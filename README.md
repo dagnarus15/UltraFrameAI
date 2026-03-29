@@ -38,3 +38,11 @@ Then launch:
 - `realesrgan-ncnn-vulkan-fork/` - pipe-enabled native engine submodule
 - `realesrgan-ncnn-vulkan-20220424/` - bundled models and runtime assets
 - `dist/UltraFrameAI/` - portable output
+
+## Development notes
+
+- The GUI stays responsive by running scan, probe, upscale, timeline, and encode work on background tasks.
+- The streaming pipeline is the preferred runtime path. It avoids temporary frame folders and keeps disk usage lower.
+- The native `realesrgan` fork lives in its own submodule so it can evolve independently from the GUI.
+- Integration tests use a small synthetic video and exercise the real pipeline end to end.
+- Progress reporting is expected to update roughly once per second, with elapsed time and ETA always visible.
