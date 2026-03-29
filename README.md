@@ -30,3 +30,11 @@ Then launch:
 ```powershell
 .\dist\UltraFrameAI\UltraFrameAI.exe
 ```
+
+## Project structure
+
+- `UltraFrameAI/` - main WPF app
+- `UltraFrameAI.Tests/` - integration tests
+- `realesrgan-ncnn-vulkan-fork/` - pipe-enabled native engine submodule
+- `realesrgan-ncnn-vulkan-20220424/` - bundled models and runtime assets
+- `dist/UltraFrameAI/` - portable output
