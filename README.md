@@ -11,3 +11,22 @@ The project uses the `realesrgan-ncnn-vulkan-fork` submodule as the native strea
 - Main app: `UltraFrameAI`
 - Engine fork: `UltraFrameAI-Realesrgan-Pipe`
 
+## Quick start
+
+```powershell
+git clone --recurse-submodules https://github.com/alexander-diener/UltraFrameAI.git
+cd UltraFrameAI
+dotnet build .\UltraFrameAI\UltraFrameAI.csproj -c Release
+```
+
+If you want the portable build, run:
+
+```powershell
+.\UltraFrameAI\publish-portable.ps1
+```
+
+Then launch:
+
+```powershell
+.\dist\UltraFrameAI\UltraFrameAI.exe
+```
