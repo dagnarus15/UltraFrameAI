@@ -1,0 +1,3 @@
+[submodule "realesrgan-ncnn-vulkan-fork"]
+	path = realesrgan-ncnn-vulkan-fork
+	url = file:///e:/Projects/AIUpscale/realesrgan-ncnn-vulkan-fork

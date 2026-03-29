@@ -12,7 +12,6 @@ AGENTS.md
 *.pdb
 corehost-trace.txt
 x264_1080p/
-realesrgan-ncnn-vulkan-fork/
 realesrgan-ncnn-vulkan-20220424/realesrgan-ncnn-vulkan.exe
 realesrgan-ncnn-vulkan-20220424/vcomp140*.dll
 realesrgan-ncnn-vulkan-20220424/input*.jpg
