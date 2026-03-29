@@ -1,0 +1,8 @@
+UltraFrame AI
+
+1. Open UltraFrameAI.exe in this folder.
+2. Select the folder that contains your video files.
+3. Click "Scan files".
+4. Click "Start batch".
+
+The app expects ffmpeg.exe, ffprobe.exe, and realesrgan-ncnn-vulkan to stay next to the EXE in the portable package.

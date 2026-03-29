@@ -1,0 +1,303 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>UltraFrame AI</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Choose one folder and press Start.</value>
+  </data>
+  <data name="Workspace" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
+  <data name="DropZoneTitle" xml:space="preserve">
+    <value>Drop folder or video here</value>
+  </data>
+  <data name="DropZoneHelp" xml:space="preserve">
+    <value>Or click Browse to choose a folder.</value>
+  </data>
+  <data name="RootFolder" xml:space="preserve">
+    <value>Root folder</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ResetToLastFolder" xml:space="preserve">
+    <value>Reset to last folder</value>
+  </data>
+  <data name="RecentFolders" xml:space="preserve">
+    <value>Recent folders</value>
+  </data>
+  <data name="OutputFolder" xml:space="preserve">
+    <value>Output folder</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="QuickStartHint" xml:space="preserve">
+    <value>The app will scan the folder automatically when you press Start.</value>
+  </data>
+  <data name="ScanningFolder" xml:space="preserve">
+    <value>Scanning folder...</value>
+  </data>
+  <data name="ScanFolderProgress" xml:space="preserve">
+    <value>Checked {0}/{1} files</value>
+  </data>
+  <data name="Codec" xml:space="preserve">
+    <value>Codec</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="FFmpegThreads" xml:space="preserve">
+    <value>FFmpeg threads</value>
+  </data>
+  <data name="UpscalerJobs" xml:space="preserve">
+    <value>Upscaler jobs</value>
+  </data>
+  <data name="TileSize" xml:space="preserve">
+    <value>Tile size</value>
+  </data>
+  <data name="OverwriteExistingOutput" xml:space="preserve">
+    <value>Overwrite existing output</value>
+  </data>
+  <data name="KeepTempFolders" xml:space="preserve">
+    <value>Keep temp folders</value>
+  </data>
+  <data name="StartBatch" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="OpenOutputFolder" xml:space="preserve">
+    <value>Open output folder</value>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>Delete item</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>Delete selected</value>
+  </data>
+  <data name="DeleteAll" xml:space="preserve">
+    <value>Delete all</value>
+  </data>
+  <data name="DeleteAllConfirmTitle" xml:space="preserve">
+    <value>Clear the list?</value>
+  </data>
+  <data name="DeleteAllConfirmMessage" xml:space="preserve">
+    <value>Your source videos will stay where they are. Continue?</value>
+  </data>
+  <data name="CurrentStage" xml:space="preserve">
+    <value>Current stage</value>
+  </data>
+  <data name="Elapsed" xml:space="preserve">
+    <value>Elapsed</value>
+  </data>
+  <data name="ETA" xml:space="preserve">
+    <value>ETA</value>
+  </data>
+  <data name="ProgressDetails" xml:space="preserve">
+    <value>Progress details</value>
+  </data>
+  <data name="Phase" xml:space="preserve">
+    <value>Phase</value>
+  </data>
+  <data name="StepDuration" xml:space="preserve">
+    <value>Step duration</value>
+  </data>
+  <data name="Queue" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="QueueQueued" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="QueueWaiting" xml:space="preserve">
+    <value>Waiting to start</value>
+  </data>
+  <data name="Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="ScanCurrentFile" xml:space="preserve">
+    <value>Current file</value>
+  </data>
+  <data name="ScanFoundVideos" xml:space="preserve">
+    <value>Found videos</value>
+  </data>
+  <data name="UnableToResolveTimestamps" xml:space="preserve">
+    <value>Unable to resolve timestamps.</value>
+  </data>
+  <data name="UnableToBuildTimeline" xml:space="preserve">
+    <value>Unable to build timeline.</value>
+  </data>
+  <data name="NoFramesExtracted" xml:space="preserve">
+    <value>No frames were extracted.</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LanguageEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LanguageRussian" xml:space="preserve">
+    <value>Русский</value>
+  </data>
+  <data name="LanguageGerman" xml:space="preserve">
+    <value>Deutsch</value>
+  </data>
+  <data name="QueueIndex" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="QueueItem" xml:space="preserve">
+    <value>Item</value>
+  </data>
+  <data name="QueueStage" xml:space="preserve">
+    <value>Stage</value>
+  </data>
+  <data name="QueueProgress" xml:space="preserve">
+    <value>Progress</value>
+  </data>
+  <data name="QueueElapsed" xml:space="preserve">
+    <value>Elapsed</value>
+  </data>
+  <data name="QueueETA" xml:space="preserve">
+    <value>ETA</value>
+  </data>
+  <data name="QueueOutput" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="ScanCurrentFolder" xml:space="preserve">
+    <value>Current folder</value>
+  </data>
+  <data name="LogReady" xml:space="preserve">
+    <value>Ready to go</value>
+  </data>
+  <data name="LogIdle" xml:space="preserve">
+    <value>Idle</value>
+  </data>
+  <data name="LogNoItemSelected" xml:space="preserve">
+    <value>Nothing selected yet</value>
+  </data>
+  <data name="LogPickFolderHint" xml:space="preserve">
+    <value>Choose a folder with videos to get started.</value>
+  </data>
+  <data name="LogWaitingForInput" xml:space="preserve">
+    <value>Waiting for your folder.</value>
+  </data>
+  <data name="LogItemCount" xml:space="preserve">
+    <value>{0} item(s)</value>
+  </data>
+  <data name="LogScanningFiles" xml:space="preserve">
+    <value>Scanning the folder...</value>
+  </data>
+  <data name="LogFoundVideoFiles" xml:space="preserve">
+    <value>Found {0} video file(s) so far.</value>
+  </data>
+  <data name="LogScanFailed" xml:space="preserve">
+    <value>I couldn't finish the scan: {0}</value>
+  </data>
+  <data name="LogRootNotFound" xml:space="preserve">
+    <value>I couldn't find that folder: {0}</value>
+  </data>
+  <data name="LogStartingBatch" xml:space="preserve">
+    <value>Starting the batch...</value>
+  </data>
+  <data name="LogBatchFinished" xml:space="preserve">
+    <value>All done for now.</value>
+  </data>
+  <data name="LogCancelled" xml:space="preserve">
+    <value>Stopped.</value>
+  </data>
+  <data name="LogBatchFailed" xml:space="preserve">
+    <value>The batch stopped with an error: {0}</value>
+  </data>
+  <data name="LogSelectVideoFolder" xml:space="preserve">
+    <value>Choose the folder that contains your videos.</value>
+  </data>
+  <data name="LogSelectOutputFolder" xml:space="preserve">
+    <value>Choose where the output should go.</value>
+  </data>
+  <data name="LogNoItemsFound" xml:space="preserve">
+    <value>Nothing found yet</value>
+  </data>
+  <data name="LogPreparing" xml:space="preserve">
+    <value>Getting things ready</value>
+  </data>
+  <data name="LogProcessing" xml:space="preserve">
+    <value>Processing...</value>
+  </data>
+  <data name="LogStartingItem" xml:space="preserve">
+    <value>Starting {0}</value>
+  </data>
+  <data name="LogBatchComplete" xml:space="preserve">
+    <value>Batch complete</value>
+  </data>
+  <data name="LogOldSrcMovedAside" xml:space="preserve">
+    <value>Moved the old src folder aside</value>
+  </data>
+  <data name="LogExtractingFrames" xml:space="preserve">
+    <value>Reconstructing details...</value>
+  </data>
+  <data name="LogOldUpMovedAside" xml:space="preserve">
+    <value>Moved the old up folder aside</value>
+  </data>
+  <data name="LogUpscalingFrames" xml:space="preserve">
+    <value>Enhancing textures...</value>
+  </data>
+  <data name="LogUnableToResolveTimestamps" xml:space="preserve">
+    <value>I couldn't resolve the timestamps.</value>
+  </data>
+  <data name="LogEncodeComplete" xml:space="preserve">
+    <value>Encoding complete</value>
+  </data>
+  <data name="LogOutputExists" xml:space="preserve">
+    <value>Output is already there, so I'll skip it</value>
+  </data>
+  <data name="LogSkippingEncode" xml:space="preserve">
+    <value>Skipping encode</value>
+  </data>
+  <data name="LogItemComplete" xml:space="preserve">
+    <value>Item complete</value>
+  </data>
+  <data name="LogFinishedItem" xml:space="preserve">
+    <value>Finished {0}</value>
+  </data>
+  <data name="LogExtractionComplete" xml:space="preserve">
+    <value>Extraction complete</value>
+  </data>
+  <data name="LogExtractedFrames" xml:space="preserve">
+    <value>Extracted {0} frames</value>
+  </data>
+  <data name="LogUpscaleComplete" xml:space="preserve">
+    <value>Upscale complete</value>
+  </data>
+  <data name="LogUpscaledFrames" xml:space="preserve">
+    <value>Upscaled {0} frames</value>
+  </data>
+  <data name="LogEncodingVideo" xml:space="preserve">
+    <value>Finalizing...</value>
+  </data>
+  <data name="LogWroteFile" xml:space="preserve">
+    <value>Saved {0}</value>
+  </data>
+  <data name="LogItemSummary" xml:space="preserve">
+    <value>Item {0}/{1} | elapsed {2}</value>
+  </data>
+  <data name="LogNoFramesExtracted" xml:space="preserve">
+    <value>No frames were extracted.</value>
+  </data>
+  <data name="LogUnableToBuildTimeline" xml:space="preserve">
+    <value>Unable to build timeline.</value>
+  </data>
+</root>

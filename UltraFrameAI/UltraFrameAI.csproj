@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AssemblyName>UltraFrameAI</AssemblyName>
+    <RootNamespace>UltraFrameAI</RootNamespace>
+    <AssemblyTitle>UltraFrame AI</AssemblyTitle>
+    <Product>UltraFrame AI</Product>
+    <Company>OpenAI</Company>
+    <Description>Portable batch video upscaling GUI.</Description>
+    <ApplicationIcon>Assets\UltraFrameAI.ico</ApplicationIcon>
+    <StartupObject>UltraFrameAI.App</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="images\*.png" Exclude="images\splashscreen.png" />
+    <SplashScreen Include="images\splashscreen.png" />
+  </ItemGroup>
+</Project>
