@@ -119,41 +119,18 @@ function New-IconFile {
         [string]$PngPath
     )
 
-    $bmp256 = New-Object System.Drawing.Bitmap 256, 256
-    $g256 = [System.Drawing.Graphics]::FromImage($bmp256)
-    try {
-        $g256.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-        $g256.Clear([System.Drawing.Color]::FromArgb(15, 23, 42))
-        $bg256 = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-            (New-Object System.Drawing.Rectangle 0, 0, 256, 256),
-            [System.Drawing.Color]::FromArgb(24, 35, 61),
-            [System.Drawing.Color]::FromArgb(15, 23, 42),
-            45
-        )
-        $g256.FillRectangle($bg256, 0, 0, 256, 256)
-        $ringPen256 = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(220, 77, 163, 255), 24)
-        $ringPen256.Alignment = [System.Drawing.Drawing2D.PenAlignment]::Inset
-        $g256.DrawEllipse($ringPen256, 36, 36, 184, 184)
-        $g256.FillEllipse((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(246, 248, 250))), 84, 66, 88, 88)
-        $g256.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(77, 163, 255))), 111, 138, 34, 56)
-    }
-    finally {
-        $g256.Dispose()
-    }
+    $pythonScript = @"
+from pathlib import Path
+from PIL import Image
 
-    $iconHandle = $bmp256.GetHicon()
-    try {
-        $ico = [System.Drawing.Icon]::FromHandle($iconHandle)
-        if ($PngPath) {
-            $bmp256.Save($PngPath, [System.Drawing.Imaging.ImageFormat]::Png)
-        }
-        $fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Create)
-        try { $ico.Save($fs) } finally { $fs.Dispose() }
-    }
-    finally {
-        [NativeMethods]::DestroyIcon($iconHandle) | Out-Null
-        $bmp256.Dispose()
-    }
+source = Path(r"$PngPath")
+target = Path(r"$Path")
+
+image = Image.open(source).convert("RGBA")
+image.save(target, format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
+"@
+
+    $pythonScript | python -
 }
 
 function New-FlagBitmap {
@@ -209,8 +186,8 @@ function New-FlagBitmap {
     $bmp.Dispose()
 }
 
-Copy-ResizedBitmap -SourcePath (Join-Path $repoRoot 'images\splashscreen.png') -DestinationPath (Join-Path $assetsDir 'Splash.png') -MaxSize 800
-Copy-ResizedBitmap -SourcePath (Join-Path $repoRoot 'images\splashscreen.png') -DestinationPath (Join-Path $imagesDir 'splashscreen.png') -MaxSize 800
+Copy-Item -LiteralPath (Join-Path $repoRoot 'images\icon.png') -Destination (Join-Path $imagesDir 'icon.png') -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot 'images\splashscreen.png') -Destination (Join-Path $imagesDir 'splashscreen.png') -Force
 New-IconFile -Path (Join-Path $assetsDir 'UltraFrameAI.ico') -PngPath (Join-Path $imagesDir 'icon.png')
 New-FlagBitmap -Path (Join-Path $imagesDir 'flag-en.png') -Country 'en'
 New-FlagBitmap -Path (Join-Path $imagesDir 'flag-ru.png') -Country 'ru'

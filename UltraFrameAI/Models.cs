@@ -14,6 +14,12 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     private string _etaText = "--:--:--";
     private string _outputState = string.Empty;
     private string _detail = string.Empty;
+    private bool _isChecked;
+    private bool _isBusy;
+    private bool _forceOverwrite;
+    private bool _skipRequested;
+    private bool _isSkipped;
+    private bool _isInterrupted;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -25,12 +31,6 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
 
     public string OutputPath { get; init; } = string.Empty;
 
-    public string WorkPath { get; init; } = string.Empty;
-
-    public string SrcPath => Path.Combine(WorkPath, "src");
-
-    public string UpPath => Path.Combine(WorkPath, "up");
-
     public string Stage
     {
         get => _stage;
@@ -40,7 +40,14 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     public double Progress
     {
         get => _progress;
-        set => SetField(ref _progress, value);
+        set
+        {
+            if (SetField(ref _progress, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCompleted)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusLabel)));
+            }
+        }
     }
 
     public string ProgressText
@@ -73,6 +80,66 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         set => SetField(ref _detail, value);
     }
 
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set => SetField(ref _isChecked, value);
+    }
+
+    public bool IsBusy
+    {
+        get => _isBusy;
+        set => SetField(ref _isBusy, value);
+    }
+
+    public bool IsCompleted => Progress >= 100 && !IsSkipped && !IsInterrupted;
+
+    public string StatusLabel => IsSkipped || IsInterrupted
+        ? LocalizedStrings.QueueStatusInterrupted
+        : IsCompleted
+            ? LocalizedStrings.QueueStatusCompleted
+            : LocalizedStrings.QueueStatusNew;
+
+    public bool ForceOverwrite
+    {
+        get => _forceOverwrite;
+        set => SetField(ref _forceOverwrite, value);
+    }
+
+    public bool SkipRequested
+    {
+        get => _skipRequested;
+        set => SetField(ref _skipRequested, value);
+    }
+
+    public bool IsSkipped
+    {
+        get => _isSkipped;
+        set
+        {
+            if (SetField(ref _isSkipped, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCompleted)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusLabel)));
+            }
+        }
+    }
+
+    public bool IsInterrupted
+    {
+        get => _isInterrupted;
+        set
+        {
+            if (SetField(ref _isInterrupted, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCompleted)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusLabel)));
+            }
+        }
+    }
+
+    public bool IsInterruptedOrSkipped => IsInterrupted || IsSkipped;
+
     public void ResetUiState()
     {
         Stage = LocalizedStrings.QueueQueued;
@@ -82,6 +149,11 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         EtaText = "--:--:--";
         OutputState = LocalizedStrings.QueueWaiting;
         Detail = string.Empty;
+        IsBusy = false;
+        IsSkipped = false;
+        IsInterrupted = false;
+        SkipRequested = false;
+        ForceOverwrite = false;
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -97,12 +169,39 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     }
 }
 
+public enum OutputConflictDecision
+{
+    Skip,
+    Replace,
+    SkipAll,
+    ReplaceAll,
+    Cancel
+}
+
+public sealed record OutputConflictRequest(
+    QueueItemViewModel Item,
+    string SourcePath,
+    string OutputPath);
+
+public sealed record RenderPreviewFrameUpdate(
+    int ItemIndex,
+    bool IsOriginal,
+    byte[] Pixels,
+    int Width,
+    int Height,
+    int Stride);
+
+public enum RenderPreviewKind
+{
+    Original,
+    Result
+}
+
 public sealed class PipelineOptions
 {
     public required string RootFolder { get; init; }
     public required string OutputFolder { get; init; }
     public required bool Overwrite { get; init; }
-    public required bool KeepTemp { get; init; }
     public required bool UseX265 { get; init; }
     public required int FfmpegThreads { get; init; }
     public required string UpscalerThreads { get; init; }
@@ -112,7 +211,17 @@ public sealed class PipelineOptions
     public required string FfprobePath { get; init; }
     public required string UpscalerPath { get; init; }
     public required string ModelDir { get; init; }
-    public required bool UsePipeMode { get; init; }
+    public required bool UseAntiFlicker { get; init; }
+    public required string ContentMode { get; init; }
+    public required double AntiFlickerStrength { get; init; }
+    public required string EncoderPreset { get; init; }
+}
+
+public sealed class AntiFlickerPresetState
+{
+    public bool Enabled { get; set; }
+
+    public double Strength { get; set; }
 }
 
 public sealed record PipelineProgress(
@@ -133,7 +242,20 @@ public sealed record PipelineProgress(
 
 public static class UiCollections
 {
-    public static ObservableCollection<string> CreateLogCollection() => new();
+    public static ObservableCollection<LogEntryViewModel> CreateLogCollection() => new();
+}
+
+public sealed class LogEntryViewModel
+{
+    public LogEntryViewModel(string time, string message)
+    {
+        Time = time;
+        Message = message;
+    }
+
+    public string Time { get; }
+
+    public string Message { get; }
 }
 
 public sealed class RecentFolderItem : INotifyPropertyChanged

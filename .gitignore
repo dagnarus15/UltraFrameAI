@@ -16,6 +16,7 @@ realesrgan-ncnn-vulkan-20220424/realesrgan-ncnn-vulkan.exe
 realesrgan-ncnn-vulkan-20220424/vcomp140*.dll
 realesrgan-ncnn-vulkan-20220424/input*.jpg
 realesrgan-ncnn-vulkan-20220424/onepiece_demo.mp4
+UltraFrameAI.Native/AntiFlicker/build/
 *.mkv
 *.mp4
 run-upscale.ps1

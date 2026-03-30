@@ -7,6 +7,10 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <AssemblyName>UltraFrameAI</AssemblyName>
     <RootNamespace>UltraFrameAI</RootNamespace>
     <AssemblyTitle>UltraFrame AI</AssemblyTitle>
@@ -18,7 +22,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="images\*.png" Exclude="images\splashscreen.png" />
-    <SplashScreen Include="images\splashscreen.png" />
+    <Resource Include="images\*.png" />
   </ItemGroup>
+
+  <Target Name="CopyNativeAntiFlicker" AfterTargets="Build">
+    <ItemGroup>
+      <NativeAntiFlickerDll Include="$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll"
+                           Condition="Exists('$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(NativeAntiFlickerDll)"
+          DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>

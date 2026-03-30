@@ -16,7 +16,7 @@
     <value>UltraFrame AI</value>
   </data>
   <data name="Subtitle" xml:space="preserve">
-    <value>Wähle einen Ordner und drücke Start.</value>
+    <value>Laden Sie einen Ordner oder eine Datei, um die Warteschlange zu füllen.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Arbeitsbereich</value>
@@ -25,7 +25,7 @@
     <value>Ordner oder Video hier ablegen</value>
   </data>
   <data name="DropZoneHelp" xml:space="preserve">
-    <value>Oder klicken Sie auf „Durchsuchen“, um einen Ordner auszuwählen.</value>
+    <value>Oder klicken Sie auf „Durchsuchen“, um einen Ordner oder eine Datei auszuwählen.</value>
   </data>
   <data name="RootFolder" xml:space="preserve">
     <value>Stammordner</value>
@@ -33,8 +33,20 @@
   <data name="Browse" xml:space="preserve">
     <value>Durchsuchen</value>
   </data>
+  <data name="BrowseFolder" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="BrowseFile" xml:space="preserve">
+    <value>Datei</value>
+  </data>
+  <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
+    <value>Wählen Sie eine Videodatei</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Abbrechen</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Stopp</value>
   </data>
   <data name="ResetToLastFolder" xml:space="preserve">
     <value>Letzten Ordner wiederherstellen</value>
@@ -45,11 +57,465 @@
   <data name="OutputFolder" xml:space="preserve">
     <value>Ausgabeordner</value>
   </data>
+  <data name="OutputFolderLabel" xml:space="preserve">
+    <value>Ausgabeordner:</value>
+  </data>
   <data name="Advanced" xml:space="preserve">
     <value>Erweitert</value>
   </data>
-  <data name="QuickStartHint" xml:space="preserve">
-    <value>Die App durchsucht den Ordner automatisch nach dem Klick auf Start.</value>
+  <data name="Additional" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="AdditionalHint" xml:space="preserve">
+    <value>Einstellungen öffnen.</value>
+  </data>
+  <data name="RenderWindowTitle" xml:space="preserve">
+    <value>Rendering</value>
+  </data>
+  <data name="RenderWindowHint" xml:space="preserve">
+    <value>Live-Vorschau und Stagedetails.</value>
+  </data>
+  <data name="RenderSubstage" xml:space="preserve">
+    <value>Unterphase</value>
+  </data>
+  <data name="RenderPreviewOriginal" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="RenderPreviewResult" xml:space="preserve">
+    <value>Ergebnis</value>
+  </data>
+  <data name="RenderPreviewResetZoom" xml:space="preserve">
+    <value>Zoom zurücksetzen</value>
+  </data>
+  <data name="RenderSkipFile" xml:space="preserve">
+    <value>Datei überspringen</value>
+  </data>
+  <data name="RenderStopAll" xml:space="preserve">
+    <value>Alles stoppen</value>
+  </data>
+  <data name="OutputConflictTitle" xml:space="preserve">
+    <value>Ausgabedatei existiert bereits</value>
+  </data>
+  <data name="OutputConflictMessage" xml:space="preserve">
+    <value>Diese Ausgabedatei existiert bereits:\n{0}\nWas möchten Sie tun?</value>
+  </data>
+  <data name="OutputConflictSkip" xml:space="preserve">
+    <value>Überspringen</value>
+  </data>
+  <data name="OutputConflictReplace" xml:space="preserve">
+    <value>Ersetzen</value>
+  </data>
+  <data name="OutputConflictSkipAll" xml:space="preserve">
+    <value>Alle überspringen</value>
+  </data>
+  <data name="OutputConflictReplaceAll" xml:space="preserve">
+    <value>Alle ersetzen</value>
+  </data>
+  <data name="FileList" xml:space="preserve">
+    <value>Dateiliste</value>
+  </data>
+  <data name="LastRunResultsTitle" xml:space="preserve">
+    <value>Ergebnisse des letzten Laufs</value>
+  </data>
+  <data name="ProcessedFiles" xml:space="preserve">
+    <value>Verarbeitete Dateien</value>
+  </data>
+  <data name="AverageFps" xml:space="preserve">
+    <value>Durchschn. FPS</value>
+  </data>
+  <data name="Benchmark" xml:space="preserve">
+    <value>Benchmark</value>
+  </data>
+  <data name="BenchmarkHint" xml:space="preserve">
+    <value>Benchmark-Fenster öffnen.</value>
+  </data>
+  <data name="BenchmarkWindowTitle" xml:space="preserve">
+    <value>Benchmark</value>
+  </data>
+  <data name="BenchmarkChartsWindowTitle" xml:space="preserve">
+    <value>Diagramme</value>
+  </data>
+  <data name="BenchmarkChartsHint" xml:space="preserve">
+    <value>Öffnen Sie ein separates Fenster für Geschwindigkeits- und Qualitätsdiagramme.</value>
+  </data>
+  <data name="BenchmarkChartsWindowHint" xml:space="preserve">
+    <value>Geschwindigkeits- und Qualitätsdiagramme auf einen Blick.</value>
+  </data>
+  <data name="BenchmarkChartsOpen" xml:space="preserve">
+    <value>Diagramme öffnen</value>
+  </data>
+  <data name="BenchmarkSourceLabel" xml:space="preserve">
+    <value>Quelldatei:</value>
+  </data>
+  <data name="BenchmarkSourceHint" xml:space="preserve">
+    <value>Wählen Sie die Quelldatei für den Benchmark aus.</value>
+  </data>
+  <data name="BenchmarkSourceFileLabel" xml:space="preserve">
+    <value>Quelldatei</value>
+  </data>
+  <data name="BenchmarkSourceFileHint" xml:space="preserve">
+    <value>Der Benchmark läuft auf einer einzelnen Videodatei, nicht auf einem Ordner.</value>
+  </data>
+  <data name="BenchmarkOutputLabel" xml:space="preserve">
+    <value>Benchmark-Ausgabe</value>
+  </data>
+  <data name="BenchmarkOutputHint" xml:space="preserve">
+    <value>Hier werden Benchmark-Samples und Berichte gespeichert.</value>
+  </data>
+  <data name="BenchmarkChooseSourceFileFirst" xml:space="preserve">
+    <value>Wählen Sie zuerst eine Quelldatei aus.</value>
+  </data>
+  <data name="BenchmarkSampleSeconds" xml:space="preserve">
+    <value>Sample-Länge (Sek.)</value>
+  </data>
+  <data name="BenchmarkQualityNote" xml:space="preserve">
+    <value>Die Qualität basiert auf einem Ähnlichkeitswert aus gesampelten Frames.</value>
+  </data>
+  <data name="BenchmarkWinnerTitle" xml:space="preserve">
+    <value>Empfohlener Sieger</value>
+  </data>
+  <data name="BenchmarkFastestOverallLabel" xml:space="preserve">
+    <value>Am schnellsten</value>
+  </data>
+  <data name="BenchmarkWeightedRecommendationLabel" xml:space="preserve">
+    <value>Gewichtete Empfehlung</value>
+  </data>
+  <data name="BenchmarkBestQualityTimeLabel" xml:space="preserve">
+    <value>Beste Qualität/Zeit</value>
+  </data>
+  <data name="BenchmarkRuntimeMode" xml:space="preserve">
+    <value>Laufzeit</value>
+  </data>
+  <data name="BenchmarkQualityTimeMode" xml:space="preserve">
+    <value>Qualität/Zeit</value>
+  </data>
+  <data name="BenchmarkCurrentStep" xml:space="preserve">
+    <value>Aktueller Schritt</value>
+  </data>
+  <data name="BenchmarkCurrentCase" xml:space="preserve">
+    <value>Aktueller Fall</value>
+  </data>
+  <data name="BenchmarkScatterTitle" xml:space="preserve">
+    <value>Geschwindigkeit / Qualität</value>
+  </data>
+  <data name="BenchmarkHistogramTitle" xml:space="preserve">
+    <value>Laufzeitvergleich</value>
+  </data>
+  <data name="BenchmarkSortLabel" xml:space="preserve">
+    <value>Sortieren nach:</value>
+  </data>
+  <data name="BenchmarkSortMetric" xml:space="preserve">
+    <value>Messwert</value>
+  </data>
+  <data name="BenchmarkSortName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="BenchmarkLegendCodecPreset" xml:space="preserve">
+    <value>Codec / Preset</value>
+  </data>
+  <data name="BenchmarkLegendAntiFlicker" xml:space="preserve">
+    <value>Anti-Flimmern</value>
+  </data>
+  <data name="BenchmarkLegendThreads" xml:space="preserve">
+    <value>Threads</value>
+  </data>
+  <data name="BenchmarkLegendTileSize" xml:space="preserve">
+    <value>Tile-Größe</value>
+  </data>
+  <data name="BenchmarkLegendFastest" xml:space="preserve">
+    <value>Am schnellsten</value>
+  </data>
+  <data name="BenchmarkLegendBestQualityTime" xml:space="preserve">
+    <value>Beste Qualität/Zeit</value>
+  </data>
+  <data name="LastRunSummaryTitle" xml:space="preserve">
+    <value>Letztes Ergebnis</value>
+  </data>
+  <data name="BenchmarkLogSource" xml:space="preserve">
+    <value>Quelle:</value>
+  </data>
+  <data name="BenchmarkLogSample" xml:space="preserve">
+    <value>Beispiel:</value>
+  </data>
+  <data name="BenchmarkLogSampleStart" xml:space="preserve">
+    <value>Sample-Start:</value>
+  </data>
+  <data name="BenchmarkLogSampleDuration" xml:space="preserve">
+    <value>Sample-Dauer:</value>
+  </data>
+  <data name="BenchmarkLogGroupSection" xml:space="preserve">
+    <value>== {0} ==</value>
+  </data>
+  <data name="BenchmarkLogSummary" xml:space="preserve">
+    <value>== Zusammenfassung ==</value>
+  </data>
+  <data name="BenchmarkLogFastestOverall" xml:space="preserve">
+    <value>Am schnellsten insgesamt: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestCodecPreset" xml:space="preserve">
+    <value>Bester Codec/Preset: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestAntiFlicker" xml:space="preserve">
+    <value>Bester Anti-Flimmern: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestUpscalerThreads" xml:space="preserve">
+    <value>Beste Upscaler-Threads: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestTileSize" xml:space="preserve">
+    <value>Beste Tile-Größe: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestSettings" xml:space="preserve">
+    <value>== Beste Einstellungen ==</value>
+  </data>
+  <data name="BenchmarkLogRecommendedFastPreset" xml:space="preserve">
+    <value>Empfohlenes schnelles Preset:</value>
+  </data>
+  <data name="BenchmarkLogMetricsSummary" xml:space="preserve">
+    <value>Ressourcenübersicht:</value>
+  </data>
+  <data name="BenchmarkSummaryRecommendedFastPreset" xml:space="preserve">
+    <value>Empfohlenes schnelles Preset</value>
+  </data>
+  <data name="BenchmarkSummaryBestSettings" xml:space="preserve">
+    <value>Beste Einstellungen</value>
+  </data>
+  <data name="BenchmarkSummaryMetricsSummary" xml:space="preserve">
+    <value>Ressourcenübersicht</value>
+  </data>
+  <data name="BenchmarkReportTableGroup" xml:space="preserve">
+    <value>Gruppe</value>
+  </data>
+  <data name="BenchmarkReportTableCase" xml:space="preserve">
+    <value>Fall</value>
+  </data>
+  <data name="BenchmarkReportTableCodec" xml:space="preserve">
+    <value>Codec</value>
+  </data>
+  <data name="BenchmarkReportTablePreset" xml:space="preserve">
+    <value>Preset</value>
+  </data>
+  <data name="BenchmarkReportTableAf" xml:space="preserve">
+    <value>AF</value>
+  </data>
+  <data name="BenchmarkReportTableMode" xml:space="preserve">
+    <value>Modus</value>
+  </data>
+  <data name="BenchmarkReportTableStrength" xml:space="preserve">
+    <value>Stärke</value>
+  </data>
+  <data name="BenchmarkReportTableThreads" xml:space="preserve">
+    <value>Threads</value>
+  </data>
+  <data name="BenchmarkReportTableTile" xml:space="preserve">
+    <value>Tile</value>
+  </data>
+  <data name="BenchmarkReportTableTime" xml:space="preserve">
+    <value>Zeit</value>
+  </data>
+  <data name="BenchmarkReportTableOutputMb" xml:space="preserve">
+    <value>Ausgabe MB</value>
+  </data>
+  <data name="BenchmarkReportTableCpu" xml:space="preserve">
+    <value>CPU Start/Avg/Peak</value>
+  </data>
+  <data name="BenchmarkReportTableRamGb" xml:space="preserve">
+    <value>RAM Start/Avg/Peak (GB)</value>
+  </data>
+  <data name="BenchmarkReportTableGpu" xml:space="preserve">
+    <value>GPU Start/Avg/Peak</value>
+  </data>
+  <data name="BenchmarkReportTableVramGb" xml:space="preserve">
+    <value>VRAM Start/Avg/Peak (GB)</value>
+  </data>
+  <data name="BenchmarkCaseCodecPreset" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerOff" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerVideo" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerFaces" xml:space="preserve">
+    <value>Gesichter</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerAnime" xml:space="preserve">
+    <value>Anime</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerAnimeUltra" xml:space="preserve">
+    <value>Anime Ultra</value>
+  </data>
+  <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
+    <value>Videodateien|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|Alle Dateien|*.*</value>
+  </data>
+  <data name="BenchmarkErrorRequiresSource" xml:space="preserve">
+    <value>Der Benchmark-Modus benötigt --benchmark-source &lt;file-or-folder&gt;.</value>
+  </data>
+  <data name="BenchmarkErrorNoVideoFilesFound" xml:space="preserve">
+    <value>In {0} wurden keine Videodateien gefunden</value>
+  </data>
+  <data name="BenchmarkErrorSourceFileNotFound" xml:space="preserve">
+    <value>Quelldatei nicht gefunden: {0}</value>
+  </data>
+  <data name="BenchmarkErrorUnableToCreateSampleClipWithExitCode" xml:space="preserve">
+    <value>Benchmark-Sampleclip konnte nicht erstellt werden. ffmpeg Exit-Code: {0}</value>
+  </data>
+  <data name="BenchmarkErrorUnableToCreateSampleClip" xml:space="preserve">
+    <value>Benchmark-Sampleclip konnte nicht erstellt werden.</value>
+  </data>
+  <data name="BenchmarkErrorPipelineFailed" xml:space="preserve">
+    <value>Pipeline fehlgeschlagen</value>
+  </data>
+  <data name="BenchmarkShortCodecFast" xml:space="preserve">
+    <value>schnell</value>
+  </data>
+  <data name="BenchmarkSuccess" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="BenchmarkFailure" xml:space="preserve">
+    <value>FEHLER</value>
+  </data>
+  <data name="BenchmarkNotAvailable" xml:space="preserve">
+    <value>n/v</value>
+  </data>
+  <data name="BenchmarkStatusStarting" xml:space="preserve">
+    <value>Benchmark wird gestartet</value>
+  </data>
+  <data name="BenchmarkStatusStarted" xml:space="preserve">
+    <value>Benchmark gestartet.</value>
+  </data>
+  <data name="BenchmarkStatusFinished" xml:space="preserve">
+    <value>Benchmark abgeschlossen</value>
+  </data>
+  <data name="BenchmarkStatusCancelled" xml:space="preserve">
+    <value>Benchmark abgebrochen</value>
+  </data>
+  <data name="BenchmarkStatusCancelledUser" xml:space="preserve">
+    <value>Benchmark vom Benutzer abgebrochen.</value>
+  </data>
+  <data name="BenchmarkStatusFailed" xml:space="preserve">
+    <value>Benchmark fehlgeschlagen</value>
+  </data>
+  <data name="BenchmarkStatusStartingDetailed" xml:space="preserve">
+    <value>Benchmark wird gestartet.</value>
+  </data>
+  <data name="BenchmarkCaseStarted" xml:space="preserve">
+    <value>[{0}/{1}] {2} / {3} gestartet.</value>
+  </data>
+  <data name="BenchmarkCaseCompleted" xml:space="preserve">
+    <value>[{0}/{1}] {2} / {3} in {4:0.###} s abgeschlossen.</value>
+  </data>
+  <data name="BenchmarkSummaryHeader" xml:space="preserve">
+    <value>Zusammenfassung</value>
+  </data>
+  <data name="BenchmarkSummaryFastestOverall" xml:space="preserve">
+    <value>Am schnellsten insgesamt</value>
+  </data>
+  <data name="BenchmarkSummaryBestCodecPreset" xml:space="preserve">
+    <value>Bester Codec/Preset</value>
+  </data>
+  <data name="BenchmarkSummaryBestAntiFlicker" xml:space="preserve">
+    <value>Bester Anti-Flimmern</value>
+  </data>
+  <data name="BenchmarkSummaryBestUpscalerThreads" xml:space="preserve">
+    <value>Beste Upscaler-Threads</value>
+  </data>
+  <data name="BenchmarkSummaryBestTileSize" xml:space="preserve">
+    <value>Beste Tile-Größe</value>
+  </data>
+  <data name="BenchmarkShortCodecMed" xml:space="preserve">
+    <value>mittel</value>
+  </data>
+  <data name="BenchmarkShortCodecSlow" xml:space="preserve">
+    <value>langsam</value>
+  </data>
+  <data name="BenchmarkShortCodecVFast" xml:space="preserve">
+    <value>sehrschn.</value>
+  </data>
+  <data name="BenchmarkShortAFOff" xml:space="preserve">
+    <value>AF aus</value>
+  </data>
+  <data name="BenchmarkShortAFOn" xml:space="preserve">
+    <value>AF an</value>
+  </data>
+  <data name="BenchmarkShortAFAnime" xml:space="preserve">
+    <value>AF anime</value>
+  </data>
+  <data name="BenchmarkShortAFUltra" xml:space="preserve">
+    <value>AF ultra</value>
+  </data>
+  <data name="BenchmarkShortAFVideo" xml:space="preserve">
+    <value>AF video</value>
+  </data>
+  <data name="BenchmarkShortAFFaces" xml:space="preserve">
+    <value>AF gesicht</value>
+  </data>
+  <data name="BenchmarkShortThreadsPrefix" xml:space="preserve">
+    <value>Thr</value>
+  </data>
+  <data name="BenchmarkShortTilePrefix" xml:space="preserve">
+    <value>Tile</value>
+  </data>
+  <data name="BenchmarkNoResults" xml:space="preserve">
+    <value>Noch keine Benchmark-Ergebnisse.</value>
+  </data>
+  <data name="BenchmarkChartTimeAxis" xml:space="preserve">
+    <value>Zeit (s)</value>
+  </data>
+  <data name="BenchmarkChartQualityAxis" xml:space="preserve">
+    <value>Qualitätswert</value>
+  </data>
+  <data name="BenchmarkStart" xml:space="preserve">
+    <value>Benchmark starten</value>
+  </data>
+  <data name="BenchmarkStop" xml:space="preserve">
+    <value>Benchmark stoppen</value>
+  </data>
+  <data name="AntiFlicker" xml:space="preserve">
+    <value>Anti-Flimmern</value>
+  </data>
+  <data name="AntiFlickerHint" xml:space="preserve">
+    <value>Stabilisiert feines Flimmern, ohne Linien zu verschmieren.</value>
+  </data>
+  <data name="AntiFlickerStrength" xml:space="preserve">
+    <value>Stärke</value>
+  </data>
+  <data name="AntiFlickerPreset" xml:space="preserve">
+    <value>Profil</value>
+  </data>
+  <data name="AntiFlickerPresetHint" xml:space="preserve">
+    <value>Jedes Profil merkt sich Schalter und Stärke separat. Der gleiche Prozentwert fühlt sich je nach Modus unterschiedlich an.</value>
+  </data>
+  <data name="AntiFlickerAnimeHint" xml:space="preserve">
+    <value>Am besten für Linien und feine Details.</value>
+  </data>
+  <data name="AntiFlickerVideoHint" xml:space="preserve">
+    <value>Ausgewogen für gemischtes Realbild-Material.</value>
+  </data>
+  <data name="AntiFlickerFacesHint" xml:space="preserve">
+    <value>Stabilisiert Flimmern und schützt Gesichter.</value>
+  </data>
+  <data name="AntiFlickerUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="AntiFlickerUltraHint" xml:space="preserve">
+    <value>Für das hartnäckigste Anime-Flimmern.
+Am besten für maximale Stabilität.</value>
+  </data>
+  <data name="ContentMode" xml:space="preserve">
+    <value>Inhaltsmodus</value>
+  </data>
+  <data name="ContentModeAnime" xml:space="preserve">
+    <value>Anime</value>
+  </data>
+  <data name="ContentModeAnimeUltra" xml:space="preserve">
+    <value>Anime Ultra</value>
+  </data>
+  <data name="ContentModeVideo" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="ContentModeFaces" xml:space="preserve">
+    <value>Gesichter</value>
   </data>
   <data name="ScanningFolder" xml:space="preserve">
     <value>Ordner wird gescannt...</value>
@@ -75,11 +541,11 @@
   <data name="OverwriteExistingOutput" xml:space="preserve">
     <value>Vorhandene Ausgabe überschreiben</value>
   </data>
-  <data name="KeepTempFolders" xml:space="preserve">
-    <value>Temporäre Ordner behalten</value>
-  </data>
   <data name="StartBatch" xml:space="preserve">
-    <value>Start</value>
+    <value>Alles starten</value>
+  </data>
+  <data name="StartSelected" xml:space="preserve">
+    <value>Ausgewählte starten</value>
   </data>
   <data name="OpenOutputFolder" xml:space="preserve">
     <value>Ausgabeordner öffnen</value>
@@ -111,9 +577,6 @@
   <data name="ProgressDetails" xml:space="preserve">
     <value>Fortschrittsdetails</value>
   </data>
-  <data name="Phase" xml:space="preserve">
-    <value>Phase</value>
-  </data>
   <data name="StepDuration" xml:space="preserve">
     <value>Schrittdauer</value>
   </data>
@@ -128,6 +591,12 @@
   </data>
   <data name="Log" xml:space="preserve">
     <value>Protokoll</value>
+  </data>
+  <data name="LogTime" xml:space="preserve">
+    <value>Zeit</value>
+  </data>
+  <data name="LogMessage" xml:space="preserve">
+    <value>Nachricht</value>
   </data>
   <data name="ScanCurrentFile" xml:space="preserve">
     <value>Aktuelle Datei</value>
@@ -177,6 +646,18 @@
   <data name="QueueOutput" xml:space="preserve">
     <value>Ausgabe</value>
   </data>
+  <data name="QueueStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="QueueStatusNew" xml:space="preserve">
+    <value>Neu</value>
+  </data>
+  <data name="QueueStatusInterrupted" xml:space="preserve">
+    <value>Unterbrochen</value>
+  </data>
+  <data name="QueueStatusCompleted" xml:space="preserve">
+    <value>Fertig</value>
+  </data>
   <data name="ScanCurrentFolder" xml:space="preserve">
     <value>Aktueller Ordner</value>
   </data>
@@ -190,7 +671,7 @@
     <value>Noch nichts ausgewählt</value>
   </data>
   <data name="LogPickFolderHint" xml:space="preserve">
-    <value>Wählen Sie einen Ordner mit Videos aus, um zu starten.</value>
+    <value>Wählen Sie einen Ordner oder eine Videodatei aus, um zu starten.</value>
   </data>
   <data name="LogWaitingForInput" xml:space="preserve">
     <value>Warte auf Ihren Ordner.</value>
@@ -213,6 +694,9 @@
   <data name="LogStartingBatch" xml:space="preserve">
     <value>Stapellauf wird gestartet...</value>
   </data>
+  <data name="LogStartingSelectedBatch" xml:space="preserve">
+    <value>Die markierten Dateien werden gestartet...</value>
+  </data>
   <data name="LogBatchFinished" xml:space="preserve">
     <value>Fürs Erste fertig.</value>
   </data>
@@ -223,16 +707,46 @@
     <value>Der Stapellauf wurde mit einem Fehler beendet: {0}</value>
   </data>
   <data name="LogSelectVideoFolder" xml:space="preserve">
-    <value>Wählen Sie den Ordner mit den Videos aus.</value>
+    <value>Wählen Sie den Ordner oder die Datei mit den Videos aus.</value>
   </data>
   <data name="LogSelectOutputFolder" xml:space="preserve">
     <value>Wählen Sie den Ausgabeordner aus.</value>
+  </data>
+  <data name="CloseDuringRenderTitle" xml:space="preserve">
+    <value>Arbeit stoppen und beenden?</value>
+  </data>
+  <data name="CloseDuringRenderMessage" xml:space="preserve">
+    <value>Die Arbeit läuft noch. Wenn Sie jetzt schließen, wird der aktuelle Auftrag abgebrochen und diese Datei muss neu gestartet werden. Trotzdem beenden?</value>
+  </data>
+  <data name="CloseDuringRenderStop" xml:space="preserve">
+    <value>Rendern stoppen</value>
+  </data>
+  <data name="CloseDuringRenderKeep" xml:space="preserve">
+    <value>Rendern fortsetzen</value>
   </data>
   <data name="LogNoItemsFound" xml:space="preserve">
     <value>Noch nichts gefunden</value>
   </data>
   <data name="LogPreparing" xml:space="preserve">
     <value>Vorbereiten</value>
+  </data>
+  <data name="LogPreparingFrames" xml:space="preserve">
+    <value>Frames vorbereiten</value>
+  </data>
+  <data name="LogSearchingFirstPng" xml:space="preserve">
+    <value>Ersten Frame suchen</value>
+  </data>
+  <data name="LogWaitingFirstUpscaledFrame" xml:space="preserve">
+    <value>Warte auf den ersten Ergebnis-Frame</value>
+  </data>
+  <data name="LogProbingSource" xml:space="preserve">
+    <value>Quelldatei prüfen</value>
+  </data>
+  <data name="LogReadingVideoInfo" xml:space="preserve">
+    <value>Videoinformationen lesen</value>
+  </data>
+  <data name="LogCheckingCache" xml:space="preserve">
+    <value>Stream-Zustand prüfen</value>
   </data>
   <data name="LogProcessing" xml:space="preserve">
     <value>Verarbeitung...</value>
@@ -243,20 +757,14 @@
   <data name="LogBatchComplete" xml:space="preserve">
     <value>Stapellauf abgeschlossen</value>
   </data>
-  <data name="LogOldSrcMovedAside" xml:space="preserve">
-    <value>Der alte src-Ordner wurde beiseitegelegt</value>
-  </data>
   <data name="LogExtractingFrames" xml:space="preserve">
     <value>Details werden rekonstruiert...</value>
-  </data>
-  <data name="LogOldUpMovedAside" xml:space="preserve">
-    <value>Der alte up-Ordner wurde beiseitegelegt</value>
   </data>
   <data name="LogUpscalingFrames" xml:space="preserve">
     <value>Texturen werden verbessert...</value>
   </data>
-  <data name="LogUnableToResolveTimestamps" xml:space="preserve">
-    <value>Zeitstempel konnten nicht ermittelt werden.</value>
+  <data name="LogInvalidVideoInfo" xml:space="preserve">
+    <value>Videoinformationen konnten nicht gelesen werden.</value>
   </data>
   <data name="LogEncodeComplete" xml:space="preserve">
     <value>Kodierung abgeschlossen</value>
@@ -296,8 +804,5 @@
   </data>
   <data name="LogNoFramesExtracted" xml:space="preserve">
     <value>Es wurden keine Frames extrahiert.</value>
-  </data>
-  <data name="LogUnableToBuildTimeline" xml:space="preserve">
-    <value>Timeline konnte nicht erstellt werden.</value>
   </data>
 </root>

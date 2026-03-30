@@ -16,7 +16,7 @@
     <value>UltraFrame AI</value>
   </data>
   <data name="Subtitle" xml:space="preserve">
-    <value>Выберите одну папку и нажмите Start.</value>
+    <value>Загрузите папку или файл, чтобы собрать очередь.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Рабочая область</value>
@@ -25,7 +25,7 @@
     <value>Перетащите папку или видео сюда</value>
   </data>
   <data name="DropZoneHelp" xml:space="preserve">
-    <value>Или нажмите Обзор, чтобы выбрать папку.</value>
+    <value>Или нажмите Обзор, чтобы выбрать папку или файл.</value>
   </data>
   <data name="RootFolder" xml:space="preserve">
     <value>Корневая папка</value>
@@ -33,8 +33,20 @@
   <data name="Browse" xml:space="preserve">
     <value>Обзор</value>
   </data>
+  <data name="BrowseFolder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="BrowseFile" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
+    <value>Выберите видеофайл</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Отмена</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Стоп</value>
   </data>
   <data name="ResetToLastFolder" xml:space="preserve">
     <value>Вернуть последнюю папку</value>
@@ -45,11 +57,465 @@
   <data name="OutputFolder" xml:space="preserve">
     <value>Папка вывода</value>
   </data>
+  <data name="OutputFolderLabel" xml:space="preserve">
+    <value>Папка вывода:</value>
+  </data>
   <data name="Advanced" xml:space="preserve">
     <value>Дополнительно</value>
   </data>
-  <data name="QuickStartHint" xml:space="preserve">
-    <value>Приложение само просканирует папку после нажатия Start.</value>
+  <data name="Additional" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="AdditionalHint" xml:space="preserve">
+    <value>Открыть настройки.</value>
+  </data>
+  <data name="RenderWindowTitle" xml:space="preserve">
+    <value>Рендеринг</value>
+  </data>
+  <data name="RenderWindowHint" xml:space="preserve">
+    <value>Живой предпросмотр и детали этапа.</value>
+  </data>
+  <data name="RenderSubstage" xml:space="preserve">
+    <value>Подэтап</value>
+  </data>
+  <data name="RenderPreviewOriginal" xml:space="preserve">
+    <value>Оригинал</value>
+  </data>
+  <data name="RenderPreviewResult" xml:space="preserve">
+    <value>Результат</value>
+  </data>
+  <data name="RenderPreviewResetZoom" xml:space="preserve">
+    <value>Сбросить масштаб</value>
+  </data>
+  <data name="RenderSkipFile" xml:space="preserve">
+    <value>Пропустить файл</value>
+  </data>
+  <data name="RenderStopAll" xml:space="preserve">
+    <value>Остановить всё</value>
+  </data>
+  <data name="OutputConflictTitle" xml:space="preserve">
+    <value>Файл результата уже существует</value>
+  </data>
+  <data name="OutputConflictMessage" xml:space="preserve">
+    <value>Файл результата уже существует:\n{0}\nЧто сделать дальше?</value>
+  </data>
+  <data name="OutputConflictSkip" xml:space="preserve">
+    <value>Пропустить</value>
+  </data>
+  <data name="OutputConflictReplace" xml:space="preserve">
+    <value>Заменить</value>
+  </data>
+  <data name="OutputConflictSkipAll" xml:space="preserve">
+    <value>Пропустить всё</value>
+  </data>
+  <data name="OutputConflictReplaceAll" xml:space="preserve">
+    <value>Заменить всё</value>
+  </data>
+  <data name="FileList" xml:space="preserve">
+    <value>Список файлов</value>
+  </data>
+  <data name="LastRunResultsTitle" xml:space="preserve">
+    <value>Результаты последнего запуска</value>
+  </data>
+  <data name="ProcessedFiles" xml:space="preserve">
+    <value>Обработано файлов</value>
+  </data>
+  <data name="AverageFps" xml:space="preserve">
+    <value>Сред. кадр/с</value>
+  </data>
+  <data name="Benchmark" xml:space="preserve">
+    <value>Бенчмарк</value>
+  </data>
+  <data name="BenchmarkHint" xml:space="preserve">
+    <value>Открыть окно бенчмарка.</value>
+  </data>
+  <data name="BenchmarkWindowTitle" xml:space="preserve">
+    <value>Бенчмарк</value>
+  </data>
+  <data name="BenchmarkChartsWindowTitle" xml:space="preserve">
+    <value>Графики</value>
+  </data>
+  <data name="BenchmarkChartsHint" xml:space="preserve">
+    <value>Откройте отдельное окно для графиков скорости и качества.</value>
+  </data>
+  <data name="BenchmarkChartsWindowHint" xml:space="preserve">
+    <value>Графики скорости и качества в одном взгляде.</value>
+  </data>
+  <data name="BenchmarkChartsOpen" xml:space="preserve">
+    <value>Открыть графики</value>
+  </data>
+  <data name="BenchmarkSourceLabel" xml:space="preserve">
+    <value>Исходный файл:</value>
+  </data>
+  <data name="BenchmarkSourceHint" xml:space="preserve">
+    <value>Выберите исходный файл для бенчмарка.</value>
+  </data>
+  <data name="BenchmarkSourceFileLabel" xml:space="preserve">
+    <value>Исходный файл</value>
+  </data>
+  <data name="BenchmarkSourceFileHint" xml:space="preserve">
+    <value>Бенчмарк запускается на одном видеофайле, а не на папке.</value>
+  </data>
+  <data name="BenchmarkOutputLabel" xml:space="preserve">
+    <value>Папка для бенчмарка</value>
+  </data>
+  <data name="BenchmarkOutputHint" xml:space="preserve">
+    <value>Сюда сохраняются sample-файлы и отчёты бенчмарка.</value>
+  </data>
+  <data name="BenchmarkChooseSourceFileFirst" xml:space="preserve">
+    <value>Сначала выберите исходный файл.</value>
+  </data>
+  <data name="BenchmarkSampleSeconds" xml:space="preserve">
+    <value>Длина sample (сек.)</value>
+  </data>
+  <data name="BenchmarkQualityNote" xml:space="preserve">
+    <value>Качество считается по похожести на выбранных кадрах.</value>
+  </data>
+  <data name="BenchmarkWinnerTitle" xml:space="preserve">
+    <value>Рекомендуемый победитель</value>
+  </data>
+  <data name="BenchmarkFastestOverallLabel" xml:space="preserve">
+    <value>Самый быстрый</value>
+  </data>
+  <data name="BenchmarkWeightedRecommendationLabel" xml:space="preserve">
+    <value>Взвешенная рекомендация</value>
+  </data>
+  <data name="BenchmarkBestQualityTimeLabel" xml:space="preserve">
+    <value>Лучшее качество/время</value>
+  </data>
+  <data name="BenchmarkRuntimeMode" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="BenchmarkQualityTimeMode" xml:space="preserve">
+    <value>Качество/время</value>
+  </data>
+  <data name="BenchmarkCurrentStep" xml:space="preserve">
+    <value>Текущий шаг</value>
+  </data>
+  <data name="BenchmarkCurrentCase" xml:space="preserve">
+    <value>Текущий кейс</value>
+  </data>
+  <data name="BenchmarkScatterTitle" xml:space="preserve">
+    <value>Скорость / качество</value>
+  </data>
+  <data name="BenchmarkHistogramTitle" xml:space="preserve">
+    <value>Сравнение времени</value>
+  </data>
+  <data name="BenchmarkSortLabel" xml:space="preserve">
+    <value>Сортировать по:</value>
+  </data>
+  <data name="BenchmarkSortMetric" xml:space="preserve">
+    <value>Метрике</value>
+  </data>
+  <data name="BenchmarkSortName" xml:space="preserve">
+    <value>Имя</value>
+  </data>
+  <data name="BenchmarkLegendCodecPreset" xml:space="preserve">
+    <value>Кодек / пресет</value>
+  </data>
+  <data name="BenchmarkLegendAntiFlicker" xml:space="preserve">
+    <value>Анти-мерцание</value>
+  </data>
+  <data name="BenchmarkLegendThreads" xml:space="preserve">
+    <value>Потоки</value>
+  </data>
+  <data name="BenchmarkLegendTileSize" xml:space="preserve">
+    <value>Размер тайла</value>
+  </data>
+  <data name="BenchmarkLegendFastest" xml:space="preserve">
+    <value>Самый быстрый</value>
+  </data>
+  <data name="BenchmarkLegendBestQualityTime" xml:space="preserve">
+    <value>Лучшее качество/время</value>
+  </data>
+  <data name="LastRunSummaryTitle" xml:space="preserve">
+    <value>Результаты последнего запуска</value>
+  </data>
+  <data name="BenchmarkLogSource" xml:space="preserve">
+    <value>Источник:</value>
+  </data>
+  <data name="BenchmarkLogSample" xml:space="preserve">
+    <value>Образец:</value>
+  </data>
+  <data name="BenchmarkLogSampleStart" xml:space="preserve">
+    <value>Старт sample:</value>
+  </data>
+  <data name="BenchmarkLogSampleDuration" xml:space="preserve">
+    <value>Длительность sample:</value>
+  </data>
+  <data name="BenchmarkLogGroupSection" xml:space="preserve">
+    <value>== {0} ==</value>
+  </data>
+  <data name="BenchmarkLogSummary" xml:space="preserve">
+    <value>== Итог ==</value>
+  </data>
+  <data name="BenchmarkLogFastestOverall" xml:space="preserve">
+    <value>Самый быстрый вообще: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestCodecPreset" xml:space="preserve">
+    <value>Лучший кодек/пресет: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestAntiFlicker" xml:space="preserve">
+    <value>Лучшее анти-мерцание: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestUpscalerThreads" xml:space="preserve">
+    <value>Лучшие потоки апскейлера: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestTileSize" xml:space="preserve">
+    <value>Лучший размер тайла: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestSettings" xml:space="preserve">
+    <value>== Лучшие настройки ==</value>
+  </data>
+  <data name="BenchmarkLogRecommendedFastPreset" xml:space="preserve">
+    <value>Рекомендуемый быстрый пресет:</value>
+  </data>
+  <data name="BenchmarkLogMetricsSummary" xml:space="preserve">
+    <value>Сводка по ресурсам:</value>
+  </data>
+  <data name="BenchmarkSummaryRecommendedFastPreset" xml:space="preserve">
+    <value>Рекомендуемый быстрый пресет</value>
+  </data>
+  <data name="BenchmarkSummaryBestSettings" xml:space="preserve">
+    <value>Лучшие настройки</value>
+  </data>
+  <data name="BenchmarkSummaryMetricsSummary" xml:space="preserve">
+    <value>Сводка по ресурсам</value>
+  </data>
+  <data name="BenchmarkReportTableGroup" xml:space="preserve">
+    <value>Группа</value>
+  </data>
+  <data name="BenchmarkReportTableCase" xml:space="preserve">
+    <value>Кейс</value>
+  </data>
+  <data name="BenchmarkReportTableCodec" xml:space="preserve">
+    <value>Кодек</value>
+  </data>
+  <data name="BenchmarkReportTablePreset" xml:space="preserve">
+    <value>Пресет</value>
+  </data>
+  <data name="BenchmarkReportTableAf" xml:space="preserve">
+    <value>АФ</value>
+  </data>
+  <data name="BenchmarkReportTableMode" xml:space="preserve">
+    <value>Режим</value>
+  </data>
+  <data name="BenchmarkReportTableStrength" xml:space="preserve">
+    <value>Сила</value>
+  </data>
+  <data name="BenchmarkReportTableThreads" xml:space="preserve">
+    <value>Потоки</value>
+  </data>
+  <data name="BenchmarkReportTableTile" xml:space="preserve">
+    <value>Тайл</value>
+  </data>
+  <data name="BenchmarkReportTableTime" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="BenchmarkReportTableOutputMb" xml:space="preserve">
+    <value>Вывод МБ</value>
+  </data>
+  <data name="BenchmarkReportTableCpu" xml:space="preserve">
+    <value>CPU старт/средн./пик</value>
+  </data>
+  <data name="BenchmarkReportTableRamGb" xml:space="preserve">
+    <value>RAM старт/средн./пик (GB)</value>
+  </data>
+  <data name="BenchmarkReportTableGpu" xml:space="preserve">
+    <value>GPU старт/средн./пик</value>
+  </data>
+  <data name="BenchmarkReportTableVramGb" xml:space="preserve">
+    <value>VRAM старт/средн./пик (GB)</value>
+  </data>
+  <data name="BenchmarkCaseCodecPreset" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerOff" xml:space="preserve">
+    <value>Выкл</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerFaces" xml:space="preserve">
+    <value>Лица</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerAnime" xml:space="preserve">
+    <value>Аниме</value>
+  </data>
+  <data name="BenchmarkCaseAntiFlickerAnimeUltra" xml:space="preserve">
+    <value>Аниме Ultra</value>
+  </data>
+  <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
+    <value>Видео файлы|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|Все файлы|*.*</value>
+  </data>
+  <data name="BenchmarkErrorRequiresSource" xml:space="preserve">
+    <value>Для режима бенчмарка нужен параметр --benchmark-source &lt;file-or-folder&gt;.</value>
+  </data>
+  <data name="BenchmarkErrorNoVideoFilesFound" xml:space="preserve">
+    <value>В {0} не найдено видеофайлов</value>
+  </data>
+  <data name="BenchmarkErrorSourceFileNotFound" xml:space="preserve">
+    <value>Исходный файл не найден: {0}</value>
+  </data>
+  <data name="BenchmarkErrorUnableToCreateSampleClipWithExitCode" xml:space="preserve">
+    <value>Не удалось создать sample-клип для бенчмарка. Код выхода ffmpeg: {0}</value>
+  </data>
+  <data name="BenchmarkErrorUnableToCreateSampleClip" xml:space="preserve">
+    <value>Не удалось создать sample-клип для бенчмарка.</value>
+  </data>
+  <data name="BenchmarkErrorPipelineFailed" xml:space="preserve">
+    <value>Пайплайн завершился с ошибкой</value>
+  </data>
+  <data name="BenchmarkShortCodecFast" xml:space="preserve">
+    <value>быстр.</value>
+  </data>
+  <data name="BenchmarkSuccess" xml:space="preserve">
+    <value>ОК</value>
+  </data>
+  <data name="BenchmarkFailure" xml:space="preserve">
+    <value>ОШИБКА</value>
+  </data>
+  <data name="BenchmarkNotAvailable" xml:space="preserve">
+    <value>н/д</value>
+  </data>
+  <data name="BenchmarkStatusStarting" xml:space="preserve">
+    <value>Запуск бенчмарка</value>
+  </data>
+  <data name="BenchmarkStatusStarted" xml:space="preserve">
+    <value>Бенчмарк запущен.</value>
+  </data>
+  <data name="BenchmarkStatusFinished" xml:space="preserve">
+    <value>Бенчмарк завершён</value>
+  </data>
+  <data name="BenchmarkStatusCancelled" xml:space="preserve">
+    <value>Бенчмарк отменён</value>
+  </data>
+  <data name="BenchmarkStatusCancelledUser" xml:space="preserve">
+    <value>Бенчмарк отменён пользователем.</value>
+  </data>
+  <data name="BenchmarkStatusFailed" xml:space="preserve">
+    <value>Бенчмарк завершился с ошибкой</value>
+  </data>
+  <data name="BenchmarkStatusStartingDetailed" xml:space="preserve">
+    <value>Бенчмарк запускается.</value>
+  </data>
+  <data name="BenchmarkCaseStarted" xml:space="preserve">
+    <value>[{0}/{1}] {2} / {3} начат.</value>
+  </data>
+  <data name="BenchmarkCaseCompleted" xml:space="preserve">
+    <value>[{0}/{1}] {2} / {3} завершён за {4:0.###} с.</value>
+  </data>
+  <data name="BenchmarkSummaryHeader" xml:space="preserve">
+    <value>Итог</value>
+  </data>
+  <data name="BenchmarkSummaryFastestOverall" xml:space="preserve">
+    <value>Самый быстрый вообще</value>
+  </data>
+  <data name="BenchmarkSummaryBestCodecPreset" xml:space="preserve">
+    <value>Лучший кодек/пресет</value>
+  </data>
+  <data name="BenchmarkSummaryBestAntiFlicker" xml:space="preserve">
+    <value>Лучшее анти-мерцание</value>
+  </data>
+  <data name="BenchmarkSummaryBestUpscalerThreads" xml:space="preserve">
+    <value>Лучшие потоки апскейлера</value>
+  </data>
+  <data name="BenchmarkSummaryBestTileSize" xml:space="preserve">
+    <value>Лучший размер тайла</value>
+  </data>
+  <data name="BenchmarkShortCodecMed" xml:space="preserve">
+    <value>средн.</value>
+  </data>
+  <data name="BenchmarkShortCodecSlow" xml:space="preserve">
+    <value>медл.</value>
+  </data>
+  <data name="BenchmarkShortCodecVFast" xml:space="preserve">
+    <value>оч.быстр.</value>
+  </data>
+  <data name="BenchmarkShortAFOff" xml:space="preserve">
+    <value>AF выкл.</value>
+  </data>
+  <data name="BenchmarkShortAFOn" xml:space="preserve">
+    <value>AF вкл.</value>
+  </data>
+  <data name="BenchmarkShortAFAnime" xml:space="preserve">
+    <value>AF anime</value>
+  </data>
+  <data name="BenchmarkShortAFUltra" xml:space="preserve">
+    <value>AF ultra</value>
+  </data>
+  <data name="BenchmarkShortAFVideo" xml:space="preserve">
+    <value>AF video</value>
+  </data>
+  <data name="BenchmarkShortAFFaces" xml:space="preserve">
+    <value>AF лица</value>
+  </data>
+  <data name="BenchmarkShortThreadsPrefix" xml:space="preserve">
+    <value>Потоки</value>
+  </data>
+  <data name="BenchmarkShortTilePrefix" xml:space="preserve">
+    <value>Тайл</value>
+  </data>
+  <data name="BenchmarkNoResults" xml:space="preserve">
+    <value>Пока нет результатов бенчмарка.</value>
+  </data>
+  <data name="BenchmarkChartTimeAxis" xml:space="preserve">
+    <value>Время (с)</value>
+  </data>
+  <data name="BenchmarkChartQualityAxis" xml:space="preserve">
+    <value>Качество</value>
+  </data>
+  <data name="BenchmarkStart" xml:space="preserve">
+    <value>Запустить бенчмарк</value>
+  </data>
+  <data name="BenchmarkStop" xml:space="preserve">
+    <value>Остановить бенчмарк</value>
+  </data>
+  <data name="AntiFlicker" xml:space="preserve">
+    <value>Анти-мерцание</value>
+  </data>
+  <data name="AntiFlickerHint" xml:space="preserve">
+    <value>Убирает мелкое мерцание, не размывая линии.</value>
+  </data>
+  <data name="AntiFlickerStrength" xml:space="preserve">
+    <value>Сила</value>
+  </data>
+  <data name="AntiFlickerPreset" xml:space="preserve">
+    <value>Пресет</value>
+  </data>
+  <data name="AntiFlickerPresetHint" xml:space="preserve">
+    <value>Каждый пресет запоминает свою настройку и силу. Один и тот же процент ощущается по-разному в каждом режиме.</value>
+  </data>
+  <data name="AntiFlickerAnimeHint" xml:space="preserve">
+    <value>Лучше всего для линий и тонких деталей.</value>
+  </data>
+  <data name="AntiFlickerVideoHint" xml:space="preserve">
+    <value>Баланс для смешанного живого видео.</value>
+  </data>
+  <data name="AntiFlickerFacesHint" xml:space="preserve">
+    <value>Сглаживает мерцание, бережно относится к лицам.</value>
+  </data>
+  <data name="AntiFlickerUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="AntiFlickerUltraHint" xml:space="preserve">
+    <value>Для самого упрямого мерцания в аниме.
+Лучше всего для максимальной стабильности.</value>
+  </data>
+  <data name="ContentMode" xml:space="preserve">
+    <value>Режим контента</value>
+  </data>
+  <data name="ContentModeAnime" xml:space="preserve">
+    <value>Аниме</value>
+  </data>
+  <data name="ContentModeAnimeUltra" xml:space="preserve">
+    <value>Аниме Ultra</value>
+  </data>
+  <data name="ContentModeVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="ContentModeFaces" xml:space="preserve">
+    <value>Лица</value>
   </data>
   <data name="ScanningFolder" xml:space="preserve">
     <value>Сканирование папки...</value>
@@ -75,11 +541,11 @@
   <data name="OverwriteExistingOutput" xml:space="preserve">
     <value>Перезаписывать выходные файлы</value>
   </data>
-  <data name="KeepTempFolders" xml:space="preserve">
-    <value>Сохранять временные папки</value>
-  </data>
   <data name="StartBatch" xml:space="preserve">
-    <value>Старт</value>
+    <value>Запустить всё</value>
+  </data>
+  <data name="StartSelected" xml:space="preserve">
+    <value>Запустить выделенное</value>
   </data>
   <data name="OpenOutputFolder" xml:space="preserve">
     <value>Открыть папку вывода</value>
@@ -111,9 +577,6 @@
   <data name="ProgressDetails" xml:space="preserve">
     <value>Подробности прогресса</value>
   </data>
-  <data name="Phase" xml:space="preserve">
-    <value>Фаза</value>
-  </data>
   <data name="StepDuration" xml:space="preserve">
     <value>Длительность шага</value>
   </data>
@@ -128,6 +591,12 @@
   </data>
   <data name="Log" xml:space="preserve">
     <value>Журнал</value>
+  </data>
+  <data name="LogTime" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="LogMessage" xml:space="preserve">
+    <value>Сообщение</value>
   </data>
   <data name="ScanCurrentFile" xml:space="preserve">
     <value>Текущий файл</value>
@@ -177,6 +646,18 @@
   <data name="QueueOutput" xml:space="preserve">
     <value>Вывод</value>
   </data>
+  <data name="QueueStatus" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="QueueStatusNew" xml:space="preserve">
+    <value>Новый</value>
+  </data>
+  <data name="QueueStatusInterrupted" xml:space="preserve">
+    <value>Прерван</value>
+  </data>
+  <data name="QueueStatusCompleted" xml:space="preserve">
+    <value>Завершён</value>
+  </data>
   <data name="ScanCurrentFolder" xml:space="preserve">
     <value>Текущая папка</value>
   </data>
@@ -190,7 +671,7 @@
     <value>Пока ничего не выбрано</value>
   </data>
   <data name="LogPickFolderHint" xml:space="preserve">
-    <value>Выберите папку с видео, чтобы начать.</value>
+    <value>Выберите папку или видеофайл, чтобы начать.</value>
   </data>
   <data name="LogWaitingForInput" xml:space="preserve">
     <value>Жду папку.</value>
@@ -213,6 +694,9 @@
   <data name="LogStartingBatch" xml:space="preserve">
     <value>Запускаю обработку...</value>
   </data>
+  <data name="LogStartingSelectedBatch" xml:space="preserve">
+    <value>Запускаю отмеченные файлы...</value>
+  </data>
   <data name="LogBatchFinished" xml:space="preserve">
     <value>Пока всё готово.</value>
   </data>
@@ -223,16 +707,46 @@
     <value>Обработка остановилась с ошибкой: {0}</value>
   </data>
   <data name="LogSelectVideoFolder" xml:space="preserve">
-    <value>Выберите папку с видеофайлами.</value>
+    <value>Выберите папку или файл с видеофайлами.</value>
   </data>
   <data name="LogSelectOutputFolder" xml:space="preserve">
     <value>Выберите папку для результата.</value>
+  </data>
+  <data name="CloseDuringRenderTitle" xml:space="preserve">
+    <value>Остановить работу и выйти?</value>
+  </data>
+  <data name="CloseDuringRenderMessage" xml:space="preserve">
+    <value>Работа ещё идёт. Если закрыть окно сейчас, текущее задание прервётся, и этот файл нужно будет запустить заново. Всё равно выйти?</value>
+  </data>
+  <data name="CloseDuringRenderStop" xml:space="preserve">
+    <value>Остановить рендер</value>
+  </data>
+  <data name="CloseDuringRenderKeep" xml:space="preserve">
+    <value>Продолжить рендер</value>
   </data>
   <data name="LogNoItemsFound" xml:space="preserve">
     <value>Пока ничего не найдено</value>
   </data>
   <data name="LogPreparing" xml:space="preserve">
     <value>Готовлюсь</value>
+  </data>
+  <data name="LogPreparingFrames" xml:space="preserve">
+    <value>Готовлю кадры</value>
+  </data>
+  <data name="LogSearchingFirstPng" xml:space="preserve">
+    <value>Ищу первый кадр</value>
+  </data>
+  <data name="LogWaitingFirstUpscaledFrame" xml:space="preserve">
+    <value>Жду первый результатный кадр</value>
+  </data>
+  <data name="LogProbingSource" xml:space="preserve">
+    <value>Проверка исходного файла</value>
+  </data>
+  <data name="LogReadingVideoInfo" xml:space="preserve">
+    <value>Чтение сведений о видео</value>
+  </data>
+  <data name="LogCheckingCache" xml:space="preserve">
+    <value>Проверка потока</value>
   </data>
   <data name="LogProcessing" xml:space="preserve">
     <value>Обработка...</value>
@@ -243,20 +757,14 @@
   <data name="LogBatchComplete" xml:space="preserve">
     <value>Обработка завершена</value>
   </data>
-  <data name="LogOldSrcMovedAside" xml:space="preserve">
-    <value>Старую папку src убрал в сторону</value>
-  </data>
   <data name="LogExtractingFrames" xml:space="preserve">
     <value>Восстанавливаю детали...</value>
-  </data>
-  <data name="LogOldUpMovedAside" xml:space="preserve">
-    <value>Старую папку up убрал в сторону</value>
   </data>
   <data name="LogUpscalingFrames" xml:space="preserve">
     <value>Улучшаю текстуры...</value>
   </data>
-  <data name="LogUnableToResolveTimestamps" xml:space="preserve">
-    <value>Не удалось определить временные метки.</value>
+  <data name="LogInvalidVideoInfo" xml:space="preserve">
+    <value>Не удалось прочитать сведения о видео.</value>
   </data>
   <data name="LogEncodeComplete" xml:space="preserve">
     <value>Кодирование завершено</value>
@@ -296,8 +804,5 @@
   </data>
   <data name="LogNoFramesExtracted" xml:space="preserve">
     <value>Кадры не были извлечены.</value>
-  </data>
-  <data name="LogUnableToBuildTimeline" xml:space="preserve">
-    <value>Не удалось построить таймлайн.</value>
   </data>
 </root>

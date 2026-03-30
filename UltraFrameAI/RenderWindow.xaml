@@ -1,0 +1,403 @@
+<Window x:Class="UltraFrameAI.RenderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:UltraFrameAI"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="{local:Loc RenderWindowTitle}"
+        Icon="pack://application:,,,/images/icon.png"
+        Width="1560"
+        Height="1020"
+        MinWidth="1360"
+        MinHeight="860"
+        WindowStartupLocation="CenterOwner"
+        Background="#0B1220"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        Closing="Window_Closing">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="2.7*" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Style="{StaticResource CardStyle}" Padding="18">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{local:Loc RenderWindowTitle}"
+                               FontSize="22"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="{local:Loc RenderWindowHint}"
+                               Margin="0,6,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusSummary}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource CardStyle}"
+                    Padding="14"
+                    BorderThickness="1"
+                    BorderBrush="#263651"
+                    Background="#0D1424">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="290" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{local:Loc RenderPreviewOriginal}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RenderPreviewZoomText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <Slider Minimum="1"
+                                    Maximum="4"
+                                    Width="130"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding RenderPreviewZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Content="{local:Loc RenderPreviewResetZoom}"
+                                    Margin="10,0,0,0"
+                                    Padding="8,6"
+                                    Click="ResetRenderPreviewZoom_Click" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Grid.Row="2"
+                            Background="#050A12"
+                            CornerRadius="16"
+                            Padding="8"
+                            BorderThickness="1"
+                            BorderBrush="#1D2940"
+                            ClipToBounds="True"
+                            Cursor="{Binding RenderPreviewCursor}"
+                            MouseLeftButtonDown="OriginalPreview_MouseLeftButtonDown"
+                            MouseMove="OriginalPreview_MouseMove"
+                            MouseLeftButtonUp="OriginalPreview_MouseLeftButtonUp">
+                        <Grid>
+                            <Image Source="{Binding RenderPreviewOriginalImage}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   RenderTransformOrigin="0.5,0.5">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="{Binding RenderPreviewZoom}" ScaleY="{Binding RenderPreviewZoom}" />
+                                        <TranslateTransform X="{Binding RenderPreviewPanX}" Y="{Binding RenderPreviewPanY}" />
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+                            <Border VerticalAlignment="Top"
+                                    Height="1"
+                                    Background="#22FFFFFF"
+                                    Margin="8,8,8,0" />
+                            <Border VerticalAlignment="Bottom"
+                                    Height="1"
+                                    Background="#12FFFFFF"
+                                    Margin="8,0,8,8" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Style="{StaticResource CardStyle}"
+                    Padding="14"
+                    BorderThickness="1"
+                    BorderBrush="#35537A"
+                    Background="#0D1424">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="290" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{local:Loc RenderPreviewResult}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RenderPreviewZoomText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <Slider Minimum="1"
+                                    Maximum="4"
+                                    Width="130"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding RenderPreviewZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Content="{local:Loc RenderPreviewResetZoom}"
+                                    Margin="10,0,0,0"
+                                    Padding="8,6"
+                                    Click="ResetRenderPreviewZoom_Click" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Grid.Row="2"
+                            Background="#070D18"
+                            CornerRadius="16"
+                            Padding="8"
+                            BorderThickness="1"
+                            BorderBrush="#2D4566"
+                            ClipToBounds="True"
+                            Cursor="{Binding RenderPreviewCursor}"
+                            MouseLeftButtonDown="ResultPreview_MouseLeftButtonDown"
+                            MouseMove="ResultPreview_MouseMove"
+                            MouseLeftButtonUp="ResultPreview_MouseLeftButtonUp">
+                        <Grid>
+                            <Image Source="{Binding RenderPreviewResultImage}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   RenderTransformOrigin="0.5,0.5">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="{Binding RenderPreviewZoom}" ScaleY="{Binding RenderPreviewZoom}" />
+                                        <TranslateTransform X="{Binding RenderPreviewPanX}" Y="{Binding RenderPreviewPanY}" />
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+                            <Border VerticalAlignment="Top"
+                                    Height="1"
+                                    Background="#30B8D8FF"
+                                    Margin="8,8,8,0" />
+                            <Border VerticalAlignment="Bottom"
+                                    Height="1"
+                                    Background="#18B8D8FF"
+                                    Margin="8,0,8,8" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Padding="18">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc CurrentStage}" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding CurrentStageDisplayText}"
+                                   Margin="0,2,0,0"
+                                   FontSize="15"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Border Grid.Column="2"
+                            Background="#0E1628"
+                            CornerRadius="12"
+                            Padding="10,8"
+                            VerticalAlignment="Center">
+                        <StackPanel>
+                            <TextBlock Text="{local:Loc BenchmarkCurrentCase}" Style="{StaticResource CaptionStyle}" />
+                            <TextBlock Text="{Binding CurrentItemTitle}"
+                                       Margin="0,4,0,0"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding CurrentItemDetail}"
+                                       Margin="0,4,0,0"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                <ProgressBar Height="18"
+                             Margin="0,12,0,0"
+                             Minimum="0"
+                             Maximum="100"
+                             Value="{Binding OverallProgress, Mode=OneWay}" />
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.92*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="1.02*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="1.14*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc Elapsed}" Style="{StaticResource CaptionStyle}" />
+                        <TextBlock Text="{Binding ElapsedText}" FontSize="18" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{local:Loc ETA}" Style="{StaticResource CaptionStyle}" />
+                        <TextBlock Text="{Binding EtaText}" FontSize="18" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="{local:Loc StepDuration}" Style="{StaticResource CaptionStyle}" />
+                        <TextBlock Text="{Binding StageDurationText}" FontSize="18" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="18" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="FileListButton"
+                    Content="{local:Loc FileList}"
+                    Click="FileListButton_Click"
+                    Padding="14,7"
+                    MinWidth="106"
+                    HorizontalAlignment="Left"
+                    Background="#16243D"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    Foreground="{StaticResource TextPrimaryBrush}" />
+
+            <Grid Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button Content="{local:Loc RenderSkipFile}"
+                        Command="{Binding SkipCurrentCommand}"
+                        Height="54"
+                        Background="#1B2740"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        Foreground="{StaticResource TextPrimaryBrush}" />
+                <Button Grid.Column="2"
+                        Content="{local:Loc RenderStopAll}"
+                        Command="{Binding CancelCommand}"
+                        Height="54"
+                        Background="#7A2630"
+                        BorderBrush="#C34B57"
+                        Foreground="{StaticResource TextPrimaryBrush}" />
+            </Grid>
+
+            <Popup x:Name="FileListPopup"
+                   PlacementTarget="{Binding ElementName=FileListButton}"
+                   Placement="Top"
+                   AllowsTransparency="True"
+                   StaysOpen="True"
+                   PopupAnimation="Fade"
+                   IsOpen="False">
+                <Border x:Name="FileListPopupBorder"
+                        Margin="0,0,0,4"
+                        Padding="10"
+                        CornerRadius="18"
+                        Background="{StaticResource CardBrush}"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        Opacity="0"
+                        RenderTransformOrigin="0.5,1">
+                    <Border.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="FileListPopupScale" ScaleX="0.96" ScaleY="0.96" />
+                            <TranslateTransform x:Name="FileListPopupTranslate" Y="10" />
+                        </TransformGroup>
+                    </Border.RenderTransform>
+                    <StackPanel MinWidth="300" MaxWidth="420">
+                        <TextBlock Text="{local:Loc FileList}"
+                                   FontWeight="SemiBold"
+                                   Margin="4,0,4,8" />
+                        <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Items}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,6"
+                                                Padding="9,7"
+                                                CornerRadius="12"
+                                                Background="#121E34">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                            <Setter Property="Background" Value="#163A2C" />
+                                                            <Setter Property="BorderBrush" Value="#4EC48C" />
+                                                            <Setter Property="BorderThickness" Value="1" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsInterrupted}" Value="True">
+                                                            <Setter Property="Background" Value="#1A2534" />
+                                                            <Setter Property="BorderBrush" Value="#3C4F67" />
+                                                            <Setter Property="BorderThickness" Value="1" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                                            <Setter Property="Background" Value="#1C2533" />
+                                                            <Setter Property="BorderBrush" Value="#4A5A72" />
+                                                            <Setter Property="BorderThickness" Value="1" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                            <Setter Property="Background" Value="#15243D" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                            <Setter Property="BorderThickness" Value="1" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding StatusLabel}"
+                                                           Margin="0,3,0,0"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           FontSize="11" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </Popup>
+        </Grid>
+    </Grid>
+</Window>

@@ -6,6 +6,9 @@ $distDir = Join-Path $repoRoot 'dist\UltraFrameAI'
 $realesrganSrc = Join-Path $repoRoot 'realesrgan-ncnn-vulkan-20220424'
 $realesrganDst = Join-Path $distDir 'realesrgan-ncnn-vulkan-20220424'
 $realesrganForkExe = Join-Path $repoRoot 'realesrgan-ncnn-vulkan-fork\build\Release\realesrgan-ncnn-vulkan.exe'
+$antiFlickerBuild = Join-Path $repoRoot 'UltraFrameAI.Native\AntiFlicker\build\Release'
+$antiFlickerDll = Join-Path $antiFlickerBuild 'UltraFrameAI.AntiFlicker.Native.dll'
+$antiFlickerScript = Join-Path $repoRoot 'UltraFrameAI.Native\AntiFlicker\build-native.ps1'
 
 if (Test-Path $distDir) {
     Remove-Item -LiteralPath $distDir -Recurse -Force
@@ -61,7 +64,13 @@ if (-not (Test-Path $realesrganForkExe)) {
     throw "Fork build not found at $realesrganForkExe"
 }
 
+& $antiFlickerScript
+if ($LASTEXITCODE -ne 0) {
+    throw "Native anti-flicker build failed with exit code $LASTEXITCODE"
+}
+
 Copy-Item -LiteralPath $realesrganForkExe -Destination (Join-Path $realesrganSrc 'realesrgan-ncnn-vulkan.exe') -Force
+Copy-Item -LiteralPath $antiFlickerDll -Destination (Join-Path $distDir 'UltraFrameAI.AntiFlicker.Native.dll') -Force
 
 Copy-Item -LiteralPath $ffmpegExe -Destination (Join-Path $distDir 'ffmpeg.exe') -Force
 Copy-Item -LiteralPath $ffprobeExe -Destination (Join-Path $distDir 'ffprobe.exe') -Force

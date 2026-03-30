@@ -1,0 +1,24 @@
+<Window x:Class="UltraFrameAI.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Width="900"
+        Height="600"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+    <Border CornerRadius="20"
+            Background="#0F172A"
+            BorderBrush="#22324C"
+            BorderThickness="1"
+            SnapsToDevicePixels="True">
+        <Image Source="pack://application:,,,/images/splashscreen.png"
+               Stretch="Fill"
+               SnapsToDevicePixels="True" />
+    </Border>
+</Window>
