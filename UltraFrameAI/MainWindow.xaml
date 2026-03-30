@@ -928,8 +928,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                      Click="QueueItemCheckChanged">
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      Checked="QueueItemCheckChanged"
+                                                      Unchecked="QueueItemCheckChanged">
                                                 <CheckBox.Style>
                                                     <Style TargetType="CheckBox" BasedOn="{StaticResource QueueSelectGlyphStyle}" />
                                                 </CheckBox.Style>

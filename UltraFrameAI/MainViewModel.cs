@@ -213,7 +213,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _skipCurrentCommand.RaiseCanExecuteChanged();
                 _resetRootCommand.RaiseCanExecuteChanged();
                 _removeItemCommand.RaiseCanExecuteChanged();
-                UpdateStartButtonStates();
+                UpdateActionStates();
                 OnQueueStateChanged();
             }
         }
@@ -660,14 +660,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IsDropTargetActive = active;
     }
 
-    public void SetDeleteSelectedEnabled(bool enabled)
+    public void UpdateActionStates()
     {
-        CanDeleteSelected = enabled && !IsBusy;
-    }
+        var anySelected = Items.Any(item => item.IsChecked);
+        var anyDeletable = Items.Any(item => !item.IsBusy);
 
-    public void SetDeleteAllEnabled(bool enabled)
-    {
-        CanDeleteAll = enabled && !IsBusy;
+        CanDeleteSelected = anySelected;
+        CanDeleteAll = anyDeletable && !IsBusy;
+        CanStartAll = !IsBusy && anyDeletable;
+        CanStartSelected = !IsBusy && anySelected;
+        _startCommand.RaiseCanExecuteChanged();
+        _startSelectedCommand.RaiseCanExecuteChanged();
     }
 
     public void ShowDeleteAllConfirmation()
@@ -711,7 +714,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 BeginScanOverlay(inputPath);
             }
             Items.Clear();
-            SetDeleteAllEnabled(false);
+            UpdateActionStates();
             Log(LocalizedStrings.LogScanningFiles);
 
             var scanRoot = GetScanRoot(inputPath);
@@ -761,7 +764,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             UpdateQueueSummary();
-            SetDeleteAllEnabled(Items.Any(item => !item.IsBusy));
+            UpdateActionStates();
             Log(LocalizedStrings.LogFoundVideoFiles(total));
             if (Items.Count > 0)
             {
@@ -791,6 +794,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         var ffprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
         var outputFolder = string.IsNullOrWhiteSpace(OutputFolder) ? null : Path.GetFullPath(OutputFolder);
+        var scanRoot = GetScanRoot(inputPath);
         var candidates = await Task.Run(() =>
         {
             if (File.Exists(inputPath))
@@ -810,7 +814,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 list.Add(path);
             }
 
-            return list.OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray();
+            return list
+                .OrderBy(path => GetFolderDepth(path, scanRoot))
+                .ThenBy(path => GetRelativeDirectory(path, scanRoot), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+                .ToArray();
         }, ct).ConfigureAwait(false);
 
         var matches = new List<string>();
@@ -840,6 +848,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         progress?.Invoke(candidates.Length, candidates.Length, matches.Count, matches.Count > 0 ? Path.GetFileName(matches[^1]) : string.Empty);
         return matches.ToArray();
+    }
+
+    private static int GetFolderDepth(string path, string scanRoot)
+    {
+        var directory = Path.GetDirectoryName(path) ?? scanRoot;
+        var relative = Path.GetRelativePath(scanRoot, directory);
+        if (string.IsNullOrWhiteSpace(relative) || relative == ".")
+        {
+            return 0;
+        }
+
+        return relative.Count(ch => ch == Path.DirectorySeparatorChar || ch == Path.AltDirectorySeparatorChar) + 1;
+    }
+
+    private static string GetRelativeDirectory(string path, string scanRoot)
+    {
+        var directory = Path.GetDirectoryName(path) ?? scanRoot;
+        var relative = Path.GetRelativePath(scanRoot, directory);
+        return relative == "." ? string.Empty : relative;
     }
 
     private Task StartAsync() => StartPipelineAsync(Items.Where(item => !item.IsBusy).ToArray(), LocalizedStrings.LogStartingBatch);
@@ -907,19 +934,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void UpdateStartButtonStates()
-    {
-        CanStartAll = !IsBusy && Items.Any(item => !item.IsBusy);
-        CanStartSelected = !IsBusy && Items.Any(item => item.IsChecked && !item.IsBusy);
-        _startCommand.RaiseCanExecuteChanged();
-        _startSelectedCommand.RaiseCanExecuteChanged();
-    }
-
     public void NotifyQueueSelectionChanged()
     {
-        SetDeleteSelectedEnabled(Items.Any(item => item.IsChecked && !item.IsBusy));
-        SetDeleteAllEnabled(Items.Any(item => !item.IsBusy));
-        UpdateStartButtonStates();
+        UpdateActionStates();
         _removeItemCommand.RaiseCanExecuteChanged();
         OnQueueStateChanged();
     }
@@ -1377,9 +1394,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         RenumberItems();
         UpdateQueueSummary();
-        SetDeleteAllEnabled(Items.Any(item => !item.IsBusy));
-        SetDeleteSelectedEnabled(Items.Any(item => item.IsChecked && !item.IsBusy));
-        UpdateStartButtonStates();
+        UpdateActionStates();
         OnQueueStateChanged();
 
         if (Items.Count == 0)
@@ -1441,16 +1456,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UpdateCurrentStageDisplayText();
             QueueSummary = LocalizedStrings.LogItemCount(0);
             StageDurationText = "--:--:--";
-            SetDeleteAllEnabled(false);
-            SetDeleteSelectedEnabled(false);
-            UpdateStartButtonStates();
+            UpdateActionStates();
             CurrentFileName = string.Empty;
         }
         else
         {
             UpdateQueueSummary();
             UpdateSelectionDetails();
-            UpdateStartButtonStates();
+            UpdateActionStates();
         }
 
         if (IsScanOverlayVisible)
@@ -1521,9 +1534,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             PostToUi(() =>
             {
-                SetDeleteSelectedEnabled(Items.Any(item => item.IsChecked && !item.IsBusy));
-                SetDeleteAllEnabled(Items.Any(item => !item.IsBusy));
-                UpdateStartButtonStates();
+                UpdateActionStates();
                 _removeItemCommand.RaiseCanExecuteChanged();
                 OnQueueStateChanged();
             });
@@ -1662,9 +1673,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         Items.Add(item);
 
             UpdateQueueSummary();
-            SetDeleteAllEnabled(Items.Any(x => !x.IsBusy));
-            SetDeleteSelectedEnabled(false);
-            UpdateStartButtonStates();
+            UpdateActionStates();
             Log(LocalizedStrings.LogFoundVideoFiles(1));
             SelectedItem = Items[0];
             ClearRenderPreviewPaths();

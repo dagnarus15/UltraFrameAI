@@ -183,8 +183,7 @@ public partial class MainWindow : Window
 
     private void QueueItemCheckChanged(object sender, RoutedEventArgs e)
     {
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
-            new Action(() => _viewModel.NotifyQueueSelectionChanged()));
+        _viewModel.UpdateActionStates();
     }
 
     private async void DeleteConfirmCancel_Click(object sender, RoutedEventArgs e)
@@ -233,11 +232,7 @@ public partial class MainWindow : Window
 
     private void UpdateDeleteButtonStates()
     {
-        var anySelectedDeletable = _viewModel.Items.Any(item => item.IsChecked && !item.IsBusy);
-        var anyDeletable = _viewModel.Items.Any(item => !item.IsBusy);
-
-        _viewModel.SetDeleteSelectedEnabled(anySelectedDeletable);
-        _viewModel.SetDeleteAllEnabled(anyDeletable);
+        _viewModel.UpdateActionStates();
     }
 
     private void Window_DragLeave(object sender, System.Windows.DragEventArgs e)
