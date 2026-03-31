@@ -1,7 +1,11 @@
 using System.Diagnostics;
+using System.Buffers;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Threading.Channels;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using UltraFrameAI.Resources;
@@ -10,7 +14,26 @@ namespace UltraFrameAI;
 
 public sealed class PipelineService
 {
-    private sealed record VideoInfo(int Width, int Height, double Fps);
+    private static readonly IFramePipelineBridge FrameBridge = new ProcessFramePipelineBridge();
+
+    private sealed record SourceMetadata(double Duration, int Width, int Height, double Fps);
+    private sealed record SourceMetadataCacheEntry(double Duration, int Width, int Height, double Fps, bool Complete);
+    private sealed record TimestampCacheEntry(double[] Timestamps, bool Complete);
+    private sealed record FrameWriteItem(byte[] Buffer);
+    private const int RawFrameQueueCapacity = 8;
+    private const int EncodeFrameQueueCapacity = 4;
+
+    private static readonly Regex DurationRegex = new(
+        @"Duration:\s*(?<hh>\d+):(?<mm>\d+):(?<ss>\d+(?:\.\d+)?)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex VideoSizeRegex = new(
+        @"Video:.*?(?<width>\d+)x(?<height>\d+)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex FpsRegex = new(
+        @"(?<fps>\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?)\s?fps\b",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private sealed class PipeEtaEstimator
     {
@@ -65,14 +88,14 @@ public sealed class PipelineService
             var remainingFrames = Math.Max(0, total - current);
             var frameSeconds = remainingFrames * secondsPerFrame;
             var progress = total > 0 ? current / total : 0;
-            var tailBlend = draining ? 1.0 : Math.Clamp((progress - 0.78) / 0.22, 0.0, 1.0);
-            var tailSeconds = Math.Max(5.0, Math.Min(stageElapsed.TotalSeconds * 0.28 * _tailMultiplier, 45.0 * _tailMultiplier));
-            tailSeconds = Math.Max(tailSeconds, secondsPerFrame * 12.0);
+            var tailBlend = draining ? 1.0 : Math.Clamp((progress - 0.72) / 0.28, 0.0, 1.0);
+            var tailSeconds = Math.Max(3.0, Math.Min(stageElapsed.TotalSeconds * 0.14 * _tailMultiplier, 24.0 * _tailMultiplier));
+            tailSeconds = Math.Max(tailSeconds, secondsPerFrame * 5.0);
             var etaSeconds = frameSeconds + tailBlend * tailSeconds;
 
             if (draining)
             {
-                etaSeconds = Math.Max(etaSeconds * (1.18 * _tailMultiplier), Math.Min(stageElapsed.TotalSeconds * 0.32 * _tailMultiplier, 45.0 * _tailMultiplier));
+                etaSeconds = Math.Max(etaSeconds * (1.06 * _tailMultiplier), Math.Min(stageElapsed.TotalSeconds * 0.18 * _tailMultiplier, 24.0 * _tailMultiplier));
             }
 
             return Time(TimeSpan.FromSeconds(Math.Max(0, etaSeconds)));
@@ -180,7 +203,6 @@ public sealed class PipelineService
             cancellationToken.ThrowIfCancellationRequested();
             var item = items[i];
             var itemWatch = Stopwatch.StartNew();
-            var frameDir = string.Empty;
             try
             {
                 if (item.SkipRequested)
@@ -191,52 +213,43 @@ public sealed class PipelineService
 
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", "00:00:00", "--:--:--", LocalizedStrings.LogPreparing, item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogStartingItem(item.Title), StageElapsedText: Time(itemWatch.Elapsed)));
 
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", "00:00:00", "--:--:--", LocalizedStrings.Get("LogProbingSource"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogProbingSource"), StageElapsedText: Time(itemWatch.Elapsed)));
-                var duration = await GetDurationAsync(options.FfprobePath, item.SourcePath, cancellationToken).ConfigureAwait(false);
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogReadingVideoInfo"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogReadingVideoInfo"), StageElapsedText: Time(itemWatch.Elapsed)));
-                var videoInfo = await GetVideoInfoAsync(options.FfprobePath, item.SourcePath, cancellationToken).ConfigureAwait(false);
-                var estimatedFrames = EstimateFrameCount(duration, videoInfo.Fps);
+                var metadataCacheHit = TryLoadSourceMetadataCache(item.SourcePath, out var cachedMetadata);
+                var metadata = metadataCacheHit
+                    ? cachedMetadata
+                    : await GetSourceMetadataAsync(options.FfmpegPath, item.SourcePath, cancellationToken).ConfigureAwait(false);
+                if (!metadataCacheHit)
+                {
+                    SaveSourceMetadataCache(item.SourcePath, metadata);
+                }
+
+                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogCheckingCache"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogCheckingCache"), StageElapsedText: Time(itemWatch.Elapsed)));
+                var estimatedFrames = EstimateFrameCount(metadata.Duration, metadata.Fps);
                 var codec = options.UseX265 ? "libx265" : "libx264";
                 var crf = options.UseX265 ? 18 : 16;
                 var height = options.UseX265 ? 2160 : 1080;
                 var subtitle = Path.Combine(Path.GetDirectoryName(item.SourcePath) ?? string.Empty, Path.GetFileNameWithoutExtension(item.SourcePath) + ".RG Genshiken.ass");
 
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogCheckingCache"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogCheckingCache"), StageElapsedText: Time(itemWatch.Elapsed)));
-
-                var fps = videoInfo.Fps > 0
-                    ? videoInfo.Fps
-                    : (duration > 0 && estimatedFrames > 0 ? estimatedFrames / duration : 25.0);
-                if (videoInfo.Width <= 0 || videoInfo.Height <= 0)
+                if (metadata.Width <= 0 || metadata.Height <= 0)
                 {
                     throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
                 }
 
+                var timestampCacheHit = TryLoadTimestampCache(item.SourcePath, out var cachedTimestamps);
+                if (timestampCacheHit)
+                {
+                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogTimestampCacheLoaded"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogTimestampCacheLoaded"), StageElapsedText: Time(itemWatch.Elapsed)));
+                }
                 var upscaleScale = 2;
-                var rawWidth = Math.Max(1, videoInfo.Width);
-                var rawHeight = Math.Max(1, videoInfo.Height);
+                var rawWidth = Math.Max(1, metadata.Width);
+                var rawHeight = Math.Max(1, metadata.Height);
                 var upWidth = checked(rawWidth * upscaleScale);
                 var upHeight = checked(rawHeight * upscaleScale);
-
-                var frameRoot = Path.Combine(Path.GetTempPath(), "UltraFrameAI");
-                frameDir = Path.Combine(frameRoot, $"{item.Index:0000}_{Guid.NewGuid():N}");
-                Directory.CreateDirectory(frameDir);
-
-                var sourceTimestamps = await GetFrameTimestampsFromVideo(options.FfprobePath, item.SourcePath, cancellationToken).ConfigureAwait(false);
-                if (sourceTimestamps.Length == 0)
-                {
-                    throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
-                }
-
-                var timestamps = sourceTimestamps.ToArray();
-                var totalFrames = timestamps.Length;
-                var defaultFrameDuration = videoInfo.Fps > 0
-                    ? 1.0 / videoInfo.Fps
-                    : (duration > 0 && totalFrames > 0 ? duration / totalFrames : 0.04);
-                var durations = GetFrameDurationsFromTimestamps(timestamps, defaultFrameDuration);
-                var timingDebugLog = Path.Combine(
-                    options.OutputFolder,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.timing.debug.log");
-                WriteTimingDebugLog(timingDebugLog, duration, timestamps, durations);
+                var totalFrames = timestampCacheHit && cachedTimestamps.Length > 0
+                    ? cachedTimestamps.Length
+                    : Math.Max(estimatedFrames, 1);
+                var upscaleFrameBudget = totalFrames;
+                var stageWatch = Stopwatch.StartNew();
+                var etaEstimator = new PipeEtaEstimator();
 
                 var overwriteAllowed = options.Overwrite || item.ForceOverwrite;
                 if (File.Exists(item.OutputPath) && !overwriteAllowed)
@@ -245,28 +258,73 @@ public sealed class PipelineService
                     continue;
                 }
 
-                var decodeArgs = new StringBuilder("-hide_banner -y -nostats -loglevel error ");
-                decodeArgs.Append($"-i {Q(item.SourcePath)} -an -sn -dn -pix_fmt bgr24 -f rawvideo -vsync 0 pipe:1");
-
-                var upscaleArgs = new StringBuilder();
-                upscaleArgs.Append($"-p -W {rawWidth} -H {rawHeight} -N {totalFrames} -c 3 -i - -o - ");
-                upscaleArgs.Append($"-s {upscaleScale} -m {Q(options.ModelDir)} -n realesr-animevideov3 -j {Q(options.UpscalerThreads)}");
-                if (options.TileSize >= 0) upscaleArgs.Append($" -t {options.TileSize}");
-                if (options.GpuId.HasValue) upscaleArgs.Append($" -g {options.GpuId.Value}");
+                stageWatch.Restart();
 
                 var decodeLastError = string.Empty;
                 var upscaleLastError = string.Empty;
+                var encodeLastError = string.Empty;
+                var timestampBridge = timestampCacheHit ? null : new TimestampStreamBridge(Math.Max(totalFrames, 1));
 
-                using var decode = StartProcess(options.FfmpegPath, decodeArgs.ToString(), Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory, cancellationToken, line => decodeLastError = line, out var decodeStderr);
-                using var upscale = StartProcess(options.UpscalerPath, upscaleArgs.ToString(), Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory, cancellationToken, line => upscaleLastError = line, out var upscaleStderr);
+                using var decode = StartProcess(
+                    options.FfmpegPath,
+                    FrameBridge.BuildDecodeArguments(item.SourcePath, !timestampCacheHit),
+                    Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory,
+                    cancellationToken,
+                    line =>
+                    {
+                        if (timestampBridge is not null && timestampBridge.TryCaptureFromShowInfo(line))
+                        {
+                            return;
+                        }
+
+                        if (LooksLikeProcessError(line))
+                        {
+                            decodeLastError = line;
+                        }
+                    },
+                    out var decodeStderr);
+                using var upscale = StartProcess(
+                    options.UpscalerPath,
+                    FrameBridge.BuildUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, options.ModelDir, options.UpscalerThreads, options.TileSize, options.GpuId),
+                    Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory,
+                    cancellationToken,
+                    line => upscaleLastError = line,
+                    out var upscaleStderr);
 
                 var decodeOut = decode.Process.StandardOutput.BaseStream;
                 var upscaleIn = upscale.Process.StandardInput.BaseStream;
                 var upscaleOut = upscale.Process.StandardOutput.BaseStream;
+                var encodeFps = metadata.Duration > 0 && totalFrames > 0
+                    ? Math.Max(1.0, totalFrames / metadata.Duration)
+                    : (metadata.Fps > 0 ? metadata.Fps : 25.0);
+
+                var hasSub = File.Exists(subtitle);
+                var outputContainer = "mkv";
+                var encoderBridge = FrameEncoderBridgeFactory.CreateDefault(options.UseNativeEncoderBackend);
+
+                var encodeWatch = Stopwatch.StartNew();
+                var encodeSessionConfig = new FrameEncoderSessionConfig(
+                    upWidth,
+                    upHeight,
+                    encodeFps,
+                    item.SourcePath,
+                    subtitle,
+                    hasSub,
+                    codec,
+                    options.EncoderPreset,
+                    crf,
+                    outputContainer,
+                    height,
+                    item.OutputPath,
+                    options.FfmpegPath);
+                using var encodeSession = encoderBridge.CreateSession(
+                    encodeSessionConfig,
+                    cancellationToken,
+                    line => encodeLastError = line);
+                await encodeSession.OpenAsync(cancellationToken).ConfigureAwait(false);
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
-                var inputFrame = new byte[inputFrameBytes];
                 var outputFrame = new byte[outputFrameBytes];
                 var antiFlicker = options.UseAntiFlicker && options.AntiFlickerStrength > 0
                     ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.ContentMode, options.AntiFlickerStrength)
@@ -274,10 +332,144 @@ public sealed class PipelineService
                 var antiFlickerFrame = antiFlicker is null ? null : new byte[outputFrameBytes];
                 var currentFrames = 0;
                 var lastTick = Stopwatch.StartNew();
-                var stageWatch = Stopwatch.StartNew();
-                var etaEstimator = new PipeEtaEstimator(8, options.UseX265 ? 1.3 : 1.0);
+                var previewUpdateWatch = Stopwatch.StartNew();
                 var draining = false;
                 var previewEnabled = previewReport is not null;
+                var frameLoopWatch = Stopwatch.StartNew();
+                long decodeReadTicks = 0;
+                var upscaleWriteElapsed = TimeSpan.Zero;
+                var upscaleReadElapsed = TimeSpan.Zero;
+                var frameSendElapsed = TimeSpan.Zero;
+                var timestampSubmitElapsed = TimeSpan.Zero;
+                long rawQueueCurrent = 0;
+                long rawQueueMax = 0;
+                long rawQueueWriteWaitTicks = 0;
+                long encodeQueueCurrent = 0;
+                long encodeQueueMax = 0;
+                long encodeQueueWriteWaitTicks = 0;
+                var perfCopyWatch = Stopwatch.StartNew();
+                var rawFrameChannel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(RawFrameQueueCapacity)
+                {
+                    SingleWriter = true,
+                    SingleReader = true,
+                    FullMode = BoundedChannelFullMode.Wait
+                });
+                var encodeFrameChannel = Channel.CreateBounded<FrameWriteItem>(new BoundedChannelOptions(EncodeFrameQueueCapacity)
+                {
+                    SingleWriter = true,
+                    SingleReader = true,
+                    FullMode = BoundedChannelFullMode.Wait
+                });
+                using var pipelineCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                var pipelineToken = pipelineCts.Token;
+                var decodeProducer = Task.Run(async () =>
+                {
+                    byte[]? currentBuffer = null;
+                    try
+                    {
+                        currentBuffer = ArrayPool<byte>.Shared.Rent(inputFrameBytes);
+                        while (true)
+                        {
+                            var readStart = Stopwatch.GetTimestamp();
+                            var hasFrame = await TryReadExactAsync(decodeOut, currentBuffer.AsMemory(0, inputFrameBytes), pipelineToken).ConfigureAwait(false);
+                            Interlocked.Add(ref decodeReadTicks, Stopwatch.GetElapsedTime(readStart).Ticks);
+                            if (!hasFrame)
+                            {
+                                break;
+                            }
+
+                            var nextBuffer = ArrayPool<byte>.Shared.Rent(inputFrameBytes);
+                            var writeWaitStart = Stopwatch.GetTimestamp();
+                            await rawFrameChannel.Writer.WriteAsync(currentBuffer, pipelineToken).ConfigureAwait(false);
+                            Interlocked.Add(ref rawQueueWriteWaitTicks, Stopwatch.GetElapsedTime(writeWaitStart).Ticks);
+                            UpdateMax(ref rawQueueMax, Interlocked.Increment(ref rawQueueCurrent));
+                            currentBuffer = nextBuffer;
+                        }
+                    }
+                    catch (EndOfStreamException)
+                    {
+                        rawFrameChannel.Writer.TryComplete();
+                    }
+                    catch (Exception)
+                    {
+                        rawFrameChannel.Writer.TryComplete();
+                    }
+                    finally
+                    {
+                        if (currentBuffer is not null)
+                        {
+                            ArrayPool<byte>.Shared.Return(currentBuffer);
+                        }
+
+                        rawFrameChannel.Writer.TryComplete();
+                    }
+                }, pipelineToken);
+                var encodeWriter = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await foreach (var itemToWrite in encodeFrameChannel.Reader.ReadAllAsync(pipelineToken).ConfigureAwait(false))
+                        {
+                            Interlocked.Decrement(ref encodeQueueCurrent);
+                            var writeStart = Stopwatch.GetTimestamp();
+                            try
+                            {
+                                await encodeSession.WriteFrameAsync(itemToWrite.Buffer, pipelineToken).ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                frameSendElapsed += Stopwatch.GetElapsedTime(writeStart);
+                                ArrayPool<byte>.Shared.Return(itemToWrite.Buffer);
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException) when (pipelineToken.IsCancellationRequested)
+                    {
+                    }
+                    finally
+                    {
+                        encodeFrameChannel.Writer.TryComplete();
+                    }
+                }, pipelineToken);
+                var perfRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+                var perfLog = Path.Combine(
+                    perfRoot,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+                var perfLogExe = Path.Combine(
+                    AppContext.BaseDirectory,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+                var perfLogFinal = Path.Combine(
+                    options.OutputFolder,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+
+                void WritePerfSnapshot(TimeSpan encodeElapsed, bool final = false)
+                {
+                    WritePerfLog(
+                        perfLog,
+                        itemWatch.Elapsed - stageWatch.Elapsed,
+                        frameLoopWatch.Elapsed,
+                        encodeElapsed,
+                        TimeSpan.FromTicks(Interlocked.Read(ref decodeReadTicks)),
+                        upscaleWriteElapsed,
+                        upscaleReadElapsed,
+                        frameSendElapsed,
+                        timestampSubmitElapsed,
+                        currentFrames,
+                        totalFrames,
+                        stageWatch.Elapsed,
+                        Interlocked.Read(ref rawQueueCurrent),
+                        Interlocked.Read(ref rawQueueMax),
+                        TimeSpan.FromTicks(Interlocked.Read(ref rawQueueWriteWaitTicks)),
+                        Interlocked.Read(ref encodeQueueCurrent),
+                        Interlocked.Read(ref encodeQueueMax),
+                        TimeSpan.FromTicks(Interlocked.Read(ref encodeQueueWriteWaitTicks)),
+                        final);
+                    if (final || perfCopyWatch.ElapsedMilliseconds >= 5000)
+                    {
+                        TryCopyPerfLog(perfLog, perfLogExe);
+                        perfCopyWatch.Restart();
+                    }
+                }
 
                 void UpdateProgress(bool heartbeat = false)
                 {
@@ -291,7 +483,17 @@ public sealed class PipelineService
                             ? LocalizedStrings.LogUpscalingFrames
                             : LocalizedStrings.LogEncodingVideo;
                     var currentText = totalFrames > 0 ? $"{Math.Min(currentFrames, totalFrames)}/{totalFrames}" : phase;
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, pct, $"{pct:0.0}%", Time(itemWatch.Elapsed), etaEstimator.Estimate(currentFrames, totalFrames, itemWatch.Elapsed, stageWatch.Elapsed, draining), phase, currentText, Summary(item.Index, total, overall.Elapsed), null, heartbeat, Time(stageWatch.Elapsed)));
+                    var processingFps = stageWatch.Elapsed.TotalSeconds > 0
+                        ? currentFrames / stageWatch.Elapsed.TotalSeconds
+                        : 0;
+                    var processingFpsText = processingFps > 0
+                        ? $"{processingFps:0.0} FPS"
+                        : "--";
+                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, pct, $"{pct:0.0}%", Time(itemWatch.Elapsed), etaEstimator.Estimate(currentFrames, totalFrames, stageWatch.Elapsed, stageWatch.Elapsed, draining), phase, currentText, Summary(item.Index, total, overall.Elapsed), null, heartbeat, processingFpsText));
+                    if (heartbeat)
+                    {
+                        WritePerfSnapshot(TimeSpan.Zero);
+                    }
                 }
 
                 UpdateProgress(heartbeat: true);
@@ -299,49 +501,90 @@ public sealed class PipelineService
                 var skipRequested = false;
                 try
                 {
-                    while (await TryReadExactAsync(decodeOut, inputFrame, cancellationToken).ConfigureAwait(false))
+                    await foreach (var inputBuffer in rawFrameChannel.Reader.ReadAllAsync(pipelineToken).ConfigureAwait(false))
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        if (item.SkipRequested)
+                        try
                         {
-                            skipRequested = true;
-                            break;
-                        }
-                        await upscaleIn.WriteAsync(inputFrame, cancellationToken).ConfigureAwait(false);
-                        if (previewEnabled)
-                        {
-                            previewReport!(new RenderPreviewFrameUpdate(item.Index, true, (byte[])inputFrame.Clone(), rawWidth, rawHeight, rawWidth * 3));
-                        }
-
-                        await ReadExactAsync(upscaleOut, outputFrame, cancellationToken).ConfigureAwait(false);
-                        var frameBytes = outputFrame;
-                        if (antiFlicker is not null && antiFlickerFrame is not null)
-                        {
-                            if (!antiFlicker.Process(outputFrame, antiFlickerFrame))
+                            Interlocked.Decrement(ref rawQueueCurrent);
+                            if (item.SkipRequested)
                             {
-                                antiFlicker.Dispose();
-                                antiFlicker = null;
-                                antiFlickerFrame = null;
+                                skipRequested = true;
+                                break;
                             }
-                            else
+
+                            var shouldUpdatePreview = previewEnabled
+                                && (currentFrames == 0 || previewUpdateWatch.ElapsedMilliseconds >= 150);
+                            if (shouldUpdatePreview)
                             {
-                                frameBytes = antiFlickerFrame;
+                                previewUpdateWatch.Restart();
+                                previewReport!(new RenderPreviewFrameUpdate(
+                                    item.Index,
+                                    true,
+                                    RenderPreviewFramePayload.From(inputBuffer.AsSpan(0, inputFrameBytes)),
+                                    rawWidth,
+                                    rawHeight,
+                                    rawWidth * 3));
+                            }
+
+                            var sectionStart = Stopwatch.GetTimestamp();
+                            await upscaleIn.WriteAsync(inputBuffer.AsMemory(0, inputFrameBytes), pipelineToken).ConfigureAwait(false);
+                            upscaleWriteElapsed += Stopwatch.GetElapsedTime(sectionStart);
+                            sectionStart = Stopwatch.GetTimestamp();
+
+                            await ReadExactAsync(upscaleOut, outputFrame, pipelineToken).ConfigureAwait(false);
+                            upscaleReadElapsed += Stopwatch.GetElapsedTime(sectionStart);
+                            sectionStart = Stopwatch.GetTimestamp();
+
+                            var frameBytes = outputFrame;
+                            if (antiFlicker is not null && antiFlickerFrame is not null)
+                            {
+                                if (!antiFlicker.Process(outputFrame, antiFlickerFrame))
+                                {
+                                    antiFlicker.Dispose();
+                                    antiFlicker = null;
+                                    antiFlickerFrame = null;
+                                }
+                                else
+                                {
+                                    frameBytes = antiFlickerFrame;
+                                }
+                            }
+                            if (shouldUpdatePreview)
+                            {
+                                var previewBuffer = frameBytes;
+                                previewReport!(new RenderPreviewFrameUpdate(
+                                    item.Index,
+                                    false,
+                                    RenderPreviewFramePayload.From(previewBuffer),
+                                    upWidth,
+                                    upHeight,
+                                    upWidth * 3));
+                            }
+
+                            if (timestampBridge is not null && timestampBridge.TryDequeue(out var timestampSeconds))
+                            {
+                                await encodeSession.SubmitTimestampAsync(timestampSeconds, pipelineToken).ConfigureAwait(false);
+                                timestampSubmitElapsed += Stopwatch.GetElapsedTime(sectionStart);
+                                sectionStart = Stopwatch.GetTimestamp();
+                            }
+
+                            var encodeBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
+                            Buffer.BlockCopy(frameBytes, 0, encodeBuffer, 0, outputFrameBytes);
+                            var encodeEnqueueStart = Stopwatch.GetTimestamp();
+                            await encodeFrameChannel.Writer.WriteAsync(new FrameWriteItem(encodeBuffer), pipelineToken).ConfigureAwait(false);
+                            Interlocked.Add(ref encodeQueueWriteWaitTicks, Stopwatch.GetElapsedTime(encodeEnqueueStart).Ticks);
+                            UpdateMax(ref encodeQueueMax, Interlocked.Increment(ref encodeQueueCurrent));
+
+                            currentFrames++;
+                            if (lastTick.ElapsedMilliseconds >= 1000)
+                            {
+                                UpdateProgress(heartbeat: true);
+                                lastTick.Restart();
                             }
                         }
-                        if (previewEnabled)
+                        finally
                         {
-                            var previewBuffer = frameBytes;
-                            previewReport!(new RenderPreviewFrameUpdate(item.Index, false, (byte[])previewBuffer.Clone(), upWidth, upHeight, upWidth * 3));
-                        }
-
-                        var framePath = Path.Combine(frameDir, $"frame_{currentFrames:00000000}.png");
-                        SaveFrameAsPng(framePath, frameBytes, upWidth, upHeight, upWidth * 3);
-
-                        currentFrames++;
-                        if (lastTick.ElapsedMilliseconds >= 1000)
-                        {
-                            UpdateProgress(heartbeat: true);
-                            lastTick.Restart();
+                            ArrayPool<byte>.Shared.Return(inputBuffer);
                         }
                     }
                 }
@@ -349,7 +592,14 @@ public sealed class PipelineService
                 {
                     try { antiFlicker?.Dispose(); } catch { }
                     try { upscaleIn.Close(); } catch { }
+                    try { await decodeProducer.ConfigureAwait(false); } catch { }
+                    try { encodeFrameChannel.Writer.TryComplete(); } catch { }
+                    try { await encodeWriter.ConfigureAwait(false); } catch { }
+                    try { await encodeSession.FlushAsync(cancellationToken).ConfigureAwait(false); } catch { }
                 }
+
+                var frameLoopElapsed = frameLoopWatch.Elapsed;
+                WritePerfSnapshot(encodeWatch.Elapsed);
 
                 if (skipRequested)
                 {
@@ -363,20 +613,14 @@ public sealed class PipelineService
                 }
 
                 draining = true;
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogEncodingVideo, $"{currentFrames}/{totalFrames}", Summary(item.Index, total, overall.Elapsed), null, true, Time(stageWatch.Elapsed)));
-
-                var timelineFile = Path.Combine(frameDir, "timeline.txt");
-                if (!WriteFrameConcatList(frameDir, timelineFile, durations))
-                {
-                    throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
-                }
-
                 await decode.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
                 await upscale.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                await encodeSession.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
                 await Task.WhenAll(decodeStderr, upscaleStderr).ConfigureAwait(false);
 
                 var decodeExitCode = decode.Process.ExitCode;
                 var upscaleExitCode = upscale.Process.ExitCode;
+                var encodeExitCode = encodeSession.ExitCode;
                 if (decodeExitCode != 0)
                 {
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(decodeLastError)
@@ -391,73 +635,41 @@ public sealed class PipelineService
                         : $"{LocalizedStrings.LogBatchFailed(item.Title)} {upscaleLastError}");
                 }
 
-                var hasSub = File.Exists(subtitle);
-                var outputContainer = string.Equals(options.OutputContainer, "mp4", StringComparison.OrdinalIgnoreCase) ? "mp4" : "mkv";
-                var encodeArgs = new StringBuilder("-hide_banner -y -nostats -loglevel error -progress pipe:2 ");
-                encodeArgs.Append($"-f concat -safe 0 -i {Q(timelineFile)} ");
-                encodeArgs.Append($"-i {Q(item.SourcePath)} ");
-                if (hasSub)
-                {
-                    encodeArgs.Append($"-i {Q(subtitle)} ");
-                }
-
-                encodeArgs.Append($"-map 0:v:0 -map 1:a? -fps_mode vfr -vf {Q($"scale=-2:{height}:flags=lanczos,setsar=1")} -c:v {codec} -preset {options.EncoderPreset} -tune animation -crf {crf} -pix_fmt yuv420p ");
-                if (outputContainer == "mp4")
-                {
-                    encodeArgs.Append("-c:a aac -b:a 320k ");
-                    if (hasSub)
-                    {
-                        encodeArgs.Append("-map 2:s? -c:s mov_text ");
-                    }
-                    else
-                    {
-                        encodeArgs.Append("-sn ");
-                    }
-                    encodeArgs.Append("-movflags +faststart ");
-                }
-                else
-                {
-                    encodeArgs.Append("-c:a copy ");
-                    if (hasSub)
-                    {
-                        encodeArgs.Append("-map 2:s? -c:s copy ");
-                    }
-                    else
-                    {
-                        encodeArgs.Append("-sn ");
-                    }
-                }
-                encodeArgs.Append(Q(item.OutputPath));
-
-                var encodeLastError = string.Empty;
-                using var encode = StartProcess(options.FfmpegPath, encodeArgs.ToString(), Path.GetDirectoryName(item.OutputPath) ?? Environment.CurrentDirectory, cancellationToken, line => encodeLastError = line, out var encodeStderr);
-                var encodeUiClock = Stopwatch.StartNew();
-                while (!encode.Process.HasExited)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (encodeUiClock.ElapsedMilliseconds >= 1000)
-                    {
-                        UpdateProgress(heartbeat: true);
-                        encodeUiClock.Restart();
-                    }
-
-                    await Task.WhenAny(encode.Process.WaitForExitAsync(cancellationToken), Task.Delay(250, cancellationToken)).ConfigureAwait(false);
-                }
-
-                await encode.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                await encodeStderr.ConfigureAwait(false);
-                if (encode.Process.ExitCode != 0)
+                if (encodeExitCode != 0)
                 {
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(encodeLastError)
                         ? LocalizedStrings.LogBatchFailed(item.Title)
                         : $"{LocalizedStrings.LogBatchFailed(item.Title)} {encodeLastError}");
                 }
+                var fallbackFrameDuration = metadata.Duration > 0 && currentFrames > 0
+                    ? metadata.Duration / currentFrames
+                    : (metadata.Fps > 0
+                        ? 1.0 / metadata.Fps
+                        : 0.04);
+                IReadOnlyList<double> frameTimestamps = timestampCacheHit && cachedTimestamps.Length > 0
+                    ? cachedTimestamps
+                    : timestampBridge is not null && timestampBridge.HasValues
+                        ? timestampBridge.Snapshot()
+                        : BuildUniformTimestamps(currentFrames, fallbackFrameDuration);
+                var durations = frameTimestamps.Count > 0
+                    ? GetFrameDurationsFromTimestamps(frameTimestamps, fallbackFrameDuration)
+                    : BuildUniformDurations(currentFrames, fallbackFrameDuration);
+                WritePerfSnapshot(encodeWatch.Elapsed, final: true);
+                TryCopyPerfLog(perfLog, perfLogFinal);
+                if (!timestampCacheHit && frameTimestamps.Count > 0)
+                {
+                    SaveTimestampCache(item.SourcePath, frameTimestamps);
+                }
+                var timingDebugLog = Path.Combine(
+                    options.OutputFolder,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.timing.debug.log");
+                WriteTimingDebugLog(timingDebugLog, metadata.Duration, frameTimestamps, durations);
 
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogEncodeComplete, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogWroteFile(Path.GetFileName(item.OutputPath)), StageElapsedText: Time(stageWatch.Elapsed)));
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                TryDelete(item.OutputPath);
+                HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
                 item.IsInterrupted = true;
                 item.IsBusy = false;
                 item.Stage = LocalizedStrings.LogCancelled;
@@ -465,9 +677,13 @@ public sealed class PipelineService
                 item.Detail = string.Empty;
                 throw;
             }
+            catch
+            {
+                HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
+                throw;
+            }
             finally
             {
-                TryDelete(frameDir);
             }
         }
 
@@ -478,53 +694,263 @@ public sealed class PipelineService
 
     private static int ParseIntInvariant(string value) => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : 0;
 
-    private static async Task<double> GetDurationAsync(string ffprobe, string sourcePath, CancellationToken ct)
+    private static async Task<SourceMetadata> GetSourceMetadataAsync(string ffmpeg, string sourcePath, CancellationToken ct)
     {
-        var lines = await ProcessRunner.CaptureLinesAsync(
-            ffprobe,
-            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {Q(sourcePath)}",
-            Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory,
-            ct).ConfigureAwait(false);
-
-        return lines.Count > 0 && double.TryParse(lines[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : 0;
-    }
-
-    private static async Task<VideoInfo> GetVideoInfoAsync(string ffprobe, string sourcePath, CancellationToken ct)
-    {
-        var lines = await ProcessRunner.CaptureLinesAsync(
-            ffprobe,
-            $"-v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of default=noprint_wrappers=1 {Q(sourcePath)}",
-            Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory,
-            ct).ConfigureAwait(false);
-
+        var duration = 0.0;
         var width = 0;
         var height = 0;
         var fps = 0.0;
+        var tcs = new TaskCompletionSource<SourceMetadata>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var lease = StartProcess(
+            ffmpeg,
+            $"-hide_banner -i {Q(sourcePath)} -f null -",
+            Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory,
+            ct,
+            line =>
+            {
+                var trimmed = line.Trim();
+                if (duration <= 0)
+                {
+                    var durationMatch = DurationRegex.Match(trimmed);
+                    if (durationMatch.Success)
+                    {
+                        duration = ParseHms(
+                            durationMatch.Groups["hh"].Value,
+                            durationMatch.Groups["mm"].Value,
+                            durationMatch.Groups["ss"].Value);
+                    }
+                }
 
-        foreach (var line in lines)
+                if (width <= 0 || height <= 0)
+                {
+                    var streamMatch = VideoSizeRegex.Match(trimmed);
+                    if (streamMatch.Success)
+                    {
+                        width = ParseIntInvariant(streamMatch.Groups["width"].Value);
+                        height = ParseIntInvariant(streamMatch.Groups["height"].Value);
+                    }
+                }
+
+                if (fps <= 0)
+                {
+                    var fpsMatch = FpsRegex.Match(trimmed);
+                    if (fpsMatch.Success)
+                    {
+                        fps = ParseFraction(fpsMatch.Groups["fps"].Value);
+                    }
+                }
+
+                if (duration > 0 && width > 0 && height > 0 && fps > 0)
+                {
+                    tcs.TrySetResult(new SourceMetadata(duration, width, height, fps));
+                }
+            },
+            out var stderrPump);
+
+        try
         {
-            var trimmed = line.Trim();
-            if (trimmed.StartsWith("width=", StringComparison.OrdinalIgnoreCase))
+            using var cancellationRegistration = ct.Register(() => tcs.TrySetCanceled(ct));
+            var metadata = await tcs.Task.ConfigureAwait(false);
+            TryKillTree(lease.Process);
+            await stderrPump.ConfigureAwait(false);
+            return metadata;
+        }
+        catch
+        {
+            TryKillTree(lease.Process);
+            await stderrPump.ConfigureAwait(false);
+            throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
+        }
+    }
+
+    private static double ParseHms(string hours, string minutes, string seconds)
+    {
+        var hh = ParseIntInvariant(hours);
+        var mm = ParseIntInvariant(minutes);
+        var ss = double.TryParse(seconds, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedSeconds) ? parsedSeconds : 0;
+        return (hh * 3600) + (mm * 60) + ss;
+    }
+
+    private static string GetSourceMetadataCachePath(string sourcePath)
+    {
+        var info = new FileInfo(sourcePath);
+        var signature = $"{Path.GetFullPath(sourcePath).ToUpperInvariant()}|{info.Length}|{info.LastWriteTimeUtc.Ticks}";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(signature)));
+        return Path.Combine(
+            Path.GetTempPath(),
+            "UltraFrameAI",
+            "probe-cache",
+            $"{hash}.json");
+    }
+
+    private static bool TryLoadSourceMetadataCache(string sourcePath, out SourceMetadata metadata)
+    {
+        metadata = new SourceMetadata(0, 0, 0, 0);
+        try
+        {
+            var cachePath = GetSourceMetadataCachePath(sourcePath);
+            if (!File.Exists(cachePath))
             {
-                width = ParseIntInvariant(trimmed["width=".Length..]);
+                return false;
             }
-            else if (trimmed.StartsWith("height=", StringComparison.OrdinalIgnoreCase))
+
+            var json = File.ReadAllText(cachePath);
+            var entry = JsonSerializer.Deserialize<SourceMetadataCacheEntry>(json);
+            if (entry is null || !entry.Complete || entry.Width <= 0 || entry.Height <= 0)
             {
-                height = ParseIntInvariant(trimmed["height=".Length..]);
+                return false;
             }
-            else if (trimmed.StartsWith("avg_frame_rate=", StringComparison.OrdinalIgnoreCase))
+
+            metadata = new SourceMetadata(entry.Duration, entry.Width, entry.Height, entry.Fps);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void SaveSourceMetadataCache(string sourcePath, SourceMetadata metadata)
+    {
+        try
+        {
+            var cachePath = GetSourceMetadataCachePath(sourcePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(cachePath) ?? Environment.CurrentDirectory);
+            var entry = new SourceMetadataCacheEntry(metadata.Duration, metadata.Width, metadata.Height, metadata.Fps, true);
+            File.WriteAllText(cachePath, JsonSerializer.Serialize(entry));
+        }
+        catch
+        {
+        }
+    }
+
+    private static string GetTimestampCachePath(string sourcePath)
+    {
+        var info = new FileInfo(sourcePath);
+        var signature = $"{Path.GetFullPath(sourcePath).ToUpperInvariant()}|{info.Length}|{info.LastWriteTimeUtc.Ticks}";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(signature)));
+        return Path.Combine(
+            Path.GetTempPath(),
+            "UltraFrameAI",
+            "timestamp-cache",
+            $"{hash}.json");
+    }
+
+    private static bool TryLoadTimestampCache(string sourcePath, out double[] timestamps)
+    {
+        timestamps = Array.Empty<double>();
+        try
+        {
+            var cachePath = GetTimestampCachePath(sourcePath);
+            if (!File.Exists(cachePath))
             {
-                fps = ParseFraction(trimmed["avg_frame_rate=".Length..]);
+                return false;
             }
-            else if (trimmed.StartsWith("r_frame_rate=", StringComparison.OrdinalIgnoreCase) && fps <= 0)
+
+            var json = File.ReadAllText(cachePath);
+            var entry = JsonSerializer.Deserialize<TimestampCacheEntry>(json);
+            if (entry is null || !entry.Complete || entry.Timestamps is null || entry.Timestamps.Length == 0)
             {
-                fps = ParseFraction(trimmed["r_frame_rate=".Length..]);
+                return false;
+            }
+
+            timestamps = entry.Timestamps;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void SaveTimestampCache(string sourcePath, IReadOnlyList<double> timestamps)
+    {
+        try
+        {
+            var cachePath = GetTimestampCachePath(sourcePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(cachePath) ?? Environment.CurrentDirectory);
+            var entry = new TimestampCacheEntry(timestamps.ToArray(), true);
+            File.WriteAllText(cachePath, JsonSerializer.Serialize(entry));
+        }
+        catch
+        {
+        }
+    }
+
+    private static void DeleteTimestampCache(string sourcePath)
+    {
+        try
+        {
+            var cachePath = GetTimestampCachePath(sourcePath);
+            if (File.Exists(cachePath))
+            {
+                File.Delete(cachePath);
             }
         }
+        catch
+        {
+        }
+    }
 
-        return new VideoInfo(width, height, fps);
+    public static void CleanupTempCaches(TimeSpan maxAge)
+    {
+        CleanupTempCacheDirectory(Path.Combine(Path.GetTempPath(), "UltraFrameAI", "probe-cache"), maxAge, typeof(SourceMetadataCacheEntry));
+        CleanupTempCacheDirectory(Path.Combine(Path.GetTempPath(), "UltraFrameAI", "timestamp-cache"), maxAge, typeof(TimestampCacheEntry));
+    }
+
+    private static void CleanupTempCacheDirectory(string directory, TimeSpan maxAge, Type cacheType)
+    {
+        try
+        {
+            if (!Directory.Exists(directory))
+            {
+                return;
+            }
+
+            var cutoff = DateTime.UtcNow - maxAge;
+            foreach (var file in Directory.EnumerateFiles(directory, "*.json", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    var writeTime = File.GetLastWriteTimeUtc(file);
+                    if (writeTime < cutoff)
+                    {
+                        File.Delete(file);
+                        continue;
+                    }
+
+                    var json = File.ReadAllText(file);
+                    var complete = cacheType == typeof(SourceMetadataCacheEntry)
+                        ? JsonSerializer.Deserialize<SourceMetadataCacheEntry>(json) is { Complete: true }
+                        : JsonSerializer.Deserialize<TimestampCacheEntry>(json) is { Complete: true };
+
+                    if (!complete)
+                    {
+                        File.Delete(file);
+                    }
+                }
+                catch
+                {
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private static bool LooksLikeProcessError(string line)
+    {
+        return line.Contains("error", StringComparison.OrdinalIgnoreCase)
+            || line.Contains("failed", StringComparison.OrdinalIgnoreCase)
+            || line.Contains("invalid", StringComparison.OrdinalIgnoreCase);
     }
 
     internal static int EstimateFrameCount(double duration, double fps)
@@ -608,20 +1034,15 @@ public sealed class PipelineService
         }
     }
 
-    private static async Task<bool> TryReadExactAsync(Stream stream, byte[] buffer, CancellationToken ct)
+    private static async Task<bool> TryReadExactAsync(Stream stream, Memory<byte> buffer, CancellationToken ct)
     {
         var offset = 0;
         while (offset < buffer.Length)
         {
-            var read = await stream.ReadAsync(buffer.AsMemory(offset, buffer.Length - offset), ct).ConfigureAwait(false);
+            var read = await stream.ReadAsync(buffer.Slice(offset), ct).ConfigureAwait(false);
             if (read == 0)
             {
-                if (offset == 0)
-                {
-                    return false;
-                }
-
-                throw new EndOfStreamException("Unexpected end of stream while reading a frame.");
+                return false;
             }
 
             offset += read;
@@ -632,58 +1053,27 @@ public sealed class PipelineService
 
     private static async Task ReadExactAsync(Stream stream, byte[] buffer, CancellationToken ct)
     {
-        if (!await TryReadExactAsync(stream, buffer, ct).ConfigureAwait(false))
+        if (!await TryReadExactAsync(stream, buffer.AsMemory(), ct).ConfigureAwait(false))
         {
             throw new EndOfStreamException("Unexpected end of stream while reading a frame.");
         }
     }
 
-    private static void SaveFrameAsPng(string path, byte[] pixels, int width, int height, int stride)
+    private static double[] BuildUniformTimestamps(int count, double defaultDuration)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(path) ?? Environment.CurrentDirectory);
-
-        var bitmap = BitmapSource.Create(
-            width,
-            height,
-            96,
-            96,
-            PixelFormats.Bgr24,
-            null,
-            pixels,
-            stride);
-        bitmap.Freeze();
-
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        using var stream = File.Create(path);
-        encoder.Save(stream);
-    }
-
-    private static async Task<double[]> GetFrameTimestampsFromVideo(string ffprobe, string sourcePath, CancellationToken ct)
-    {
-        var lines = await ProcessRunner.CaptureLinesAsync(
-            ffprobe,
-            $"-v error -select_streams v:0 -show_entries frame=best_effort_timestamp_time -of csv=p=0 {Q(sourcePath)}",
-            Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory,
-            ct).ConfigureAwait(false);
-
-        var timestamps = new List<double>(lines.Count);
-        foreach (var lineRaw in lines)
+        if (count <= 0)
         {
-            var token = lineRaw.Trim();
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                continue;
-            }
-
-            var firstToken = token.Split(',')[0].Trim();
-            if (double.TryParse(firstToken, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
-            {
-                timestamps.Add(value);
-            }
+            return Array.Empty<double>();
         }
 
-        return timestamps.ToArray();
+        var timestamps = new double[count];
+        var step = Math.Max(0.001, defaultDuration);
+        for (var i = 0; i < count; i++)
+        {
+            timestamps[i] = i * step;
+        }
+
+        return timestamps;
     }
 
     private static double[] GetFrameDurationsFromTimestamps(IReadOnlyList<double> timestamps, double defaultDuration)
@@ -715,31 +1105,21 @@ public sealed class PipelineService
         return durations;
     }
 
-    private static bool WriteFrameConcatList(string framesPath, string listPath, IReadOnlyList<double> durations)
+    private static double[] BuildUniformDurations(int count, double defaultDuration)
     {
-        var frameFiles = Directory.GetFiles(framesPath, "*.png")
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        if (frameFiles.Length == 0 || frameFiles.Length != durations.Count)
+        if (count <= 0)
         {
-            return false;
+            return Array.Empty<double>();
         }
 
-        var lines = new List<string>(frameFiles.Length * 2 + 2);
-        for (var i = 0; i < frameFiles.Length - 1; i++)
+        var durations = new double[count];
+        var duration = Math.Max(0.001, defaultDuration);
+        for (var i = 0; i < count; i++)
         {
-            var name = frameFiles[i].Replace('\\', '/').Replace("'", "'\\''");
-            lines.Add($"file '{name}'");
-            lines.Add($"duration {durations[i].ToString("0.######", CultureInfo.InvariantCulture)}");
+            durations[i] = duration;
         }
 
-        var lastName = frameFiles[^1].Replace('\\', '/').Replace("'", "'\\''");
-        lines.Add($"file '{lastName}'");
-        lines.Add($"file '{lastName}'");
-
-        File.WriteAllLines(listPath, lines, Encoding.ASCII);
-        return true;
+        return durations;
     }
 
     private static void WriteTimingDebugLog(string logPath, double sourceDuration, IReadOnlyList<double> timestamps, IReadOnlyList<double> durations)
@@ -764,6 +1144,71 @@ public sealed class PipelineService
         File.WriteAllLines(logPath, lines, Encoding.UTF8);
     }
 
+    private static void WritePerfLog(
+        string logPath,
+        TimeSpan preflightElapsed,
+        TimeSpan frameLoopElapsed,
+        TimeSpan encodeElapsed,
+        TimeSpan decodeReadElapsed,
+        TimeSpan upscaleWriteElapsed,
+        TimeSpan upscaleReadElapsed,
+        TimeSpan frameSendElapsed,
+        TimeSpan timestampSubmitElapsed,
+        int processedFrames,
+        int totalFrames,
+        TimeSpan processingElapsed,
+        long rawQueueCurrent,
+        long rawQueueMax,
+        TimeSpan rawQueueWriteWaitElapsed,
+        long encodeQueueCurrent,
+        long encodeQueueMax,
+        TimeSpan encodeQueueWriteWaitElapsed,
+        bool final)
+    {
+        var fps = processingElapsed.TotalSeconds > 0
+            ? processedFrames / processingElapsed.TotalSeconds
+            : 0.0;
+
+        var lines = new[]
+        {
+            $"preflight_seconds={preflightElapsed.TotalSeconds:0.######}",
+            $"frame_loop_seconds={frameLoopElapsed.TotalSeconds:0.######}",
+            $"encode_seconds={encodeElapsed.TotalSeconds:0.######}",
+            $"decode_read_seconds={decodeReadElapsed.TotalSeconds:0.######}",
+            $"upscale_write_seconds={upscaleWriteElapsed.TotalSeconds:0.######}",
+            $"upscale_read_seconds={upscaleReadElapsed.TotalSeconds:0.######}",
+            $"frame_send_seconds={frameSendElapsed.TotalSeconds:0.######}",
+            $"timestamp_submit_seconds={timestampSubmitElapsed.TotalSeconds:0.######}",
+            $"processed_frames={processedFrames}",
+            $"total_frames={totalFrames}",
+            $"processing_fps={fps:0.######}",
+            $"raw_queue_current={rawQueueCurrent}",
+            $"raw_queue_max={rawQueueMax}",
+            $"raw_queue_write_wait_seconds={rawQueueWriteWaitElapsed.TotalSeconds:0.######}",
+            $"encode_queue_current={encodeQueueCurrent}",
+            $"encode_queue_max={encodeQueueMax}",
+            $"encode_queue_write_wait_seconds={encodeQueueWriteWaitElapsed.TotalSeconds:0.######}",
+            $"state={(final ? "final" : "live")}"
+        };
+
+        File.WriteAllLines(logPath, lines, Encoding.UTF8);
+    }
+
+    private static void TryCopyPerfLog(string sourcePath, string targetPath)
+    {
+        try
+        {
+            if (File.Exists(sourcePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(targetPath) ?? Environment.CurrentDirectory);
+                File.Copy(sourcePath, targetPath, true);
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private static void TryKillTree(Process process)
     {
         try
@@ -775,6 +1220,23 @@ public sealed class PipelineService
         }
         catch
         {
+        }
+    }
+
+    private static void UpdateMax(ref long target, long value)
+    {
+        while (true)
+        {
+            var current = Interlocked.Read(ref target);
+            if (value <= current)
+            {
+                return;
+            }
+
+            if (Interlocked.CompareExchange(ref target, value, current) == current)
+            {
+                return;
+            }
         }
     }
 
@@ -794,6 +1256,21 @@ public sealed class PipelineService
         catch
         {
         }
+    }
+
+    private static void HandleIncompleteOutput(string path, bool preserveIncompleteOutput)
+    {
+        if (preserveIncompleteOutput)
+        {
+            return;
+        }
+
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        TryDelete(path);
     }
 
     private static string Summary(int current, int total, TimeSpan elapsed) => LocalizedStrings.LogItemSummary(current, total, Time(elapsed));

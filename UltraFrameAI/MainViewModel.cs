@@ -14,6 +14,25 @@ namespace UltraFrameAI;
 
 public sealed class MainViewModel : INotifyPropertyChanged
 {
+    private sealed record RecentRootFoldersCacheEntry(List<string> Folders, bool Complete);
+    private sealed record AntiFlickerProfilesCacheEntry(Dictionary<string, AntiFlickerPresetState> Presets, bool Complete);
+    private sealed record NativeEncoderBackendCacheEntry(bool Enabled, bool Complete);
+    private sealed record AppSettingsCacheEntry(
+        string RootFolder,
+        string OutputFolder,
+        string SelectedCodec,
+        string SelectedTarget,
+        string SelectedContainer,
+        string FfmpegThreadsText,
+        string UpscalerThreadsText,
+        string TileSizeText,
+        bool Overwrite,
+        string SelectedContentMode,
+        string CurrentLanguage,
+        bool PreserveIncompleteOutput,
+        bool UseNativeEncoderBackend,
+        bool Complete);
+
     private readonly PipelineService _pipeline;
     private readonly RelayCommand _browseRootFolderCommand;
     private readonly RelayCommand _browseRootFileCommand;
@@ -42,6 +61,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "UltraFrameAI",
         "anti-flicker-presets.json");
+    private readonly string _nativeEncoderBackendPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "UltraFrameAI",
+        "native-encoder-backend.json");
+    private readonly string _appSettingsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "UltraFrameAI",
+        "app-settings.json");
 
     private CancellationTokenSource? _runCts;
     private CancellationTokenSource? _scanCts;
@@ -58,9 +85,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _tileSizeText = "1024";
     private bool _overwrite;
     private bool _useAntiFlicker = true;
+    private bool _useNativeEncoderBackend;
+    private bool _preserveIncompleteOutput;
     private double _antiFlickerStrength = 65;
     private string _selectedContentMode = "Anime";
     private bool _suppressAntiFlickerPresetPersistence;
+    private bool _suppressAppSettingsPersistence;
     private string _statusSummary = string.Empty;
     private string _lastHeartbeat = string.Empty;
     private string _currentStage = string.Empty;
@@ -75,6 +105,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _currentFileName = string.Empty;
     private ImageSource? _renderPreviewOriginalImage;
     private ImageSource? _renderPreviewResultImage;
+    private readonly object _renderPreviewSync = new();
+    private RenderPreviewFrameUpdate? _pendingRenderPreviewOriginal;
+    private RenderPreviewFrameUpdate? _pendingRenderPreviewResult;
+    private bool _renderPreviewUpdateQueued;
     private double _renderPreviewZoom = 1.0;
     private double _renderPreviewPanX;
     private double _renderPreviewPanY;
@@ -112,7 +146,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         RecentRootFolders = new ObservableCollection<RecentFolderItem>();
         CodecOptions = new[] { "x264", "x265" };
         TargetOptions = new[] { "1080p", "2160p" };
-        ContainerOptions = new[] { "mkv", "mp4" };
+        ContainerOptions = new[] { "mkv" };
 
         _browseRootFolderCommand = new RelayCommand(BrowseRootFolder);
         _browseRootFileCommand = new RelayCommand(BrowseRootFile);
@@ -131,12 +165,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
         LocalizedStrings.LanguageChanged += (_, _) => RefreshLocalizedText();
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerPresets = LoadAntiFlickerPresets();
+        _useNativeEncoderBackend = LoadNativeEncoderBackendPreference();
         LoadRecentRootFolders();
-        RootFolder = LoadPersistedRootFolder(_repoRoot);
+        _suppressAppSettingsPersistence = true;
+        try
+        {
+            RootFolder = LoadPersistedRootFolder(_repoRoot);
+            OutputFolder = GetDefaultOutputFolder(RootFolder);
+            ApplyAntiFlickerPreset(_selectedContentMode, persist: false);
+            LoadAppSettings();
+        }
+        finally
+        {
+            _suppressAppSettingsPersistence = false;
+        }
         RememberRecentFolder(RootFolder, persist: true);
-        OutputFolder = GetDefaultOutputFolder(RootFolder);
-        ApplyAntiFlickerPreset(_selectedContentMode, persist: false);
         RefreshLocalizedText();
+        PersistAppSettings();
+        _ = Task.Run(() => PipelineService.CleanupTempCaches(TimeSpan.FromDays(14)));
         LastRunProcessedFiles = "--";
     }
 
@@ -247,6 +293,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 UpdateQueueSummary();
                 SavePersistedRootFolder(value);
                 RefreshRecentFolderSelection();
+                PersistAppSettings();
             }
         }
     }
@@ -254,7 +301,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string OutputFolder
     {
         get => _outputFolder;
-        set => SetField(ref _outputFolder, value);
+        set
+        {
+            if (SetField(ref _outputFolder, value))
+            {
+                PersistAppSettings();
+            }
+        }
     }
 
     public string SelectedCodec
@@ -276,6 +329,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     OnPropertyChanged(nameof(SelectedTarget));
                     OutputFolder = GetDefaultOutputFolder(RootFolder);
                 }
+
+                PersistAppSettings();
             }
         }
     }
@@ -299,6 +354,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     OnPropertyChanged(nameof(SelectedCodec));
                     OutputFolder = GetDefaultOutputFolder(RootFolder);
                 }
+
+                PersistAppSettings();
             }
         }
     }
@@ -306,31 +363,61 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string SelectedContainer
     {
         get => _selectedContainer;
-        set => SetField(ref _selectedContainer, value);
+        set
+        {
+            if (SetField(ref _selectedContainer, value))
+            {
+                PersistAppSettings();
+            }
+        }
     }
 
     public string FfmpegThreadsText
     {
         get => _ffmpegThreadsText;
-        set => SetField(ref _ffmpegThreadsText, value);
+        set
+        {
+            if (SetField(ref _ffmpegThreadsText, value))
+            {
+                PersistAppSettings();
+            }
+        }
     }
 
     public string UpscalerThreadsText
     {
         get => _upscalerThreadsText;
-        set => SetField(ref _upscalerThreadsText, value);
+        set
+        {
+            if (SetField(ref _upscalerThreadsText, value))
+            {
+                PersistAppSettings();
+            }
+        }
     }
 
     public string TileSizeText
     {
         get => _tileSizeText;
-        set => SetField(ref _tileSizeText, value);
+        set
+        {
+            if (SetField(ref _tileSizeText, value))
+            {
+                PersistAppSettings();
+            }
+        }
     }
 
     public bool Overwrite
     {
         get => _overwrite;
-        set => SetField(ref _overwrite, value);
+        set
+        {
+            if (SetField(ref _overwrite, value))
+            {
+                PersistAppSettings();
+            }
+        }
     }
 
     public bool UseAntiFlicker
@@ -341,6 +428,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _useAntiFlicker, value))
             {
                 PersistCurrentAntiFlickerPreset();
+            }
+        }
+    }
+
+    public bool UseNativeEncoderBackend
+    {
+        get => _useNativeEncoderBackend;
+        set
+        {
+            if (SetField(ref _useNativeEncoderBackend, value))
+            {
+                PersistNativeEncoderBackendPreference();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public bool PreserveIncompleteOutput
+    {
+        get => _preserveIncompleteOutput;
+        set
+        {
+            if (SetField(ref _preserveIncompleteOutput, value))
+            {
+                PersistAppSettings();
             }
         }
     }
@@ -372,6 +484,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 ApplyAntiFlickerPreset(normalized, persist: false);
                 PersistAllAntiFlickerPresets();
+                PersistAppSettings();
             }
         }
     }
@@ -580,6 +693,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 LocalizedStrings.SetLanguage(value);
                 OnPropertyChanged(nameof(CurrentLanguageFlagPath));
+                PersistAppSettings();
             }
         }
     }
@@ -985,7 +1099,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UseAntiFlicker = UseAntiFlicker,
             ContentMode = SelectedContentMode,
             AntiFlickerStrength = AntiFlickerStrength,
-            EncoderPreset = "slower"
+            EncoderPreset = "slower",
+            UseNativeEncoderBackend = NativeFrameEncoderBridge.IsAvailable(),
+            PreserveIncompleteOutput = PreserveIncompleteOutput
         };
     }
 
@@ -1227,7 +1343,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             Title = LocalizedStrings.BrowseVideoFileDialogTitle,
             InitialDirectory = GetScanRoot(RootFolder),
-            Filter = "Video files|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|All files|*.*",
+            Filter = LocalizedStrings.BrowseVideoFilesFilter,
             Multiselect = false
         };
 
@@ -1293,45 +1409,120 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void HandleRenderPreviewFrame(RenderPreviewFrameUpdate frame)
     {
-        PostToUi(() =>
+        var schedule = false;
+        lock (_renderPreviewSync)
         {
             if (_currentItemIndex > 0 && frame.ItemIndex != _currentItemIndex)
             {
+                frame.Payload.Dispose();
                 return;
             }
 
-            if (frame.Width <= 0 || frame.Height <= 0 || frame.Pixels.Length == 0)
+            var pending = frame.IsOriginal ? _pendingRenderPreviewOriginal : _pendingRenderPreviewResult;
+            pending?.Payload.Dispose();
+            if (frame.IsOriginal)
+            {
+                _pendingRenderPreviewOriginal = frame;
+            }
+            else
+            {
+                _pendingRenderPreviewResult = frame;
+            }
+            if (_renderPreviewUpdateQueued)
             {
                 return;
             }
 
-            try
-            {
-                var bitmap = BitmapSource.Create(
-                    frame.Width,
-                    frame.Height,
-                    96,
-                    96,
-                    PixelFormats.Bgr24,
-                    null,
-                    frame.Pixels,
-                    frame.Stride);
-                bitmap.Freeze();
-                if (frame.IsOriginal)
-                {
-                    RenderPreviewOriginalImage = bitmap;
-                }
-                else
-                {
-                    RenderPreviewResultImage = bitmap;
-                }
+            _renderPreviewUpdateQueued = true;
+            schedule = true;
+        }
 
-                UpdateRenderPreviewIndicators();
-            }
-            catch
+        if (schedule)
+        {
+            PostToUi(ApplyPendingRenderPreviewFrames);
+        }
+    }
+
+    private void ApplyPendingRenderPreviewFrames()
+    {
+        RenderPreviewFrameUpdate? original;
+        RenderPreviewFrameUpdate? result;
+
+        lock (_renderPreviewSync)
+        {
+            original = _pendingRenderPreviewOriginal;
+            result = _pendingRenderPreviewResult;
+            _pendingRenderPreviewOriginal = null;
+            _pendingRenderPreviewResult = null;
+        }
+
+        try
+        {
+            ApplyRenderPreviewFrame(original);
+            ApplyRenderPreviewFrame(result);
+            UpdateRenderPreviewIndicators();
+        }
+        finally
+        {
+            var reschedule = false;
+            lock (_renderPreviewSync)
             {
+                _renderPreviewUpdateQueued = false;
+                if (_pendingRenderPreviewOriginal is not null || _pendingRenderPreviewResult is not null)
+                {
+                    _renderPreviewUpdateQueued = true;
+                    reschedule = true;
+                }
             }
-        });
+
+            original?.Payload.Dispose();
+            result?.Payload.Dispose();
+
+            if (reschedule)
+            {
+                PostToUi(ApplyPendingRenderPreviewFrames);
+            }
+        }
+    }
+
+    private void ApplyRenderPreviewFrame(RenderPreviewFrameUpdate? frame)
+    {
+        if (frame is null)
+        {
+            return;
+        }
+
+        var buffer = frame.Payload.Buffer;
+        if (frame.Width <= 0 || frame.Height <= 0 || buffer is null || buffer.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var pixels = frame.Payload.Span.ToArray();
+            var bitmap = BitmapSource.Create(
+                frame.Width,
+                frame.Height,
+                96,
+                96,
+                PixelFormats.Bgr24,
+                null,
+                pixels,
+                frame.Stride);
+            bitmap.Freeze();
+            if (frame.IsOriginal)
+            {
+                RenderPreviewOriginalImage = bitmap;
+            }
+            else
+            {
+                RenderPreviewResultImage = bitmap;
+            }
+        }
+        catch
+        {
+        }
     }
 
 
@@ -1668,6 +1859,89 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return fallback;
     }
 
+    private void LoadAppSettings()
+    {
+        var restoreSuppression = !_suppressAppSettingsPersistence;
+        if (restoreSuppression)
+        {
+            _suppressAppSettingsPersistence = true;
+        }
+
+        try
+        {
+            if (!File.Exists(_appSettingsPath))
+            {
+                return;
+            }
+
+            var json = File.ReadAllText(_appSettingsPath);
+            var loaded = JsonSerializer.Deserialize<AppSettingsCacheEntry>(json);
+            if (loaded is null || !loaded.Complete)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.RootFolder) && (Directory.Exists(loaded.RootFolder) || File.Exists(loaded.RootFolder)))
+            {
+                RootFolder = loaded.RootFolder;
+            }
+
+            var target = loaded.SelectedTarget == "2160p" ? "2160p" : "1080p";
+            var codec = loaded.SelectedCodec == "x265" ? "x265" : "x264";
+            const string container = "mkv";
+
+            SelectedTarget = target;
+            SelectedCodec = codec;
+            SelectedContainer = container;
+
+            if (!string.IsNullOrWhiteSpace(loaded.FfmpegThreadsText))
+            {
+                FfmpegThreadsText = loaded.FfmpegThreadsText;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.UpscalerThreadsText))
+            {
+                UpscalerThreadsText = loaded.UpscalerThreadsText;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.TileSizeText))
+            {
+                TileSizeText = loaded.TileSizeText;
+            }
+
+            Overwrite = loaded.Overwrite;
+
+            if (!string.IsNullOrWhiteSpace(loaded.CurrentLanguage) && Enum.TryParse(loaded.CurrentLanguage, true, out UiLanguage parsedLanguage))
+            {
+                CurrentLanguage = parsedLanguage;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.SelectedContentMode))
+            {
+                SelectedContentMode = loaded.SelectedContentMode;
+            }
+
+            PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
+            UseNativeEncoderBackend = loaded.UseNativeEncoderBackend;
+
+            if (!string.IsNullOrWhiteSpace(loaded.OutputFolder))
+            {
+                OutputFolder = loaded.OutputFolder;
+            }
+        }
+        catch
+        {
+        }
+        finally
+        {
+            if (restoreSuppression)
+            {
+                _suppressAppSettingsPersistence = false;
+                PersistAppSettings();
+            }
+        }
+    }
+
     private async Task LoadSingleFileAsync(string filePath)
     {
         _scanCts?.Cancel();
@@ -1735,29 +2009,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             }
 
+            var json = File.ReadAllText(_recentRootFoldersPath);
+            var loaded = JsonSerializer.Deserialize<RecentRootFoldersCacheEntry>(json);
+            if (loaded is not null && loaded.Complete)
+            {
+                foreach (var raw in loaded.Folders)
+                {
+                    AddRecentRootFolder(raw);
+                }
+
+                RefreshRecentFolderSelection();
+                return;
+            }
+
             foreach (var raw in File.ReadAllLines(_recentRootFoldersPath))
             {
-                var inputPath = NormalizeInputPath(raw);
-                if (string.IsNullOrWhiteSpace(inputPath))
-                {
-                    continue;
-                }
-
-                if (!Directory.Exists(inputPath) && !File.Exists(inputPath))
-                {
-                    continue;
-                }
-
-                if (RecentRootFolders.Any(item => string.Equals(item.FolderPath, inputPath, StringComparison.OrdinalIgnoreCase)))
-                {
-                    continue;
-                }
-
-                RecentRootFolders.Add(new RecentFolderItem(inputPath));
-                if (RecentRootFolders.Count >= 10)
-                {
-                    break;
-                }
+                AddRecentRootFolder(raw);
             }
         }
         catch
@@ -1765,6 +2032,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         RefreshRecentFolderSelection();
+    }
+
+    private void AddRecentRootFolder(string raw)
+    {
+        var inputPath = NormalizeInputPath(raw);
+        if (string.IsNullOrWhiteSpace(inputPath))
+        {
+            return;
+        }
+
+        if (!Directory.Exists(inputPath) && !File.Exists(inputPath))
+        {
+            return;
+        }
+
+        if (RecentRootFolders.Any(item => string.Equals(item.FolderPath, inputPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        RecentRootFolders.Add(new RecentFolderItem(inputPath));
+        if (RecentRootFolders.Count >= 10)
+        {
+            return;
+        }
     }
 
     private void RememberRecentFolder(string folder, bool persist)
@@ -1813,7 +2105,46 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllText(_lastRootFolderPath, folder);
+            WriteAtomicText(_lastRootFolderPath, folder);
+        }
+        catch
+        {
+        }
+    }
+
+    private void PersistAppSettings()
+    {
+        if (_suppressAppSettingsPersistence)
+        {
+            return;
+        }
+
+        try
+        {
+            var directory = Path.GetDirectoryName(_appSettingsPath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var entry = new AppSettingsCacheEntry(
+                RootFolder,
+                OutputFolder,
+                SelectedCodec,
+                SelectedTarget,
+                SelectedContainer,
+                FfmpegThreadsText,
+                UpscalerThreadsText,
+                TileSizeText,
+                Overwrite,
+                SelectedContentMode,
+                CurrentLanguage.ToString(),
+                PreserveIncompleteOutput,
+                UseNativeEncoderBackend,
+                true);
+
+            var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
+            WriteAtomicText(_appSettingsPath, json);
         }
         catch
         {
@@ -1830,7 +2161,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllLines(_recentRootFoldersPath, RecentRootFolders.Select(item => item.FolderPath));
+            var entry = new RecentRootFoldersCacheEntry(RecentRootFolders.Select(item => item.FolderPath).ToList(), true);
+            WriteAtomicText(_recentRootFoldersPath, JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch
         {
@@ -1852,7 +2184,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         var resolution = SelectedTarget == "2160p" ? "2160p" : "1080p";
         var codec = SelectedCodec == "x265" ? "x265" : "x264";
-        var extension = string.Equals(SelectedContainer, "mp4", StringComparison.OrdinalIgnoreCase) ? ".mp4" : ".mkv";
+        var extension = ".mkv";
         return $"_{resolution}_{codec}{extension}";
     }
 
@@ -1947,12 +2279,64 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Directory.CreateDirectory(directory);
             }
 
-            var json = JsonSerializer.Serialize(_antiFlickerPresets, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_antiFlickerProfilesPath, json);
+            var entry = new AntiFlickerProfilesCacheEntry(new Dictionary<string, AntiFlickerPresetState>(_antiFlickerPresets), true);
+            var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
+            WriteAtomicText(_antiFlickerProfilesPath, json);
         }
         catch
         {
         }
+    }
+
+    private bool LoadNativeEncoderBackendPreference()
+    {
+        try
+        {
+            if (!File.Exists(_nativeEncoderBackendPath))
+            {
+                return false;
+            }
+
+            var json = File.ReadAllText(_nativeEncoderBackendPath);
+            var entry = JsonSerializer.Deserialize<NativeEncoderBackendCacheEntry>(json);
+            return entry is not null && entry.Complete && entry.Enabled;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void PersistNativeEncoderBackendPreference()
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(_nativeEncoderBackendPath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var entry = new NativeEncoderBackendCacheEntry(UseNativeEncoderBackend, true);
+            var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
+            WriteAtomicText(_nativeEncoderBackendPath, json);
+        }
+        catch
+        {
+        }
+    }
+
+    private static void WriteAtomicText(string path, string content)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var tempPath = path + ".tmp";
+        File.WriteAllText(tempPath, content);
+        File.Move(tempPath, path, true);
     }
 
     private Dictionary<string, AntiFlickerPresetState> LoadAntiFlickerPresets()
@@ -1963,22 +2347,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (File.Exists(_antiFlickerProfilesPath))
             {
                 var json = File.ReadAllText(_antiFlickerProfilesPath);
-                var loaded = JsonSerializer.Deserialize<Dictionary<string, AntiFlickerPresetState>>(json);
-                if (loaded is not null)
+                var loaded = JsonSerializer.Deserialize<AntiFlickerProfilesCacheEntry>(json);
+                if (loaded is not null && loaded.Complete)
                 {
-                    foreach (var pair in loaded)
+                    ApplyLoadedAntiFlickerPresets(presets, loaded.Presets);
+                }
+                else
+                {
+                    var legacyLoaded = JsonSerializer.Deserialize<Dictionary<string, AntiFlickerPresetState>>(json);
+                    if (legacyLoaded is not null)
                     {
-                        var mode = NormalizeContentMode(pair.Key);
-                        if (string.IsNullOrWhiteSpace(mode))
-                        {
-                            continue;
-                        }
-
-                        presets[mode] = new AntiFlickerPresetState
-                        {
-                            Enabled = pair.Value.Enabled,
-                            Strength = Math.Clamp(pair.Value.Strength, 0, 100)
-                        };
+                        ApplyLoadedAntiFlickerPresets(presets, legacyLoaded);
                     }
                 }
             }
@@ -1988,6 +2367,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         return presets;
+    }
+
+    private static void ApplyLoadedAntiFlickerPresets(
+        Dictionary<string, AntiFlickerPresetState> presets,
+        IReadOnlyDictionary<string, AntiFlickerPresetState> loaded)
+    {
+        foreach (var pair in loaded)
+        {
+            var mode = NormalizeContentMode(pair.Key);
+            if (string.IsNullOrWhiteSpace(mode))
+            {
+                continue;
+            }
+
+            presets[mode] = new AntiFlickerPresetState
+            {
+                Enabled = pair.Value.Enabled,
+                Strength = Math.Clamp(pair.Value.Strength, 0, 100)
+            };
+        }
     }
 
     private static Dictionary<string, AntiFlickerPresetState> CreateDefaultAntiFlickerPresets()
@@ -2080,7 +2479,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         switch (extension.ToLowerInvariant())
         {
-            case ".mp4":
             case ".mkv":
             case ".mka":
             case ".mov":

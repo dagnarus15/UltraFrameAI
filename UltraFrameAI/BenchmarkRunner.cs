@@ -335,7 +335,9 @@ public static class BenchmarkRunner
             ContentMode = benchCase.ContentMode,
             AntiFlickerStrength = benchCase.AntiFlickerStrength,
             EncoderPreset = benchCase.Preset,
-            OutputContainer = "mkv"
+            OutputContainer = "mkv",
+            UseNativeEncoderBackend = false,
+            PreserveIncompleteOutput = false
         };
 
         var started = Stopwatch.StartNew();

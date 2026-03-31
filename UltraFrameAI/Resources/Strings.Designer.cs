@@ -217,6 +217,7 @@ public static class Strings
     public static string ETA => GetRequired(nameof(ETA));
     public static string ProgressDetails => GetRequired(nameof(ProgressDetails));
     public static string StepDuration => GetRequired(nameof(StepDuration));
+    public static string ProcessingFps => GetRequired(nameof(ProcessingFps));
     public static string Queue => GetRequired(nameof(Queue));
     public static string Log => GetRequired(nameof(Log));
     public static string LogTime => GetRequired(nameof(LogTime));

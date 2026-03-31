@@ -42,6 +42,9 @@
   <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
     <value>Wählen Sie eine Videodatei</value>
   </data>
+  <data name="BrowseVideoFilesFilter" xml:space="preserve">
+    <value>Videodateien|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|Alle Dateien|*.*</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Abbrechen</value>
   </data>
@@ -538,6 +541,18 @@ Am besten für maximale Stabilität.</value>
   <data name="Container" xml:space="preserve">
     <value>Container</value>
   </data>
+  <data name="CodecHelpTitle" xml:space="preserve">
+    <value>Codec</value>
+  </data>
+  <data name="CodecHelpBody" xml:space="preserve">
+    <value>Ein Codec bestimmt, wie das Video komprimiert wird. x264 ist schneller und weit kompatibel. x265 erzeugt meist kleinere Dateien, braucht aber l?nger.</value>
+  </data>
+  <data name="FormatHelpTitle" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="FormatHelpBody" xml:space="preserve">
+    <value>Format bedeutet hier die Ausgabaufl?sung. 1080p bleibt Full HD, 2160p rendert 4K.</value>
+  </data>
   <data name="FFmpegThreads" xml:space="preserve">
     <value>FFmpeg-Threads</value>
   </data>
@@ -549,6 +564,12 @@ Am besten für maximale Stabilität.</value>
   </data>
   <data name="OverwriteExistingOutput" xml:space="preserve">
     <value>Vorhandene Ausgabe überschreiben</value>
+  </data>
+  <data name="PreserveIncompleteOutput" xml:space="preserve">
+    <value>Unvollständige Ausgabe behalten</value>
+  </data>
+  <data name="PreserveIncompleteOutputHint" xml:space="preserve">
+    <value>Unvollständige Ausgabedateien am Speicherort belassen statt sie zu löschen.</value>
   </data>
   <data name="StartBatch" xml:space="preserve">
     <value>Alles starten</value>
@@ -588,6 +609,9 @@ Am besten für maximale Stabilität.</value>
   </data>
   <data name="StepDuration" xml:space="preserve">
     <value>Schrittdauer</value>
+  </data>
+  <data name="ProcessingFps" xml:space="preserve">
+    <value>Verarbeitungs-FPS</value>
   </data>
   <data name="Queue" xml:space="preserve">
     <value>Warteschlange</value>
@@ -756,6 +780,12 @@ Am besten für maximale Stabilität.</value>
   </data>
   <data name="LogCheckingCache" xml:space="preserve">
     <value>Stream-Zustand prüfen</value>
+  </data>
+  <data name="LogTimestampCacheLoaded" xml:space="preserve">
+    <value>Zeitstempel-Cache geladen</value>
+  </data>
+  <data name="LogTimestampCacheSaved" xml:space="preserve">
+    <value>Zeitstempel-Cache gespeichert</value>
   </data>
   <data name="LogProcessing" xml:space="preserve">
     <value>Verarbeitung...</value>

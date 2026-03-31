@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -186,10 +187,52 @@ public sealed record OutputConflictRequest(
 public sealed record RenderPreviewFrameUpdate(
     int ItemIndex,
     bool IsOriginal,
-    byte[] Pixels,
+    RenderPreviewFramePayload Payload,
     int Width,
     int Height,
     int Stride);
+
+public sealed class RenderPreviewFramePayload : IDisposable
+{
+    private readonly ArrayPool<byte> _pool;
+    private byte[]? _buffer;
+    private readonly int _length;
+
+    private RenderPreviewFramePayload(byte[] buffer, int length, ArrayPool<byte> pool)
+    {
+        _buffer = buffer;
+        _length = length;
+        _pool = pool;
+    }
+
+    public static RenderPreviewFramePayload From(ReadOnlySpan<byte> source)
+    {
+        var pool = ArrayPool<byte>.Shared;
+        var buffer = pool.Rent(source.Length);
+        source.CopyTo(buffer);
+        return new RenderPreviewFramePayload(buffer, source.Length, pool);
+    }
+
+    public ReadOnlySpan<byte> Span
+    {
+        get
+        {
+            var buffer = _buffer;
+            return buffer is null ? ReadOnlySpan<byte>.Empty : buffer.AsSpan(0, _length);
+        }
+    }
+
+    public byte[]? Buffer => _buffer;
+
+    public void Dispose()
+    {
+        var buffer = Interlocked.Exchange(ref _buffer, null);
+        if (buffer is not null)
+        {
+            _pool.Return(buffer);
+        }
+    }
+}
 
 public enum RenderPreviewKind
 {
@@ -216,6 +259,8 @@ public sealed class PipelineOptions
     public required double AntiFlickerStrength { get; init; }
     public required string EncoderPreset { get; init; }
     public string OutputContainer { get; init; } = "mkv";
+    public required bool UseNativeEncoderBackend { get; init; }
+    public required bool PreserveIncompleteOutput { get; init; }
 }
 
 public sealed class AntiFlickerPresetState

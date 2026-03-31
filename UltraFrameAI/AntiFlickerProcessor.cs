@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Reflection;
 
 namespace UltraFrameAI;
 
@@ -9,7 +8,7 @@ public sealed class AntiFlickerProcessor : IDisposable
 
     static AntiFlickerProcessor()
     {
-        NativeLibrary.SetDllImportResolver(typeof(AntiFlickerProcessor).Assembly, ResolveLibrary);
+        NativeLibraryResolver.EnsureInstalled();
     }
 
     private readonly nint _handle;
@@ -176,38 +175,4 @@ public sealed class AntiFlickerProcessor : IDisposable
 
     private readonly record struct NativeProfile(int DownscaleFactor, int BlockSize, int SearchRadius, float BlendStrength, float MaxBlend, float EdgeGuard);
 
-    private static nint ResolveLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
-    {
-        if (!string.Equals(libraryName, LibraryName, StringComparison.OrdinalIgnoreCase))
-        {
-            return nint.Zero;
-        }
-
-        foreach (var candidate in GetLibraryCandidates())
-        {
-            if (File.Exists(candidate))
-            {
-                return NativeLibrary.Load(candidate);
-            }
-        }
-
-        return nint.Zero;
-    }
-
-    private static IEnumerable<string> GetLibraryCandidates()
-    {
-        var fileName = LibraryName + ".dll";
-        var baseDir = AppContext.BaseDirectory;
-        yield return Path.Combine(baseDir, fileName);
-        yield return Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-        var current = new DirectoryInfo(baseDir);
-        while (current is not null)
-        {
-            yield return Path.Combine(current.FullName, "UltraFrameAI.Native", "AntiFlicker", "build", "Release", fileName);
-            yield return Path.Combine(current.FullName, "UltraFrameAI", "bin", "Release", "net8.0-windows", "win-x64", fileName);
-            yield return Path.Combine(current.FullName, "dist", "UltraFrameAI", fileName);
-            current = current.Parent;
-        }
-    }
 }

@@ -59,6 +59,7 @@ public static class LocalizedStrings
     public static string BrowseFolder => GetText(nameof(BrowseFolder));
     public static string BrowseFile => GetText(nameof(BrowseFile));
     public static string BrowseVideoFileDialogTitle => GetText(nameof(BrowseVideoFileDialogTitle));
+    public static string BrowseVideoFilesFilter => GetText(nameof(BrowseVideoFilesFilter));
     public static string Cancel => GetText(nameof(Cancel));
     public static string ResetToLastFolder => GetText(nameof(ResetToLastFolder));
     public static string RecentFolders => GetText(nameof(RecentFolders));
@@ -206,6 +207,8 @@ public static class LocalizedStrings
     public static string UpscalerJobs => GetText(nameof(UpscalerJobs));
     public static string TileSize => GetText(nameof(TileSize));
     public static string OverwriteExistingOutput => GetText(nameof(OverwriteExistingOutput));
+    public static string PreserveIncompleteOutput => GetText(nameof(PreserveIncompleteOutput));
+    public static string PreserveIncompleteOutputHint => GetText(nameof(PreserveIncompleteOutputHint));
     public static string StartBatch => GetText(nameof(StartBatch));
     public static string StartSelected => GetText(nameof(StartSelected));
     public static string OpenOutputFolder => GetText(nameof(OpenOutputFolder));
@@ -219,6 +222,7 @@ public static class LocalizedStrings
     public static string ETA => GetText(nameof(ETA));
     public static string ProgressDetails => GetText(nameof(ProgressDetails));
     public static string StepDuration => GetText(nameof(StepDuration));
+    public static string ProcessingFps => GetText(nameof(ProcessingFps));
     public static string Queue => GetText(nameof(Queue));
     public static string Log => GetText(nameof(Log));
     public static string LogTime => GetText(nameof(LogTime));
@@ -375,7 +379,9 @@ public static class LocalizedStrings
                 Directory.CreateDirectory(dir);
             }
 
-            File.WriteAllText(StoragePath, language.ToString());
+            var tempPath = StoragePath + ".tmp";
+            File.WriteAllText(tempPath, language.ToString());
+            File.Move(tempPath, StoragePath, true);
         }
         catch
         {

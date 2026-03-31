@@ -205,10 +205,12 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
                 WindowState = WindowState
             };
 
-            File.WriteAllText(PlacementPath, JsonSerializer.Serialize(state, new JsonSerializerOptions
+            var tempPath = PlacementPath + ".tmp";
+            File.WriteAllText(tempPath, JsonSerializer.Serialize(state, new JsonSerializerOptions
             {
                 WriteIndented = true
             }));
+            File.Move(tempPath, PlacementPath, true);
         }
         catch
         {

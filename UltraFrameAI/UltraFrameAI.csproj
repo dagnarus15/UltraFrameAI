@@ -11,6 +11,8 @@
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>UltraFrameAI</AssemblyName>
     <RootNamespace>UltraFrameAI</RootNamespace>
     <AssemblyTitle>UltraFrame AI</AssemblyTitle>
@@ -23,6 +25,10 @@
 
   <ItemGroup>
     <Resource Include="images\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FFmpeg.AutoGen" Version="8.0.0" />
   </ItemGroup>
 
   <Target Name="CopyNativeAntiFlicker" AfterTargets="Build">

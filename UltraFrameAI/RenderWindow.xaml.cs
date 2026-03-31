@@ -1,6 +1,9 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -11,8 +14,6 @@ public partial class RenderWindow : Window
     private bool _closingAfterStop;
     private bool _suppressClosePrompt;
     private INotifyPropertyChanged? _notifyingDataContext;
-    private RenderPreviewWindow? _originalPreviewWindow;
-    private RenderPreviewWindow? _resultPreviewWindow;
     private RenderPreviewKind? _activePreviewDragKind;
     private System.Windows.Point _previewDragStart;
     private double _previewDragStartPanX;
@@ -189,47 +190,65 @@ public partial class RenderWindow : Window
             return;
         }
 
-        var existing = kind == RenderPreviewKind.Original ? _originalPreviewWindow : _resultPreviewWindow;
-        if (existing is not null)
-        {
-            if (existing.WindowState == WindowState.Minimized)
-            {
-                existing.WindowState = WindowState.Normal;
-            }
-
-            existing.Activate();
-            existing.Focus();
-            return;
-        }
+        source = CreateStaticPreviewSource(source);
 
         var window = new RenderPreviewWindow(source, kind)
         {
             Owner = this
         };
 
-        window.Closed += (_, _) =>
-        {
-            if (kind == RenderPreviewKind.Original)
-            {
-                _originalPreviewWindow = null;
-            }
-            else
-            {
-                _resultPreviewWindow = null;
-            }
-        };
-
-        if (kind == RenderPreviewKind.Original)
-        {
-            _originalPreviewWindow = window;
-        }
-        else
-        {
-            _resultPreviewWindow = window;
-        }
-
         window.Show();
         window.Activate();
+    }
+
+    private static ImageSource CreateStaticPreviewSource(ImageSource source)
+    {
+        if (source is not BitmapSource bitmapSource)
+        {
+            return source;
+        }
+
+        try
+        {
+            var width = bitmapSource.PixelWidth;
+            var height = bitmapSource.PixelHeight;
+            if (width <= 0 || height <= 0)
+            {
+                return source;
+            }
+
+            var renderTarget = new RenderTargetBitmap(
+                width,
+                height,
+                bitmapSource.DpiX,
+                bitmapSource.DpiY,
+                PixelFormats.Pbgra32);
+            var visual = new DrawingVisual();
+            using (var context = visual.RenderOpen())
+            {
+                context.DrawImage(bitmapSource, new Rect(0, 0, width, height));
+            }
+
+            renderTarget.Render(visual);
+
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderTarget));
+            using var stream = new MemoryStream();
+            encoder.Save(stream);
+            stream.Position = 0;
+
+            var snapshot = new BitmapImage();
+            snapshot.BeginInit();
+            snapshot.CacheOption = BitmapCacheOption.OnLoad;
+            snapshot.StreamSource = stream;
+            snapshot.EndInit();
+            snapshot.Freeze();
+            return snapshot;
+        }
+        catch
+        {
+            return source;
+        }
     }
 
     private void RenderWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

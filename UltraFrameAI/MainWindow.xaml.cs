@@ -148,6 +148,33 @@ public partial class MainWindow : Window
         _viewModel.BrowseRootFileCommand.Execute(null);
     }
 
+    private void CodecHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("CodecHelpTitle"), LocalizedStrings.Get("CodecHelpBody"));
+    }
+
+    private void FormatHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("FormatHelpTitle"), LocalizedStrings.Get("FormatHelpBody"));
+    }
+
+    private void OpenCodecFormatHelp(object sender, string title, string body)
+    {
+        if (sender is not System.Windows.Controls.Button button)
+        {
+            return;
+        }
+
+        _ = ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
+        _ = ClosePopupAsync(BrowseInputPopup, BrowseInputPopupBorder, BrowseInputPopupScale, BrowseInputPopupTranslate);
+        _ = ClosePopupAsync(RecentFoldersPopup, RecentFoldersPopupBorder, RecentFoldersPopupScale, RecentFoldersPopupTranslate);
+
+        CodecFormatHelpPopupTitle.Text = title;
+        CodecFormatHelpPopupBody.Text = body;
+        CodecFormatHelpPopup.PlacementTarget = button;
+        CodecFormatHelpPopup.IsOpen = true;
+    }
+
     private void BenchmarkButton_Click(object sender, RoutedEventArgs e)
     {
         var sourcePath = _viewModel.SelectedItem?.SourcePath;

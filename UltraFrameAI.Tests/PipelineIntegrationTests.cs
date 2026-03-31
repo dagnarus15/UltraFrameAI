@@ -63,7 +63,8 @@ public sealed class PipelineIntegrationTests
                 UseAntiFlicker = true,
                 ContentMode = "Anime",
                 AntiFlickerStrength = 65,
-                EncoderPreset = "slower"
+                EncoderPreset = "slower",
+                UseNativeEncoderBackend = false
             };
 
             await pipeline.RunAsync(new[] { item }, options, reports.Add, CancellationToken.None);
