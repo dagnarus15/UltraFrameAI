@@ -538,8 +538,24 @@ Am besten für maximale Stabilität.</value>
   <data name="Resolution" xml:space="preserve">
     <value>Auflösung</value>
   </data>
+  <data name="EncoderPreset" xml:space="preserve">
+    <value>Encoder-Preset</value>
+  </data>
+  <data name="EncoderPresetHint" xml:space="preserve">
+    <value>Bestimmt, wie stark der Video-Encoder nach dem Upscaling arbeiten soll. Schnellere Presets brauchen meist weniger Zeit.</value>
+  </data>
   <data name="Container" xml:space="preserve">
     <value>Container</value>
+  </data>
+  <data name="EncoderPresetHelpTitle" xml:space="preserve">
+    <value>Encoder-Preset</value>
+  </data>
+  <data name="EncoderPresetHelpBody" xml:space="preserve">
+    <value>fast: benötigt am wenigsten Kodierzeit und eignet sich für schnelle Kontrollen oder schwächere Rechner.
+medium: ausgewogener Kompromiss aus Qualität, Größe und Geschwindigkeit für die meisten Jobs.
+slower: verbringt mehr Zeit pro Bild und zielt meist auf etwas bessere Kompression und kleinere Dateien.
+
+Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder in Kompressionsentscheidungen steckt. Langsamere Presets tauschen CPU-Zeit oft gegen kleinere Dateien und manchmal etwas effizientere Kompression.</value>
   </data>
   <data name="CodecHelpTitle" xml:space="preserve">
     <value>Codec</value>

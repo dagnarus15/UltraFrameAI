@@ -608,10 +608,11 @@
                 <Popup x:Name="CodecFormatHelpPopup"
                        Placement="Bottom"
                        AllowsTransparency="True"
-                       StaysOpen="False"
+                       StaysOpen="True"
                        PopupAnimation="Fade"
                        IsOpen="False">
-                    <Border Background="{StaticResource CardBrush}"
+                    <Border x:Name="CodecFormatHelpPopupBorder"
+                            Background="{StaticResource CardBrush}"
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="16"
@@ -790,10 +791,12 @@
                                     <TextBlock Text="{local:Loc Codec}"
                                                Style="{StaticResource CaptionStyle}"
                                                VerticalAlignment="Center" />
-                                    <Button Grid.Column="1"
-                                            Style="{StaticResource RoundHelpButtonStyle}"
-                                            Content="?"
-                                            Click="CodecHelp_Click" />
+                                        <Button Grid.Column="1"
+                                                x:Name="CodecHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="CodecHelp_Click"
+                                                />
                                 </Grid>
                                 <ComboBox ItemsSource="{Binding CodecOptions}"
                                           SelectedItem="{Binding SelectedCodec}"
@@ -813,9 +816,11 @@
                                         <Run Text=")" />
                                     </TextBlock>
                                     <Button Grid.Column="1"
+                                            x:Name="FormatHelpButton"
                                             Style="{StaticResource RoundHelpButtonStyle}"
                                             Content="?"
-                                            Click="FormatHelp_Click" />
+                                            Click="FormatHelp_Click"
+                                            />
                                 </Grid>
                                 <ComboBox ItemsSource="{Binding TargetOptions}"
                                           SelectedItem="{Binding SelectedTarget}"
@@ -1248,14 +1253,44 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{local:Loc EncoderPreset}"
+                                                   Style="{StaticResource CaptionStyle}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                x:Name="EncoderPresetHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="EncoderPresetHelp_Click"
+                                                />
+                                    </Grid>
+                                    <ComboBox ItemsSource="{Binding EncoderPresetOptions}"
+                                              SelectedItem="{Binding EncoderPreset}"
+                                              HorizontalAlignment="Stretch"
+                                              ToolTip="{local:Loc EncoderPresetHint}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
                                     <TextBlock Text="{local:Loc FFmpegThreads}" Style="{StaticResource CaptionStyle}" />
                                     <TextBox Text="{Binding FfmpegThreadsText, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2">
+                                <StackPanel Grid.Column="4">
                                     <TextBlock Text="{local:Loc UpscalerJobs}" Style="{StaticResource CaptionStyle}" />
                                     <TextBox Text="{Binding UpscalerThreadsText, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="4">
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
                                     <TextBlock Text="{local:Loc TileSize}" Style="{StaticResource CaptionStyle}" />
                                     <TextBox Text="{Binding TileSizeText, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
@@ -1270,6 +1305,15 @@
                                           ToolTip="{local:Loc PreserveIncompleteOutputHint}"
                                           IsChecked="{Binding PreserveIncompleteOutput}" />
                             </WrapPanel>
+
+                            <WrapPanel Margin="0,0,0,12">
+                                <CheckBox Content="{local:Loc AntiFlicker}"
+                                          IsChecked="{Binding UseAntiFlicker}" />
+                            </WrapPanel>
+                            <TextBlock Text="{local:Loc AntiFlickerHint}"
+                                       Margin="0,-6,0,12"
+                                       Style="{StaticResource CaptionStyle}"
+                                       TextWrapping="Wrap" />
 
                             <Button Content="{local:Loc OpenOutputFolder}"
                                     Command="{Binding OpenOutputCommand}"
@@ -1288,8 +1332,6 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <CheckBox Content="{local:Loc AntiFlicker}"
-                                      IsChecked="{Binding UseAntiFlicker}" />
                             <TextBlock Text="{local:Loc AntiFlickerHint}"
                                        Margin="0,6,0,12"
                                        Style="{StaticResource CaptionStyle}"

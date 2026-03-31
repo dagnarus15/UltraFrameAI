@@ -538,6 +538,22 @@ Best for maximum stability.</value>
   <data name="Resolution" xml:space="preserve">
     <value>Resolution</value>
   </data>
+  <data name="EncoderPreset" xml:space="preserve">
+    <value>Encoder preset</value>
+  </data>
+  <data name="EncoderPresetHint" xml:space="preserve">
+    <value>Controls how hard the video encoder works after upscaling. Faster presets usually use less time.</value>
+  </data>
+  <data name="EncoderPresetHelpTitle" xml:space="preserve">
+    <value>Encoder preset</value>
+  </data>
+  <data name="EncoderPresetHelpBody" xml:space="preserve">
+    <value>fast: uses the least encoder time and is best for quick checks or low-power machines.
+medium: balanced quality, size, and speed for most jobs.
+slower: spends more time per frame, usually aiming for slightly better compression and smaller files.
+
+Beyond speed, the preset changes how much effort the encoder spends on compression decisions. Slower presets often trade CPU time for smaller output and sometimes a bit more compression efficiency.</value>
+  </data>
   <data name="CodecHelpTitle" xml:space="preserve">
     <value>Codec</value>
   </data>

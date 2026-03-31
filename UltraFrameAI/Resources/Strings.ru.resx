@@ -538,8 +538,24 @@
   <data name="Resolution" xml:space="preserve">
     <value>Разрешение</value>
   </data>
+  <data name="EncoderPreset" xml:space="preserve">
+    <value>Пресет энкодера</value>
+  </data>
+  <data name="EncoderPresetHint" xml:space="preserve">
+    <value>Определяет, насколько тяжело видеоэнкодер работает после апскейла. Более быстрые пресеты обычно экономят время.</value>
+  </data>
   <data name="Container" xml:space="preserve">
     <value>Контейнер</value>
+  </data>
+  <data name="EncoderPresetHelpTitle" xml:space="preserve">
+    <value>Пресет энкодера</value>
+  </data>
+  <data name="EncoderPresetHelpBody" xml:space="preserve">
+    <value>fast: тратит меньше всего времени на кодирование и подходит для быстрых проверок или слабых машин.
+medium: баланс качества, размера и скорости для большинства задач.
+slower: тратит больше времени на кадр и обычно даёт чуть лучшее сжатие и немного меньший файл.
+
+Помимо скорости пресет влияет на то, сколько усилий энкодер тратит на решения по сжатию. Более медленные пресеты обычно меняют время CPU на меньший размер и иногда чуть более эффективное сжатие.</value>
   </data>
   <data name="CodecHelpTitle" xml:space="preserve">
     <value>Кодек</value>

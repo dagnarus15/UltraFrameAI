@@ -43,6 +43,10 @@ This is the current canonical key set for `Resources/Strings.resx`.
 - `ProcessingFps`
 - `Resolution`
 - `Container`
+- `EncoderPreset`
+- `EncoderPresetHint`
+- `EncoderPresetHelpTitle`
+- `EncoderPresetHelpBody`
 - `CodecHelpTitle`
 - `CodecHelpBody`
 - `FormatHelpTitle`

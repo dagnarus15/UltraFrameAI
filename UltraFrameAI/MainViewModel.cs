@@ -23,12 +23,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string SelectedCodec,
         string SelectedTarget,
         string SelectedContainer,
+        string EncoderPreset,
         string FfmpegThreadsText,
         string UpscalerThreadsText,
         string TileSizeText,
         bool Overwrite,
         string SelectedContentMode,
         string CurrentLanguage,
+        bool? UseAntiFlicker,
         bool PreserveIncompleteOutput,
         bool UseNativeEncoderBackend,
         bool Complete);
@@ -80,6 +82,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _selectedCodec = "x264";
     private string _selectedTarget = "1080p";
     private string _selectedContainer = "mkv";
+    private string _encoderPreset = "slower";
     private string _ffmpegThreadsText = "0";
     private string _upscalerThreadsText = "4:4:4";
     private string _tileSizeText = "1024";
@@ -147,6 +150,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CodecOptions = new[] { "x264", "x265" };
         TargetOptions = new[] { "1080p", "2160p" };
         ContainerOptions = new[] { "mkv" };
+        EncoderPresetOptions = new[] { "fast", "medium", "slower" };
 
         _browseRootFolderCommand = new RelayCommand(BrowseRootFolder);
         _browseRootFileCommand = new RelayCommand(BrowseRootFile);
@@ -205,6 +209,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public IEnumerable<string> TargetOptions { get; }
 
     public IEnumerable<string> ContainerOptions { get; }
+
+    public IEnumerable<string> EncoderPresetOptions { get; }
 
     public ICommand BrowseRootFolderCommand => _browseRootFolderCommand;
 
@@ -372,6 +378,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public string EncoderPreset
+    {
+        get => _encoderPreset;
+        set
+        {
+            var normalized = NormalizeEncoderPreset(value);
+            if (SetField(ref _encoderPreset, normalized))
+            {
+                PersistAppSettings();
+            }
+        }
+    }
+
     public string FfmpegThreadsText
     {
         get => _ffmpegThreadsText;
@@ -428,6 +447,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _useAntiFlicker, value))
             {
                 PersistCurrentAntiFlickerPreset();
+                PersistAppSettings();
             }
         }
     }
@@ -1099,7 +1119,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UseAntiFlicker = UseAntiFlicker,
             ContentMode = SelectedContentMode,
             AntiFlickerStrength = AntiFlickerStrength,
-            EncoderPreset = "slower",
+            EncoderPreset = EncoderPreset,
             UseNativeEncoderBackend = NativeFrameEncoderBridge.IsAvailable(),
             PreserveIncompleteOutput = PreserveIncompleteOutput
         };
@@ -1893,6 +1913,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             SelectedTarget = target;
             SelectedCodec = codec;
             SelectedContainer = container;
+            EncoderPreset = NormalizeEncoderPreset(loaded.EncoderPreset);
 
             if (!string.IsNullOrWhiteSpace(loaded.FfmpegThreadsText))
             {
@@ -1919,6 +1940,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (!string.IsNullOrWhiteSpace(loaded.SelectedContentMode))
             {
                 SelectedContentMode = loaded.SelectedContentMode;
+            }
+
+            if (loaded.UseAntiFlicker is bool useAntiFlicker)
+            {
+                UseAntiFlicker = useAntiFlicker;
             }
 
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
@@ -2133,12 +2159,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 SelectedCodec,
                 SelectedTarget,
                 SelectedContainer,
+                EncoderPreset,
                 FfmpegThreadsText,
                 UpscalerThreadsText,
                 TileSizeText,
                 Overwrite,
                 SelectedContentMode,
                 CurrentLanguage.ToString(),
+                UseAntiFlicker,
                 PreserveIncompleteOutput,
                 UseNativeEncoderBackend,
                 true);
@@ -2229,6 +2257,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         return GetInputDirectory(inputPath);
+    }
+
+    private static string NormalizeEncoderPreset(string? preset)
+    {
+        return preset?.Trim().ToLowerInvariant() switch
+        {
+            "fast" => "fast",
+            "medium" => "medium",
+            "slower" => "slower",
+            _ => "slower"
+        };
     }
 
     private void ApplyAntiFlickerPreset(string mode, bool persist)

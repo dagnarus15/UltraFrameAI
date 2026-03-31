@@ -22,6 +22,7 @@
     <ApplicationIcon>Assets\UltraFrameAI.ico</ApplicationIcon>
     <StartupObject>UltraFrameAI.App</StartupObject>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
 
   <ItemGroup>
     <Resource Include="images\*.png" />
@@ -33,11 +34,8 @@
 
   <Target Name="CopyNativeAntiFlicker" AfterTargets="Build">
     <ItemGroup>
-      <NativeAntiFlickerDll Include="$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll"
-                           Condition="Exists('$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll')" />
+      <NativeAntiFlickerDll Include="$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll" Condition="Exists('$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll')" />
     </ItemGroup>
-    <Copy SourceFiles="@(NativeAntiFlickerDll)"
-          DestinationFolder="$(TargetDir)"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(NativeAntiFlickerDll)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

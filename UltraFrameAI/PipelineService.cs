@@ -19,7 +19,7 @@ public sealed class PipelineService
     private sealed record SourceMetadata(double Duration, int Width, int Height, double Fps);
     private sealed record SourceMetadataCacheEntry(double Duration, int Width, int Height, double Fps, bool Complete);
     private sealed record TimestampCacheEntry(double[] Timestamps, bool Complete);
-    private sealed record FrameWriteItem(byte[] Buffer);
+    private sealed record FrameWriteItem(byte[] Buffer, double? TimestampSeconds);
     private const int RawFrameQueueCapacity = 8;
     private const int EncodeFrameQueueCapacity = 4;
 
@@ -325,11 +325,9 @@ public sealed class PipelineService
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
-                var outputFrame = new byte[outputFrameBytes];
                 var antiFlicker = options.UseAntiFlicker && options.AntiFlickerStrength > 0
                     ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.ContentMode, options.AntiFlickerStrength)
                     : null;
-                var antiFlickerFrame = antiFlicker is null ? null : new byte[outputFrameBytes];
                 var currentFrames = 0;
                 var lastTick = Stopwatch.StartNew();
                 var previewUpdateWatch = Stopwatch.StartNew();
@@ -414,6 +412,13 @@ public sealed class PipelineService
                             var writeStart = Stopwatch.GetTimestamp();
                             try
                             {
+                                if (itemToWrite.TimestampSeconds is not null)
+                                {
+                                    var timestampStart = Stopwatch.GetTimestamp();
+                                    await encodeSession.SubmitTimestampAsync(itemToWrite.TimestampSeconds.Value, pipelineToken).ConfigureAwait(false);
+                                    timestampSubmitElapsed += Stopwatch.GetElapsedTime(timestampStart);
+                                }
+
                                 await encodeSession.WriteFrameAsync(itemToWrite.Buffer, pipelineToken).ConfigureAwait(false);
                             }
                             finally
@@ -531,27 +536,31 @@ public sealed class PipelineService
                             upscaleWriteElapsed += Stopwatch.GetElapsedTime(sectionStart);
                             sectionStart = Stopwatch.GetTimestamp();
 
-                            await ReadExactAsync(upscaleOut, outputFrame, pipelineToken).ConfigureAwait(false);
+                            var outputBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
+                            await ReadExactAsync(upscaleOut, outputBuffer, pipelineToken).ConfigureAwait(false);
                             upscaleReadElapsed += Stopwatch.GetElapsedTime(sectionStart);
-                            sectionStart = Stopwatch.GetTimestamp();
 
-                            var frameBytes = outputFrame;
-                            if (antiFlicker is not null && antiFlickerFrame is not null)
+                            var frameBuffer = outputBuffer;
+                            byte[]? processedBuffer = null;
+                            if (antiFlicker is not null)
                             {
-                                if (!antiFlicker.Process(outputFrame, antiFlickerFrame))
+                                processedBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
+                                if (!antiFlicker.Process(outputBuffer, processedBuffer))
                                 {
                                     antiFlicker.Dispose();
                                     antiFlicker = null;
-                                    antiFlickerFrame = null;
+                                    ArrayPool<byte>.Shared.Return(processedBuffer);
+                                    processedBuffer = null;
                                 }
                                 else
                                 {
-                                    frameBytes = antiFlickerFrame;
+                                    frameBuffer = processedBuffer;
+                                    ArrayPool<byte>.Shared.Return(outputBuffer);
                                 }
                             }
                             if (shouldUpdatePreview)
                             {
-                                var previewBuffer = frameBytes;
+                                var previewBuffer = frameBuffer;
                                 previewReport!(new RenderPreviewFrameUpdate(
                                     item.Index,
                                     false,
@@ -561,17 +570,14 @@ public sealed class PipelineService
                                     upWidth * 3));
                             }
 
-                            if (timestampBridge is not null && timestampBridge.TryDequeue(out var timestampSeconds))
+                            double? timestampSeconds = null;
+                            if (timestampBridge is not null && timestampBridge.TryDequeue(out var dequeuedTimestamp))
                             {
-                                await encodeSession.SubmitTimestampAsync(timestampSeconds, pipelineToken).ConfigureAwait(false);
-                                timestampSubmitElapsed += Stopwatch.GetElapsedTime(sectionStart);
-                                sectionStart = Stopwatch.GetTimestamp();
+                                timestampSeconds = dequeuedTimestamp;
                             }
 
-                            var encodeBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
-                            Buffer.BlockCopy(frameBytes, 0, encodeBuffer, 0, outputFrameBytes);
                             var encodeEnqueueStart = Stopwatch.GetTimestamp();
-                            await encodeFrameChannel.Writer.WriteAsync(new FrameWriteItem(encodeBuffer), pipelineToken).ConfigureAwait(false);
+                            await encodeFrameChannel.Writer.WriteAsync(new FrameWriteItem(frameBuffer, timestampSeconds), pipelineToken).ConfigureAwait(false);
                             Interlocked.Add(ref encodeQueueWriteWaitTicks, Stopwatch.GetElapsedTime(encodeEnqueueStart).Ticks);
                             UpdateMax(ref encodeQueueMax, Interlocked.Increment(ref encodeQueueCurrent));
 

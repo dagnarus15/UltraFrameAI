@@ -158,10 +158,22 @@ public partial class MainWindow : Window
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("FormatHelpTitle"), LocalizedStrings.Get("FormatHelpBody"));
     }
 
+    private void EncoderPresetHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("EncoderPresetHelpTitle"), LocalizedStrings.Get("EncoderPresetHelpBody"));
+    }
+
     private void OpenCodecFormatHelp(object sender, string title, string body)
     {
         if (sender is not System.Windows.Controls.Button button)
         {
+            return;
+        }
+
+        if (CodecFormatHelpPopup.IsOpen
+            && ReferenceEquals(CodecFormatHelpPopup.PlacementTarget, button))
+        {
+            CodecFormatHelpPopup.IsOpen = false;
             return;
         }
 
@@ -269,17 +281,24 @@ public partial class MainWindow : Window
 
     private async void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (IsWithinButton(e.OriginalSource, CodecHelpButton) ||
+            IsWithinButton(e.OriginalSource, FormatHelpButton) ||
+            IsWithinButton(e.OriginalSource, EncoderPresetHelpButton))
+        {
+            return;
+        }
+
+        if (CodecFormatHelpPopup.IsOpen && !IsWithinElement(e.OriginalSource, CodecFormatHelpPopupBorder))
+        {
+            CodecFormatHelpPopup.IsOpen = false;
+        }
+
         if (IsWithinButton(e.OriginalSource, LanguageButton) ||
             IsWithinButton(e.OriginalSource, RecentFoldersButton) ||
             IsWithinButton(e.OriginalSource, SettingsButton) ||
             IsWithinButton(e.OriginalSource, BrowseInputButton))
         {
             return;
-        }
-
-        if (AdditionalOverlayRoot.Visibility == Visibility.Visible && !IsWithinElement(e.OriginalSource, AdditionalOverlayBorder))
-        {
-            await CloseAdditionalOverlayAsync().ConfigureAwait(true);
         }
 
         if (LanguagePopup.IsOpen)
