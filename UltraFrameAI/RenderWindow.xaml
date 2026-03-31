@@ -15,9 +15,43 @@
         Background="#0B1220"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
+        PreviewMouseDown="Window_PreviewMouseDown"
         Closing="Window_Closing">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <local:LanguageEqualsConverter x:Key="LanguageEqualsConverter" />
+        <Style x:Key="LanguageMenuButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#22375B" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#16243D" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="24">
@@ -45,11 +79,116 @@
                                Margin="0,6,0,0"
                                Foreground="{StaticResource TextSecondaryBrush}" />
                 </StackPanel>
-                <TextBlock Grid.Column="1"
-                           Text="{Binding StatusSummary}"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           FontWeight="SemiBold" />
+                <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <Grid HorizontalAlignment="Right">
+                        <Button x:Name="LanguageButton"
+                                Width="42"
+                                Height="32"
+                                HorizontalAlignment="Right"
+                                Padding="0"
+                                Background="#13203A"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                ToolTip="{local:Loc Language}"
+                                Click="LanguageButton_Click">
+                            <Image Source="{Binding CurrentLanguageFlagPath}" Width="24" Height="16" />
+                        </Button>
+                        <Popup x:Name="LanguagePopup"
+                               PlacementTarget="{Binding ElementName=LanguageButton}"
+                               Placement="Bottom"
+                               AllowsTransparency="True"
+                               StaysOpen="True"
+                               DataContext="{Binding}">
+                            <Border x:Name="LanguagePopupBorder"
+                                    Background="{StaticResource CardBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="4"
+                                    Margin="0,4,0,0"
+                                    Opacity="0"
+                                    RenderTransformOrigin="0.5,0">
+                                <Border.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform x:Name="LanguagePopupScale" ScaleX="0.96" ScaleY="0.96" />
+                                        <TranslateTransform x:Name="LanguagePopupTranslate" Y="10" />
+                                    </TransformGroup>
+                                </Border.RenderTransform>
+                                <StackPanel MinWidth="180">
+                                    <Button Command="{Binding SetLanguageCommand}"
+                                            CommandParameter="English"
+                                            Click="LanguageChoice_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=English}" Value="True">
+                                                        <Setter Property="Background" Value="#2B4D7A" />
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="pack://application:,,,/images/flag-en.png" Width="18" Height="12" Margin="0,0,8,0" />
+                                                <TextBlock Text="{local:Loc LanguageEnglish}" />
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Command="{Binding SetLanguageCommand}"
+                                            CommandParameter="Russian"
+                                            Margin="0,2,0,0"
+                                            Click="LanguageChoice_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=Russian}" Value="True">
+                                                        <Setter Property="Background" Value="#2B4D7A" />
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="pack://application:,,,/images/flag-ru.png" Width="18" Height="12" Margin="0,0,8,0" />
+                                                <TextBlock Text="{local:Loc LanguageRussian}" />
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Command="{Binding SetLanguageCommand}"
+                                            CommandParameter="German"
+                                            Margin="0,2,0,0"
+                                            Click="LanguageChoice_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=German}" Value="True">
+                                                        <Setter Property="Background" Value="#2B4D7A" />
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="pack://application:,,,/images/flag-de.png" Width="18" Height="12" Margin="0,0,8,0" />
+                                                <TextBlock Text="{local:Loc LanguageGerman}" />
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <TextBlock Text="{Binding StatusSummary}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               Margin="0,6,0,0" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -290,15 +429,28 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="FileListButton"
-                    Content="{local:Loc FileList}"
-                    Click="FileListButton_Click"
-                    Padding="14,7"
-                    MinWidth="106"
-                    HorizontalAlignment="Left"
-                    Background="#16243D"
-                    BorderBrush="{StaticResource CardBorderBrush}"
-                    Foreground="{StaticResource TextPrimaryBrush}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <Button x:Name="FileListButton"
+                        Content="{local:Loc RenderFileListForRender}"
+                        Click="FileListButton_Click"
+                        Padding="14,7"
+                        MinWidth="198"
+                        HorizontalAlignment="Left"
+                        Background="#16243D"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        Foreground="{StaticResource TextPrimaryBrush}" />
+                <Border Margin="10,0,0,0"
+                        Padding="9,4"
+                        CornerRadius="10"
+                        Background="#13203A"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="{Binding CurrentRenderItemsCountText}"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="10.5"
+                               FontWeight="SemiBold"
+                               Margin="1,0" />
+                </Border>
+            </StackPanel>
 
             <Grid Grid.Column="2">
                 <Grid.ColumnDefinitions>
@@ -344,11 +496,11 @@
                         </TransformGroup>
                     </Border.RenderTransform>
                     <StackPanel MinWidth="300" MaxWidth="420">
-                        <TextBlock Text="{local:Loc FileList}"
+                        <TextBlock Text="{local:Loc RenderFileListForRender}"
                                    FontWeight="SemiBold"
                                    Margin="4,0,4,8" />
                         <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl ItemsSource="{Binding CurrentRenderItems}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Margin="0,0,0,6"

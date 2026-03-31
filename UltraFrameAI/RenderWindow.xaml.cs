@@ -26,6 +26,23 @@ public partial class RenderWindow : Window
         DataContextChanged += RenderWindow_DataContextChanged;
     }
 
+    private void LanguageButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (LanguagePopup.IsOpen)
+        {
+            _ = ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
+            return;
+        }
+
+        _ = ClosePopupAsync(FileListPopup, FileListPopupBorder, FileListPopupScale, FileListPopupTranslate);
+        OpenPopup(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
+    }
+
+    private void LanguageChoice_Click(object sender, RoutedEventArgs e)
+    {
+        _ = ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
+    }
+
     private void FileListButton_Click(object sender, RoutedEventArgs e)
     {
         if (FileListPopup.IsOpen)
@@ -34,6 +51,7 @@ public partial class RenderWindow : Window
             return;
         }
 
+        _ = ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
         FileListPopupBorder.Opacity = 1;
         FileListPopupScale.ScaleX = 1;
         FileListPopupScale.ScaleY = 1;
@@ -228,6 +246,24 @@ public partial class RenderWindow : Window
         }
     }
 
+    private async void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (IsWithinButton(e.OriginalSource, LanguageButton) || IsWithinButton(e.OriginalSource, FileListButton))
+        {
+            return;
+        }
+
+        if (LanguagePopup.IsOpen && !IsWithinElement(e.OriginalSource, LanguagePopupBorder))
+        {
+            await ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate).ConfigureAwait(true);
+        }
+
+        if (FileListPopup.IsOpen && !IsWithinElement(e.OriginalSource, FileListPopupBorder))
+        {
+            await ClosePopupAsync(FileListPopup, FileListPopupBorder, FileListPopupScale, FileListPopupTranslate).ConfigureAwait(true);
+        }
+    }
+
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(MainViewModel.IsBusy))
@@ -279,5 +315,98 @@ public partial class RenderWindow : Window
 
         _closingAfterStop = true;
         viewModel.CancelCommand.Execute(null);
+    }
+
+    private static void OpenPopup(
+        System.Windows.Controls.Primitives.Popup popup,
+        System.Windows.FrameworkElement content,
+        System.Windows.Media.ScaleTransform scale,
+        System.Windows.Media.TranslateTransform translate)
+    {
+        if (popup.IsOpen)
+        {
+            return;
+        }
+
+        content.Opacity = 0;
+        scale.ScaleX = 0.96;
+        scale.ScaleY = 0.96;
+        translate.Y = 10;
+        popup.IsOpen = true;
+
+        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(1, TimeSpan.FromMilliseconds(120))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        };
+        content.BeginAnimation(OpacityProperty, fadeIn);
+
+        scale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, new System.Windows.Media.Animation.DoubleAnimation(1, TimeSpan.FromMilliseconds(120))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        });
+        scale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, new System.Windows.Media.Animation.DoubleAnimation(1, TimeSpan.FromMilliseconds(120))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        });
+        translate.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(0, TimeSpan.FromMilliseconds(120))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        });
+    }
+
+    private static async Task ClosePopupAsync(
+        System.Windows.Controls.Primitives.Popup popup,
+        System.Windows.FrameworkElement content,
+        System.Windows.Media.ScaleTransform scale,
+        System.Windows.Media.TranslateTransform translate)
+    {
+        if (!popup.IsOpen)
+        {
+            return;
+        }
+
+        var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(0, TimeSpan.FromMilliseconds(100))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+        };
+        content.BeginAnimation(OpacityProperty, fadeOut);
+        scale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, new System.Windows.Media.Animation.DoubleAnimation(0.96, TimeSpan.FromMilliseconds(100))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+        });
+        scale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, new System.Windows.Media.Animation.DoubleAnimation(0.96, TimeSpan.FromMilliseconds(100))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+        });
+        translate.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(10, TimeSpan.FromMilliseconds(100))
+        {
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+        });
+
+        await Task.Delay(110).ConfigureAwait(true);
+        popup.IsOpen = false;
+    }
+
+    private static bool IsWithinButton(object source, System.Windows.Controls.Button button)
+    {
+        return IsWithinElement(source, button);
+    }
+
+    private static bool IsWithinElement(object source, DependencyObject element)
+    {
+        if (source is not DependencyObject dependencyObject)
+        {
+            return false;
+        }
+
+        for (var current = dependencyObject; current is not null; current = System.Windows.Media.VisualTreeHelper.GetParent(current))
+        {
+            if (ReferenceEquals(current, element))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

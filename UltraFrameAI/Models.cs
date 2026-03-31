@@ -215,6 +215,7 @@ public sealed class PipelineOptions
     public required string ContentMode { get; init; }
     public required double AntiFlickerStrength { get; init; }
     public required string EncoderPreset { get; init; }
+    public string OutputContainer { get; init; } = "mkv";
 }
 
 public sealed class AntiFlickerPresetState

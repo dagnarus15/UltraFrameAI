@@ -19,6 +19,7 @@ This is the current canonical key set for `Resources/Strings.resx`.
 - `CloseDuringRenderMessage`
 - `CloseDuringRenderStop`
 - `CloseDuringRenderKeep`
+- `RenderFileListForRender`
 - `QuickStartHint`
 - `ScanningFolder`
 - `ScanFolderProgress`
@@ -37,6 +38,8 @@ This is the current canonical key set for `Resources/Strings.resx`.
 - `AntiFlickerUltraHint`
 - `Codec`
 - `Target`
+- `Resolution`
+- `Container`
 - `FFmpegThreads`
 - `UpscalerJobs`
 - `TileSize`

@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -178,6 +180,7 @@ public sealed class PipelineService
             cancellationToken.ThrowIfCancellationRequested();
             var item = items[i];
             var itemWatch = Stopwatch.StartNew();
+            var frameDir = string.Empty;
             try
             {
                 if (item.SkipRequested)
@@ -192,26 +195,48 @@ public sealed class PipelineService
                 var duration = await GetDurationAsync(options.FfprobePath, item.SourcePath, cancellationToken).ConfigureAwait(false);
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogReadingVideoInfo"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogReadingVideoInfo"), StageElapsedText: Time(itemWatch.Elapsed)));
                 var videoInfo = await GetVideoInfoAsync(options.FfprobePath, item.SourcePath, cancellationToken).ConfigureAwait(false);
-                var totalFrames = EstimateFrameCount(duration, videoInfo.Fps);
+                var estimatedFrames = EstimateFrameCount(duration, videoInfo.Fps);
                 var codec = options.UseX265 ? "libx265" : "libx264";
                 var crf = options.UseX265 ? 18 : 16;
                 var height = options.UseX265 ? 2160 : 1080;
+                var subtitle = Path.Combine(Path.GetDirectoryName(item.SourcePath) ?? string.Empty, Path.GetFileNameWithoutExtension(item.SourcePath) + ".RG Genshiken.ass");
 
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogCheckingCache"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogCheckingCache"), StageElapsedText: Time(itemWatch.Elapsed)));
 
                 var fps = videoInfo.Fps > 0
                     ? videoInfo.Fps
-                    : (duration > 0 && totalFrames > 0 ? totalFrames / duration : 25.0);
+                    : (duration > 0 && estimatedFrames > 0 ? estimatedFrames / duration : 25.0);
                 if (videoInfo.Width <= 0 || videoInfo.Height <= 0)
                 {
                     throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
                 }
 
-            var upscaleScale = 2;
-            var rawWidth = Math.Max(1, videoInfo.Width);
-            var rawHeight = Math.Max(1, videoInfo.Height);
-            var upWidth = checked(rawWidth * upscaleScale);
-            var upHeight = checked(rawHeight * upscaleScale);
+                var upscaleScale = 2;
+                var rawWidth = Math.Max(1, videoInfo.Width);
+                var rawHeight = Math.Max(1, videoInfo.Height);
+                var upWidth = checked(rawWidth * upscaleScale);
+                var upHeight = checked(rawHeight * upscaleScale);
+
+                var frameRoot = Path.Combine(Path.GetTempPath(), "UltraFrameAI");
+                frameDir = Path.Combine(frameRoot, $"{item.Index:0000}_{Guid.NewGuid():N}");
+                Directory.CreateDirectory(frameDir);
+
+                var sourceTimestamps = await GetFrameTimestampsFromVideo(options.FfprobePath, item.SourcePath, cancellationToken).ConfigureAwait(false);
+                if (sourceTimestamps.Length == 0)
+                {
+                    throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
+                }
+
+                var timestamps = sourceTimestamps.ToArray();
+                var totalFrames = timestamps.Length;
+                var defaultFrameDuration = videoInfo.Fps > 0
+                    ? 1.0 / videoInfo.Fps
+                    : (duration > 0 && totalFrames > 0 ? duration / totalFrames : 0.04);
+                var durations = GetFrameDurationsFromTimestamps(timestamps, defaultFrameDuration);
+                var timingDebugLog = Path.Combine(
+                    options.OutputFolder,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.timing.debug.log");
+                WriteTimingDebugLog(timingDebugLog, duration, timestamps, durations);
 
                 var overwriteAllowed = options.Overwrite || item.ForceOverwrite;
                 if (File.Exists(item.OutputPath) && !overwriteAllowed)
@@ -229,24 +254,15 @@ public sealed class PipelineService
                 if (options.TileSize >= 0) upscaleArgs.Append($" -t {options.TileSize}");
                 if (options.GpuId.HasValue) upscaleArgs.Append($" -g {options.GpuId.Value}");
 
-                var encodeArgs = new StringBuilder("-hide_banner -y -nostats -loglevel error -progress pipe:2 ");
-                encodeArgs.Append($"-f rawvideo -pix_fmt bgr24 -s {upWidth}x{upHeight} -r {fps.ToString("0.######", CultureInfo.InvariantCulture)} -i pipe:0 ");
-                encodeArgs.Append($"-i {Q(item.SourcePath)} ");
-                encodeArgs.Append($"-map 0:v:0 -map 1:a? -fps_mode vfr -vf {Q($"scale=-2:{height}:flags=lanczos,setsar=1")} -c:v {codec} -preset {options.EncoderPreset} -tune animation -crf {crf} -pix_fmt yuv420p -c:a copy -sn ");
-                encodeArgs.Append(Q(item.OutputPath));
-
                 var decodeLastError = string.Empty;
                 var upscaleLastError = string.Empty;
-                var encodeLastError = string.Empty;
 
                 using var decode = StartProcess(options.FfmpegPath, decodeArgs.ToString(), Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory, cancellationToken, line => decodeLastError = line, out var decodeStderr);
                 using var upscale = StartProcess(options.UpscalerPath, upscaleArgs.ToString(), Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory, cancellationToken, line => upscaleLastError = line, out var upscaleStderr);
-                using var encode = StartProcess(options.FfmpegPath, encodeArgs.ToString(), Path.GetDirectoryName(item.OutputPath) ?? Environment.CurrentDirectory, cancellationToken, line => encodeLastError = line, out var encodeStderr);
 
                 var decodeOut = decode.Process.StandardOutput.BaseStream;
                 var upscaleIn = upscale.Process.StandardInput.BaseStream;
                 var upscaleOut = upscale.Process.StandardOutput.BaseStream;
-                var encodeIn = encode.Process.StandardInput.BaseStream;
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
@@ -298,6 +314,7 @@ public sealed class PipelineService
                         }
 
                         await ReadExactAsync(upscaleOut, outputFrame, cancellationToken).ConfigureAwait(false);
+                        var frameBytes = outputFrame;
                         if (antiFlicker is not null && antiFlickerFrame is not null)
                         {
                             if (!antiFlicker.Process(outputFrame, antiFlickerFrame))
@@ -305,22 +322,20 @@ public sealed class PipelineService
                                 antiFlicker.Dispose();
                                 antiFlicker = null;
                                 antiFlickerFrame = null;
-                                await encodeIn.WriteAsync(outputFrame, cancellationToken).ConfigureAwait(false);
                             }
                             else
                             {
-                                await encodeIn.WriteAsync(antiFlickerFrame, cancellationToken).ConfigureAwait(false);
+                                frameBytes = antiFlickerFrame;
                             }
-                        }
-                        else
-                        {
-                            await encodeIn.WriteAsync(outputFrame, cancellationToken).ConfigureAwait(false);
                         }
                         if (previewEnabled)
                         {
-                            var previewBuffer = antiFlickerFrame is not null ? antiFlickerFrame : outputFrame;
+                            var previewBuffer = frameBytes;
                             previewReport!(new RenderPreviewFrameUpdate(item.Index, false, (byte[])previewBuffer.Clone(), upWidth, upHeight, upWidth * 3));
                         }
+
+                        var framePath = Path.Combine(frameDir, $"frame_{currentFrames:00000000}.png");
+                        SaveFrameAsPng(framePath, frameBytes, upWidth, upHeight, upWidth * 3);
 
                         currentFrames++;
                         if (lastTick.ElapsedMilliseconds >= 1000)
@@ -334,7 +349,6 @@ public sealed class PipelineService
                 {
                     try { antiFlicker?.Dispose(); } catch { }
                     try { upscaleIn.Close(); } catch { }
-                    try { encodeIn.Close(); } catch { }
                 }
 
                 if (skipRequested)
@@ -351,38 +365,87 @@ public sealed class PipelineService
                 draining = true;
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogEncodingVideo, $"{currentFrames}/{totalFrames}", Summary(item.Index, total, overall.Elapsed), null, true, Time(stageWatch.Elapsed)));
 
-                var drainTick = Stopwatch.StartNew();
-                while (!encode.Process.HasExited)
+                var timelineFile = Path.Combine(frameDir, "timeline.txt");
+                if (!WriteFrameConcatList(frameDir, timelineFile, durations))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (drainTick.ElapsedMilliseconds >= 1000)
-                    {
-                        UpdateProgress(heartbeat: true);
-                        drainTick.Restart();
-                    }
-
-                    await Task.WhenAny(encode.Process.WaitForExitAsync(cancellationToken), Task.Delay(250, cancellationToken)).ConfigureAwait(false);
+                    throw new InvalidOperationException(LocalizedStrings.LogInvalidVideoInfo);
                 }
 
                 await decode.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
                 await upscale.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                await encode.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                await Task.WhenAll(decodeStderr, upscaleStderr, encodeStderr).ConfigureAwait(false);
+                await Task.WhenAll(decodeStderr, upscaleStderr).ConfigureAwait(false);
 
-                if (decode.Process.ExitCode != 0)
+                var decodeExitCode = decode.Process.ExitCode;
+                var upscaleExitCode = upscale.Process.ExitCode;
+                if (decodeExitCode != 0)
                 {
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(decodeLastError)
                         ? LocalizedStrings.LogBatchFailed(item.Title)
                         : $"{LocalizedStrings.LogBatchFailed(item.Title)} {decodeLastError}");
                 }
 
-                if (upscale.Process.ExitCode != 0)
+                if (upscaleExitCode != 0)
                 {
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(upscaleLastError)
                         ? LocalizedStrings.LogBatchFailed(item.Title)
                         : $"{LocalizedStrings.LogBatchFailed(item.Title)} {upscaleLastError}");
                 }
 
+                var hasSub = File.Exists(subtitle);
+                var outputContainer = string.Equals(options.OutputContainer, "mp4", StringComparison.OrdinalIgnoreCase) ? "mp4" : "mkv";
+                var encodeArgs = new StringBuilder("-hide_banner -y -nostats -loglevel error -progress pipe:2 ");
+                encodeArgs.Append($"-f concat -safe 0 -i {Q(timelineFile)} ");
+                encodeArgs.Append($"-i {Q(item.SourcePath)} ");
+                if (hasSub)
+                {
+                    encodeArgs.Append($"-i {Q(subtitle)} ");
+                }
+
+                encodeArgs.Append($"-map 0:v:0 -map 1:a? -fps_mode vfr -vf {Q($"scale=-2:{height}:flags=lanczos,setsar=1")} -c:v {codec} -preset {options.EncoderPreset} -tune animation -crf {crf} -pix_fmt yuv420p ");
+                if (outputContainer == "mp4")
+                {
+                    encodeArgs.Append("-c:a aac -b:a 320k ");
+                    if (hasSub)
+                    {
+                        encodeArgs.Append("-map 2:s? -c:s mov_text ");
+                    }
+                    else
+                    {
+                        encodeArgs.Append("-sn ");
+                    }
+                    encodeArgs.Append("-movflags +faststart ");
+                }
+                else
+                {
+                    encodeArgs.Append("-c:a copy ");
+                    if (hasSub)
+                    {
+                        encodeArgs.Append("-map 2:s? -c:s copy ");
+                    }
+                    else
+                    {
+                        encodeArgs.Append("-sn ");
+                    }
+                }
+                encodeArgs.Append(Q(item.OutputPath));
+
+                var encodeLastError = string.Empty;
+                using var encode = StartProcess(options.FfmpegPath, encodeArgs.ToString(), Path.GetDirectoryName(item.OutputPath) ?? Environment.CurrentDirectory, cancellationToken, line => encodeLastError = line, out var encodeStderr);
+                var encodeUiClock = Stopwatch.StartNew();
+                while (!encode.Process.HasExited)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (encodeUiClock.ElapsedMilliseconds >= 1000)
+                    {
+                        UpdateProgress(heartbeat: true);
+                        encodeUiClock.Restart();
+                    }
+
+                    await Task.WhenAny(encode.Process.WaitForExitAsync(cancellationToken), Task.Delay(250, cancellationToken)).ConfigureAwait(false);
+                }
+
+                await encode.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                await encodeStderr.ConfigureAwait(false);
                 if (encode.Process.ExitCode != 0)
                 {
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(encodeLastError)
@@ -401,6 +464,10 @@ public sealed class PipelineService
                 item.OutputState = LocalizedStrings.LogCancelled;
                 item.Detail = string.Empty;
                 throw;
+            }
+            finally
+            {
+                TryDelete(frameDir);
             }
         }
 
@@ -569,6 +636,132 @@ public sealed class PipelineService
         {
             throw new EndOfStreamException("Unexpected end of stream while reading a frame.");
         }
+    }
+
+    private static void SaveFrameAsPng(string path, byte[] pixels, int width, int height, int stride)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path) ?? Environment.CurrentDirectory);
+
+        var bitmap = BitmapSource.Create(
+            width,
+            height,
+            96,
+            96,
+            PixelFormats.Bgr24,
+            null,
+            pixels,
+            stride);
+        bitmap.Freeze();
+
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(path);
+        encoder.Save(stream);
+    }
+
+    private static async Task<double[]> GetFrameTimestampsFromVideo(string ffprobe, string sourcePath, CancellationToken ct)
+    {
+        var lines = await ProcessRunner.CaptureLinesAsync(
+            ffprobe,
+            $"-v error -select_streams v:0 -show_entries frame=best_effort_timestamp_time -of csv=p=0 {Q(sourcePath)}",
+            Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory,
+            ct).ConfigureAwait(false);
+
+        var timestamps = new List<double>(lines.Count);
+        foreach (var lineRaw in lines)
+        {
+            var token = lineRaw.Trim();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                continue;
+            }
+
+            var firstToken = token.Split(',')[0].Trim();
+            if (double.TryParse(firstToken, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+            {
+                timestamps.Add(value);
+            }
+        }
+
+        return timestamps.ToArray();
+    }
+
+    private static double[] GetFrameDurationsFromTimestamps(IReadOnlyList<double> timestamps, double defaultDuration)
+    {
+        if (timestamps.Count == 0)
+        {
+            return Array.Empty<double>();
+        }
+
+        var durations = new double[timestamps.Count];
+        if (timestamps.Count == 1)
+        {
+            durations[0] = Math.Max(0.001, defaultDuration);
+            return durations;
+        }
+
+        for (var i = 0; i < timestamps.Count - 1; i++)
+        {
+            var delta = timestamps[i + 1] - timestamps[i];
+            if (delta <= 0)
+            {
+                delta = i > 0 ? durations[i - 1] : Math.Max(0.001, defaultDuration);
+            }
+
+            durations[i] = delta;
+        }
+
+        durations[^1] = durations[^2];
+        return durations;
+    }
+
+    private static bool WriteFrameConcatList(string framesPath, string listPath, IReadOnlyList<double> durations)
+    {
+        var frameFiles = Directory.GetFiles(framesPath, "*.png")
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (frameFiles.Length == 0 || frameFiles.Length != durations.Count)
+        {
+            return false;
+        }
+
+        var lines = new List<string>(frameFiles.Length * 2 + 2);
+        for (var i = 0; i < frameFiles.Length - 1; i++)
+        {
+            var name = frameFiles[i].Replace('\\', '/').Replace("'", "'\\''");
+            lines.Add($"file '{name}'");
+            lines.Add($"duration {durations[i].ToString("0.######", CultureInfo.InvariantCulture)}");
+        }
+
+        var lastName = frameFiles[^1].Replace('\\', '/').Replace("'", "'\\''");
+        lines.Add($"file '{lastName}'");
+        lines.Add($"file '{lastName}'");
+
+        File.WriteAllLines(listPath, lines, Encoding.ASCII);
+        return true;
+    }
+
+    private static void WriteTimingDebugLog(string logPath, double sourceDuration, IReadOnlyList<double> timestamps, IReadOnlyList<double> durations)
+    {
+        var timelineDuration = durations.Sum();
+        var firstPts = timestamps.Count > 0 ? timestamps[0] : 0.0;
+        var lastPts = timestamps.Count > 0 ? timestamps[^1] : 0.0;
+        var delta = timelineDuration - sourceDuration;
+        var percent = sourceDuration > 0 ? delta / sourceDuration * 100.0 : 0.0;
+
+        var lines = new[]
+        {
+            $"frame_count={timestamps.Count}",
+            $"source_duration_seconds={sourceDuration:0.######}",
+            $"first_pts_seconds={firstPts:0.######}",
+            $"last_pts_seconds={lastPts:0.######}",
+            $"timeline_duration_seconds={timelineDuration:0.######}",
+            $"delta_seconds={delta:0.######}",
+            $"delta_percent={percent:0.######}"
+        };
+
+        File.WriteAllLines(logPath, lines, Encoding.UTF8);
     }
 
     private static void TryKillTree(Process process)

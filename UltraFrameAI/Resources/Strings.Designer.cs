@@ -192,6 +192,8 @@ public static class Strings
     public static string SelectOutputFolder => GetRequired(nameof(SelectOutputFolder));
     public static string Codec => GetRequired(nameof(Codec));
     public static string Target => GetRequired(nameof(Target));
+    public static string Resolution => GetRequired(nameof(Resolution));
+    public static string Container => GetRequired(nameof(Container));
     public static string FFmpegThreads => GetRequired(nameof(FFmpegThreads));
     public static string UpscalerJobs => GetRequired(nameof(UpscalerJobs));
     public static string TileSize => GetRequired(nameof(TileSize));

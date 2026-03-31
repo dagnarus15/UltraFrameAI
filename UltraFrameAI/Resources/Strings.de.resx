@@ -114,6 +114,9 @@
   <data name="FileList" xml:space="preserve">
     <value>Dateiliste</value>
   </data>
+  <data name="RenderFileListForRender" xml:space="preserve">
+    <value>Dateiliste für den Render</value>
+  </data>
   <data name="LastRunResultsTitle" xml:space="preserve">
     <value>Ergebnisse des letzten Laufs</value>
   </data>
@@ -527,7 +530,13 @@ Am besten für maximale Stabilität.</value>
     <value>Codec</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>Ziel</value>
+    <value>Format</value>
+  </data>
+  <data name="Resolution" xml:space="preserve">
+    <value>Auflösung</value>
+  </data>
+  <data name="Container" xml:space="preserve">
+    <value>Container</value>
   </data>
   <data name="FFmpegThreads" xml:space="preserve">
     <value>FFmpeg-Threads</value>
@@ -677,7 +686,7 @@ Am besten für maximale Stabilität.</value>
     <value>Warte auf Ihren Ordner.</value>
   </data>
   <data name="LogItemCount" xml:space="preserve">
-    <value>{0} Element(e)</value>
+    <value>{0} Datei(en)</value>
   </data>
   <data name="LogScanningFiles" xml:space="preserve">
     <value>Ordner wird durchsucht...</value>
@@ -695,7 +704,7 @@ Am besten für maximale Stabilität.</value>
     <value>Stapellauf wird gestartet...</value>
   </data>
   <data name="LogStartingSelectedBatch" xml:space="preserve">
-    <value>Die markierten Dateien werden gestartet...</value>
+    <value>Die ausgewählten Dateien werden gestartet...</value>
   </data>
   <data name="LogBatchFinished" xml:space="preserve">
     <value>Fürs Erste fertig.</value>
@@ -806,3 +815,5 @@ Am besten für maximale Stabilität.</value>
     <value>Es wurden keine Frames extrahiert.</value>
   </data>
 </root>
+
+

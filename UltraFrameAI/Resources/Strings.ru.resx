@@ -114,6 +114,9 @@
   <data name="FileList" xml:space="preserve">
     <value>Список файлов</value>
   </data>
+  <data name="RenderFileListForRender" xml:space="preserve">
+    <value>Список файлов для рендера</value>
+  </data>
   <data name="LastRunResultsTitle" xml:space="preserve">
     <value>Результаты последнего запуска</value>
   </data>
@@ -527,7 +530,13 @@
     <value>Кодек</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>Цель</value>
+    <value>Формат</value>
+  </data>
+  <data name="Resolution" xml:space="preserve">
+    <value>Разрешение</value>
+  </data>
+  <data name="Container" xml:space="preserve">
+    <value>Контейнер</value>
   </data>
   <data name="FFmpegThreads" xml:space="preserve">
     <value>Потоки FFmpeg</value>
@@ -545,7 +554,7 @@
     <value>Запустить всё</value>
   </data>
   <data name="StartSelected" xml:space="preserve">
-    <value>Запустить выделенное</value>
+    <value>Запустить выбранное</value>
   </data>
   <data name="OpenOutputFolder" xml:space="preserve">
     <value>Открыть папку вывода</value>
@@ -677,7 +686,7 @@
     <value>Жду папку.</value>
   </data>
   <data name="LogItemCount" xml:space="preserve">
-    <value>{0} элемент(ов)</value>
+    <value>{0} файл(ов)</value>
   </data>
   <data name="LogScanningFiles" xml:space="preserve">
     <value>Сканирую папку...</value>
@@ -695,7 +704,7 @@
     <value>Запускаю обработку...</value>
   </data>
   <data name="LogStartingSelectedBatch" xml:space="preserve">
-    <value>Запускаю отмеченные файлы...</value>
+    <value>Запускаю выбранные файлы...</value>
   </data>
   <data name="LogBatchFinished" xml:space="preserve">
     <value>Пока всё готово.</value>
@@ -806,3 +815,5 @@
     <value>Кадры не были извлечены.</value>
   </data>
 </root>
+
+

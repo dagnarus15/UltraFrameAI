@@ -1,4 +1,5 @@
 .vs/
+.dotnethome/
 **/bin/
 **/obj/
 dist/

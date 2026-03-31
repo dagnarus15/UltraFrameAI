@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Resources;
 using UltraFrameAI.Resources;
 
@@ -200,6 +200,8 @@ public static class LocalizedStrings
     public static string ScanningFolder => GetText(nameof(ScanningFolder));
     public static string Codec => GetText(nameof(Codec));
     public static string Target => GetText(nameof(Target));
+    public static string Resolution => GetText(nameof(Resolution));
+    public static string Container => GetText(nameof(Container));
     public static string FFmpegThreads => GetText(nameof(FFmpegThreads));
     public static string UpscalerJobs => GetText(nameof(UpscalerJobs));
     public static string TileSize => GetText(nameof(TileSize));
@@ -282,7 +284,15 @@ public static class LocalizedStrings
     public static string LogStartingItem(string itemTitle) => Format(nameof(LogStartingItem), itemTitle);
     public static string LogFinishedItem(string itemTitle) => Format(nameof(LogFinishedItem), itemTitle);
     public static string LogFoundVideoFiles(int count) => Format(nameof(LogFoundVideoFiles), count);
-    public static string LogItemCount(int count) => Format(nameof(LogItemCount), count);
+    public static string LogItemCount(int count)
+    {
+        return CurrentLanguage switch
+        {
+            UiLanguage.Russian => $"{count} {GetRussianFileWord(count)}",
+            UiLanguage.German => $"{count} {GetGermanFileWord(count)}",
+            _ => $"{count} {GetEnglishFileWord(count)}"
+        };
+    }
     public static string LogScanFailed(string message) => Format(nameof(LogScanFailed), message);
     public static string LogRootNotFound(string folder) => Format(nameof(LogRootNotFound), folder);
     public static string LogBatchFailed(string message) => Format(nameof(LogBatchFailed), message);
@@ -313,6 +323,27 @@ public static class LocalizedStrings
         UiLanguage.German => GermanCulture,
         _ => EnglishCulture
     };
+
+    private static string GetEnglishFileWord(int count) => count == 1 ? "file" : "files";
+
+    private static string GetGermanFileWord(int count) => count == 1 ? "Datei" : "Dateien";
+
+    private static string GetRussianFileWord(int count)
+    {
+        var absoluteCount = Math.Abs(count);
+        var lastTwoDigits = absoluteCount % 100;
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 14)
+        {
+            return "файлов";
+        }
+
+        return (absoluteCount % 10) switch
+        {
+            1 => "файл",
+            2 or 3 or 4 => "файла",
+            _ => "файлов"
+        };
+    }
 
     private static UiLanguage LoadLanguage()
     {
@@ -351,3 +382,4 @@ public static class LocalizedStrings
         }
     }
 }
+

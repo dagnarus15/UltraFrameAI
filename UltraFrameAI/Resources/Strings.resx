@@ -114,6 +114,9 @@
   <data name="FileList" xml:space="preserve">
     <value>File list</value>
   </data>
+  <data name="RenderFileListForRender" xml:space="preserve">
+    <value>Render file list</value>
+  </data>
   <data name="LastRunResultsTitle" xml:space="preserve">
     <value>Last run results</value>
   </data>
@@ -526,8 +529,11 @@ Best for maximum stability.</value>
   <data name="Codec" xml:space="preserve">
     <value>Codec</value>
   </data>
-  <data name="Target" xml:space="preserve">
-    <value>Target</value>
+      <data name="Target" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Resolution" xml:space="preserve">
+    <value>Resolution</value>
   </data>
   <data name="FFmpegThreads" xml:space="preserve">
     <value>FFmpeg threads</value>
@@ -545,7 +551,7 @@ Best for maximum stability.</value>
     <value>Start all</value>
   </data>
   <data name="StartSelected" xml:space="preserve">
-    <value>Start selected</value>
+    <value>Start chosen</value>
   </data>
   <data name="OpenOutputFolder" xml:space="preserve">
     <value>Open output folder</value>
@@ -677,7 +683,7 @@ Best for maximum stability.</value>
     <value>Waiting for your folder.</value>
   </data>
   <data name="LogItemCount" xml:space="preserve">
-    <value>{0} item(s)</value>
+    <value>{0} file(s)</value>
   </data>
   <data name="LogScanningFiles" xml:space="preserve">
     <value>Scanning the folder...</value>
@@ -695,7 +701,7 @@ Best for maximum stability.</value>
     <value>Starting the batch...</value>
   </data>
   <data name="LogStartingSelectedBatch" xml:space="preserve">
-    <value>Starting selected files...</value>
+    <value>Starting chosen files...</value>
   </data>
   <data name="LogBatchFinished" xml:space="preserve">
     <value>All done for now.</value>
@@ -806,3 +812,5 @@ Best for maximum stability.</value>
     <value>No frames were extracted.</value>
   </data>
 </root>
+
+

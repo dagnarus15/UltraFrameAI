@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -51,6 +52,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _outputFolder = string.Empty;
     private string _selectedCodec = "x264";
     private string _selectedTarget = "1080p";
+    private string _selectedContainer = "mkv";
     private string _ffmpegThreadsText = "0";
     private string _upscalerThreadsText = "4:4:4";
     private string _tileSizeText = "1024";
@@ -105,9 +107,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         _pipeline = new PipelineService();
         Items = new ObservableCollection<QueueItemViewModel>();
+        CurrentRenderItems = new ObservableCollection<QueueItemViewModel>();
+        CurrentRenderItems.CollectionChanged += CurrentRenderItems_CollectionChanged;
         RecentRootFolders = new ObservableCollection<RecentFolderItem>();
         CodecOptions = new[] { "x264", "x265" };
         TargetOptions = new[] { "1080p", "2160p" };
+        ContainerOptions = new[] { "mkv", "mp4" };
 
         _browseRootFolderCommand = new RelayCommand(BrowseRootFolder);
         _browseRootFileCommand = new RelayCommand(BrowseRootFile);
@@ -141,6 +146,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<QueueItemViewModel> Items { get; }
 
+    public ObservableCollection<QueueItemViewModel> CurrentRenderItems { get; }
+
+    public string CurrentRenderItemsCountText => LocalizedStrings.LogItemCount(CurrentRenderItems.Count);
+
     public ObservableCollection<RecentFolderItem> RecentRootFolders { get; }
 
     public ObservableCollection<LogEntryViewModel> LogLines => _logLines;
@@ -148,6 +157,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public IEnumerable<string> CodecOptions { get; }
 
     public IEnumerable<string> TargetOptions { get; }
+
+    public IEnumerable<string> ContainerOptions { get; }
 
     public ICommand BrowseRootFolderCommand => _browseRootFolderCommand;
 
@@ -290,6 +301,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 }
             }
         }
+    }
+
+    public string SelectedContainer
+    {
+        get => _selectedContainer;
+        set => SetField(ref _selectedContainer, value);
     }
 
     public string FfmpegThreadsText
@@ -750,7 +767,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 var outputDir = string.IsNullOrWhiteSpace(relativeDir)
                     ? outputFolder
                     : Path.Combine(outputFolder, relativeDir);
-                var suffix = SelectedCodec == "x265" ? "_2160p_x265.mkv" : "_1080p_x264.mkv";
+                var suffix = GetOutputSuffix();
 
                 var item = new QueueItemViewModel()
                 {
@@ -887,6 +904,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         if (runItems.Count == 0)
         {
+            CurrentRenderItems.Clear();
             Log(LocalizedStrings.LogNoItemsFound);
             return;
         }
@@ -899,6 +917,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             RememberRecentFolder(RootFolder, persist: true);
             _runCts = new CancellationTokenSource();
             ResetItemUi(runItems);
+            CurrentRenderItems.Clear();
+            foreach (var item in runItems)
+            {
+                CurrentRenderItems.Add(item);
+            }
             ClearRenderPreviewPaths();
             Log(startMessage);
             _sessionOutputDecision = null;
@@ -931,6 +954,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             IsBusy = false;
             IsRenderMode = false;
             ClearRenderPreviewPaths();
+            CurrentRenderItems.Clear();
         }
     }
 
@@ -949,6 +973,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             OutputFolder = OutputFolder,
             Overwrite = Overwrite,
             UseX265 = SelectedCodec == "x265",
+            OutputContainer = SelectedContainer,
             FfmpegThreads = ParseInt(FfmpegThreadsText, 0),
             UpscalerThreads = string.IsNullOrWhiteSpace(UpscalerThreadsText) ? "4:4:4" : UpscalerThreadsText,
             TileSize = ParseInt(TileSizeText, 1024),
@@ -1495,6 +1520,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         QueueStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    private void CurrentRenderItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(CurrentRenderItemsCountText));
+    }
+
     private void AttachQueueItem(QueueItemViewModel item)
     {
         if (_attachedQueueItems.Add(item))
@@ -1656,7 +1686,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             var baseName = Path.GetFileNameWithoutExtension(filePath);
             var scanRoot = GetScanRoot(filePath);
-            var suffix = SelectedCodec == "x265" ? "_2160p_x265.mkv" : "_1080p_x264.mkv";
+            var suffix = GetOutputSuffix();
             var outputFolder = OutputFolder;
             Directory.CreateDirectory(outputFolder);
 
@@ -1816,6 +1846,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         return Path.Combine(baseDirectory, $"{SelectedCodec}_{SelectedTarget}");
+    }
+
+    private string GetOutputSuffix()
+    {
+        var resolution = SelectedTarget == "2160p" ? "2160p" : "1080p";
+        var codec = SelectedCodec == "x265" ? "x265" : "x264";
+        var extension = string.Equals(SelectedContainer, "mp4", StringComparison.OrdinalIgnoreCase) ? ".mp4" : ".mkv";
+        return $"_{resolution}_{codec}{extension}";
     }
 
     private static string GetInputDirectory(string inputPath)
