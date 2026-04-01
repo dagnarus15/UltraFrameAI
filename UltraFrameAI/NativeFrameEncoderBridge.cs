@@ -56,7 +56,7 @@ internal sealed class NativeFrameEncoderBridge : IFrameEncoderBridge
     }
 
     private static bool SupportsTimestampedProcessFallback()
-        => SupportsCodec("ffv1");
+        => SupportsCodec("rawvideo");
 
     public string BuildEncoderArguments(
         int upWidth,

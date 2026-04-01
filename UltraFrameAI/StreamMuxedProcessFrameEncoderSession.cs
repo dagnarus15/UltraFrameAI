@@ -56,7 +56,7 @@ internal sealed class StreamMuxedProcessFrameEncoderSession : IFrameEncoderSessi
             string.Empty,
             string.Empty,
             false,
-            "ffv1",
+            "rawvideo",
             "medium",
             0,
             "nut",
