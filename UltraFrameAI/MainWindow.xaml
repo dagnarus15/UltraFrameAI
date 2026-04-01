@@ -1306,6 +1306,23 @@
                                           IsChecked="{Binding PreserveIncompleteOutput}" />
                             </WrapPanel>
 
+                            <WrapPanel Margin="0,0,0,4"
+                                       VerticalAlignment="Center">
+                                <CheckBox Content="{local:Loc RepairBrokenTimestamps}"
+                                          ToolTip="{local:Loc RepairBrokenTimestampsHint}"
+                                          IsChecked="{Binding RepairBrokenTimestamps}"
+                                          VerticalAlignment="Center" />
+                                <Button x:Name="RepairBrokenTimestampsHelpButton"
+                                        Style="{StaticResource RoundHelpButtonStyle}"
+                                        Content="?"
+                                        Margin="8,0,0,0"
+                                        Click="RepairBrokenTimestampsHelp_Click" />
+                            </WrapPanel>
+                            <TextBlock Text="{local:Loc RepairBrokenTimestampsHint}"
+                                       Margin="0,-2,0,12"
+                                       Style="{StaticResource CaptionStyle}"
+                                       TextWrapping="Wrap" />
+
                             <WrapPanel Margin="0,0,0,12">
                                 <CheckBox Content="{local:Loc AntiFlicker}"
                                           IsChecked="{Binding UseAntiFlicker}" />

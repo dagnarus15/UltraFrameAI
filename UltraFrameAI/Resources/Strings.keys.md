@@ -57,6 +57,10 @@ This is the current canonical key set for `Resources/Strings.resx`.
 - `OverwriteExistingOutput`
 - `PreserveIncompleteOutput`
 - `PreserveIncompleteOutputHint`
+- `RepairBrokenTimestamps`
+- `RepairBrokenTimestampsHint`
+- `RepairBrokenTimestampsHelpTitle`
+- `RepairBrokenTimestampsHelpBody`
 - `StartBatch`
 - `OpenOutputFolder`
 - `DeleteItem`

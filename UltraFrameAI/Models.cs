@@ -261,6 +261,7 @@ public sealed class PipelineOptions
     public string OutputContainer { get; init; } = "mkv";
     public required bool UseNativeEncoderBackend { get; init; }
     public required bool PreserveIncompleteOutput { get; init; }
+    public required bool RepairBrokenTimestamps { get; init; }
 }
 
 public sealed class AntiFlickerPresetState

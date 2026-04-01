@@ -33,6 +33,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool? UseAntiFlicker,
         bool PreserveIncompleteOutput,
         bool UseNativeEncoderBackend,
+        bool? RepairBrokenTimestamps,
         bool Complete);
 
     private readonly PipelineService _pipeline;
@@ -90,6 +91,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _useAntiFlicker = true;
     private bool _useNativeEncoderBackend;
     private bool _preserveIncompleteOutput;
+    private bool _repairBrokenTimestamps = true;
     private double _antiFlickerStrength = 65;
     private string _selectedContentMode = "Anime";
     private bool _suppressAntiFlickerPresetPersistence;
@@ -471,6 +473,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set
         {
             if (SetField(ref _preserveIncompleteOutput, value))
+            {
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public bool RepairBrokenTimestamps
+    {
+        get => _repairBrokenTimestamps;
+        set
+        {
+            if (SetField(ref _repairBrokenTimestamps, value))
             {
                 PersistAppSettings();
             }
@@ -1121,7 +1135,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             AntiFlickerStrength = AntiFlickerStrength,
             EncoderPreset = EncoderPreset,
             UseNativeEncoderBackend = UseNativeEncoderBackend && NativeFrameEncoderBridge.IsAvailable(),
-            PreserveIncompleteOutput = PreserveIncompleteOutput
+            PreserveIncompleteOutput = PreserveIncompleteOutput,
+            RepairBrokenTimestamps = RepairBrokenTimestamps
         };
     }
 
@@ -1949,6 +1964,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
             UseNativeEncoderBackend = loaded.UseNativeEncoderBackend;
+            RepairBrokenTimestamps = loaded.RepairBrokenTimestamps ?? true;
 
             if (!string.IsNullOrWhiteSpace(loaded.OutputFolder))
             {
@@ -2169,6 +2185,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 UseAntiFlicker,
                 PreserveIncompleteOutput,
                 UseNativeEncoderBackend,
+                RepairBrokenTimestamps,
                 true);
 
             var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });

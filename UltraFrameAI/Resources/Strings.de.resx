@@ -587,6 +587,22 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   <data name="PreserveIncompleteOutputHint" xml:space="preserve">
     <value>Unvollständige Ausgabedateien am Speicherort belassen statt sie zu löschen.</value>
   </data>
+  <data name="RepairBrokenTimestamps" xml:space="preserve">
+    <value>Defekte Zeitstempel reparieren</value>
+  </data>
+  <data name="RepairBrokenTimestampsHint" xml:space="preserve">
+    <value>Behebt einzelne defekte Sprünge in der Timeline beschädigter Quellen, damit die Wiedergabe später nicht springt oder hängen bleibt.</value>
+  </data>
+  <data name="RepairBrokenTimestampsHelpTitle" xml:space="preserve">
+    <value>Defekte Zeitstempel reparieren</value>
+  </data>
+  <data name="RepairBrokenTimestampsHelpBody" xml:space="preserve">
+    <value>Nutze diese Option, wenn die Quelle an einer beschädigten Stelle plötzlich einen großen Zeitstempelsprung hat. Die App glättet nur klare isolierte Ausreißer, damit die Wiedergabe stabil bleibt.
+
+Das hilft bei beschädigten Rips, bei denen ein einzelner Fehler den späteren Ablauf verschiebt.
+
+Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie sie ist, inklusive des defekten Sprungs.</value>
+  </data>
   <data name="StartBatch" xml:space="preserve">
     <value>Alles starten</value>
   </data>

@@ -337,7 +337,8 @@ public static class BenchmarkRunner
             EncoderPreset = benchCase.Preset,
             OutputContainer = "mkv",
             UseNativeEncoderBackend = false,
-            PreserveIncompleteOutput = false
+            PreserveIncompleteOutput = false,
+            RepairBrokenTimestamps = false
         };
 
         var started = Stopwatch.StartNew();

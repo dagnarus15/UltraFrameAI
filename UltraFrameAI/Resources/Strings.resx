@@ -584,6 +584,22 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   <data name="PreserveIncompleteOutputHint" xml:space="preserve">
     <value>Leave unfinished output files in place instead of deleting them.</value>
   </data>
+  <data name="RepairBrokenTimestamps" xml:space="preserve">
+    <value>Repair broken timestamps</value>
+  </data>
+  <data name="RepairBrokenTimestampsHint" xml:space="preserve">
+    <value>Fix isolated broken timeline spikes from damaged sources so playback does not jump or stall later.</value>
+  </data>
+  <data name="RepairBrokenTimestampsHelpTitle" xml:space="preserve">
+    <value>Repair broken timestamps</value>
+  </data>
+  <data name="RepairBrokenTimestampsHelpBody" xml:space="preserve">
+    <value>Use this when the source file has a damaged spot with a sudden timestamp spike. The app will smooth only obvious isolated jumps so playback stays stable.
+
+This helps with broken rips where one bad segment can throw later timing off.
+
+Turn it off if you want to preserve the source timeline exactly as-is, including a broken jump.</value>
+  </data>
   <data name="StartBatch" xml:space="preserve">
     <value>Start all</value>
   </data>

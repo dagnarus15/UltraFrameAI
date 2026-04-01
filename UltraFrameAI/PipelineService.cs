@@ -35,6 +35,81 @@ public sealed class PipelineService
         @"(?<fps>\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?)\s?fps\b",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private sealed class TimestampRepairState
+    {
+        private readonly Queue<double> _recentDeltas = new();
+        private readonly int _windowSize;
+        private double? _lastTimestamp;
+
+        public TimestampRepairState(int windowSize = 8)
+        {
+            _windowSize = Math.Max(4, windowSize);
+        }
+
+        public int RepairCount { get; private set; }
+
+        public bool TryRepair(double rawTimestamp, out double repairedTimestamp)
+        {
+            repairedTimestamp = rawTimestamp;
+            if (_lastTimestamp is null)
+            {
+                _lastTimestamp = rawTimestamp;
+                return false;
+            }
+
+            var previous = _lastTimestamp.Value;
+            var delta = rawTimestamp - previous;
+            var expectedDelta = GetExpectedDelta(delta);
+            var shouldRepair = delta <= 0
+                || (!double.IsNaN(expectedDelta)
+                    && expectedDelta > 0
+                    && delta > Math.Max(expectedDelta * 6.0, expectedDelta + 0.5));
+
+            if (shouldRepair)
+            {
+                repairedTimestamp = previous + expectedDelta;
+                delta = repairedTimestamp - previous;
+                RepairCount++;
+            }
+
+            RememberDelta(delta, expectedDelta);
+            _lastTimestamp = repairedTimestamp;
+            return shouldRepair;
+        }
+
+        private double GetExpectedDelta(double fallbackDelta)
+        {
+            if (_recentDeltas.Count == 0)
+            {
+                return fallbackDelta > 0 ? fallbackDelta : 1.0 / 24.0;
+            }
+
+            var ordered = _recentDeltas.OrderBy(x => x).ToArray();
+            return ordered[ordered.Length / 2];
+        }
+
+        private void RememberDelta(double delta, double expectedDelta)
+        {
+            if (delta <= 0 || double.IsNaN(delta) || double.IsInfinity(delta))
+            {
+                return;
+            }
+
+            if (_recentDeltas.Count > 0
+                && expectedDelta > 0
+                && delta > Math.Max(expectedDelta * 3.0, expectedDelta + 0.12))
+            {
+                return;
+            }
+
+            _recentDeltas.Enqueue(delta);
+            while (_recentDeltas.Count > _windowSize)
+            {
+                _recentDeltas.Dequeue();
+            }
+        }
+    }
+
     private sealed class PipeEtaEstimator
     {
         private readonly Queue<double> _secondsPerFrameSamples = new();
@@ -283,6 +358,9 @@ public sealed class PipelineService
                 var upscaleStartupStderrCount = 0;
                 var timestampBridge = timestampCacheHit ? null : new TimestampStreamBridge(Math.Max(totalFrames, 1));
                 var cachedTimestampIndex = 0;
+                var timestampRepairState = options.RepairBrokenTimestamps ? new TimestampRepairState() : null;
+                var emittedTimestamps = new List<double>(Math.Max(totalFrames, 1));
+                var timestampRepairLogged = false;
 
                 async ValueTask<double?> GetTimestampForFrameAsync(CancellationToken ct)
                 {
@@ -703,6 +781,22 @@ public sealed class PipelineService
                             }
 
                             var timestampSeconds = await GetTimestampForFrameAsync(pipelineToken).ConfigureAwait(false);
+                            if (timestampSeconds is double rawTimestamp)
+                            {
+                                if (timestampRepairState is not null
+                                    && timestampRepairState.TryRepair(rawTimestamp, out var repairedTimestamp))
+                                {
+                                    timestampSeconds = repairedTimestamp;
+                                    if (!timestampRepairLogged)
+                                    {
+                                        timestampRepairLogged = true;
+                                        WriteStartupLog($"Timestamp repair enabled: isolated spike corrected near frame {currentFrames + 1} ({rawTimestamp:0.######} -> {repairedTimestamp:0.######})");
+                                    }
+                                }
+
+                                emittedTimestamps.Add(timestampSeconds.Value);
+                            }
+
                             if (currentFrames == 0 && timestampSeconds is not null)
                             {
                                 WriteStartupLog($"First frame timestamp: {timestampSeconds.Value:0.######}");
@@ -794,19 +888,22 @@ public sealed class PipelineService
                     : (metadata.Fps > 0
                         ? 1.0 / metadata.Fps
                         : 0.04);
-                IReadOnlyList<double> frameTimestamps = timestampCacheHit && cachedTimestamps.Length > 0
-                    ? cachedTimestamps
+                var rawFrameTimestamps = timestampCacheHit && cachedTimestamps.Length > 0
+                    ? (IReadOnlyList<double>)cachedTimestamps
                     : timestampBridge is not null && timestampBridge.HasValues
                         ? timestampBridge.Snapshot()
                         : BuildUniformTimestamps(currentFrames, fallbackFrameDuration);
+                IReadOnlyList<double> frameTimestamps = emittedTimestamps.Count > 0
+                    ? emittedTimestamps
+                    : rawFrameTimestamps;
                 var durations = frameTimestamps.Count > 0
                     ? GetFrameDurationsFromTimestamps(frameTimestamps, fallbackFrameDuration)
                     : BuildUniformDurations(currentFrames, fallbackFrameDuration);
                 WritePerfSnapshot(encodeWatch.Elapsed, final: true);
                 TryCopyPerfLog(perfLog, perfLogFinal);
-                if (!timestampCacheHit && frameTimestamps.Count > 0)
+                if (!timestampCacheHit && rawFrameTimestamps.Count > 0)
                 {
-                    SaveTimestampCache(item.SourcePath, frameTimestamps);
+                    SaveTimestampCache(item.SourcePath, rawFrameTimestamps);
                 }
                 var timingDebugLog = Path.Combine(
                     options.OutputFolder,

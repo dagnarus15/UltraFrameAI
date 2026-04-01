@@ -65,7 +65,8 @@ public sealed class PipelineIntegrationTests
                 AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = false,
-                UseNativeEncoderBackend = false
+                UseNativeEncoderBackend = false,
+                RepairBrokenTimestamps = false
             };
 
             await pipeline.RunAsync(new[] { item }, options, reports.Add, CancellationToken.None);
