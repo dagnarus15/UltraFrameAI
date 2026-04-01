@@ -1,3 +1,5 @@
+using FFmpeg.AutoGen;
+
 namespace UltraFrameAI;
 
 internal sealed class NativeFrameEncoderBridge : IFrameEncoderBridge
@@ -30,6 +32,31 @@ internal sealed class NativeFrameEncoderBridge : IFrameEncoderBridge
 
         return true;
     }
+
+    private static unsafe bool SupportsCodec(string codec)
+    {
+        if (string.IsNullOrWhiteSpace(codec))
+        {
+            return false;
+        }
+
+        if (!FfmpegApiRuntime.TryInitialize(out _))
+        {
+            return false;
+        }
+
+        try
+        {
+            return ffmpeg.avcodec_find_encoder_by_name(codec) is not null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool SupportsTimestampedProcessFallback()
+        => SupportsCodec("ffv1");
 
     public string BuildEncoderArguments(
         int upWidth,
@@ -89,6 +116,16 @@ internal sealed class NativeFrameEncoderBridge : IFrameEncoderBridge
         if (!IsAvailable()
             || !string.Equals(config.OutputContainer, "mkv", StringComparison.OrdinalIgnoreCase))
         {
+            return _fallback.CreateSession(config, cancellationToken, onStderr);
+        }
+
+        if (!SupportsCodec(config.Codec))
+        {
+            if (SupportsTimestampedProcessFallback())
+            {
+                return new TimestampedProcessFrameEncoderSession(config, cancellationToken, onStderr);
+            }
+
             return _fallback.CreateSession(config, cancellationToken, onStderr);
         }
 

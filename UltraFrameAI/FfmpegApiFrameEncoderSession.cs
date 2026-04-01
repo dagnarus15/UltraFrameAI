@@ -18,6 +18,7 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
     private AVFrame* _frame;
     private AVPacket* _packet;
     private bool _opened;
+    private bool _headerWritten;
     private string? _lastError;
     private bool _hasPendingTimestamp;
     private double _pendingTimestampSeconds;
@@ -35,6 +36,8 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
     public int ExitCode => _opened ? 0 : -1;
 
     public string? LastError => _lastError;
+
+    public bool SupportsPerFrameTimestamps => true;
 
     public Task OpenAsync(CancellationToken cancellationToken)
     {
@@ -141,6 +144,8 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
             ThrowFfmpeg("Unable to write format header.", headerResult);
         }
 
+        _headerWritten = true;
+
         _frame = ffmpeg.av_frame_alloc();
         if (_frame == null)
         {
@@ -204,7 +209,13 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
             srcData[0] = srcPtr;
             srcLinesize[0] = _config.UpWidth * 3;
             dstData[0] = _frame->data[0];
+            dstData[1] = _frame->data[1];
+            dstData[2] = _frame->data[2];
+            dstData[3] = _frame->data[3];
             dstLinesize[0] = _frame->linesize[0];
+            dstLinesize[1] = _frame->linesize[1];
+            dstLinesize[2] = _frame->linesize[2];
+            dstLinesize[3] = _frame->linesize[3];
 
             ffmpeg.sws_scale(_sws, srcData, srcLinesize, 0, _config.UpHeight, dstData, dstLinesize);
         }
@@ -251,7 +262,7 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
     {
         try
         {
-            if (_formatCtx != null)
+            if (_headerWritten && _formatCtx != null)
             {
                 ffmpeg.av_write_trailer(_formatCtx);
             }
@@ -299,6 +310,8 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
             ffmpeg.avformat_free_context(_formatCtx);
             _formatCtx = null;
         }
+
+        _headerWritten = false;
 
         CloseInputContext(ref _sourceCtx);
         CloseInputContext(ref _subtitleCtx);

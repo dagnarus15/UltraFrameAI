@@ -34,6 +34,8 @@ internal sealed class ProcessFrameEncoderSession : IFrameEncoderSession
 
     public string? LastError => string.IsNullOrWhiteSpace(_lastError) ? null : _lastError;
 
+    public bool SupportsPerFrameTimestamps => false;
+
     public Task OpenAsync(CancellationToken cancellationToken)
     {
         if (_opened)
