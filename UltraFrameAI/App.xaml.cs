@@ -101,7 +101,7 @@ public partial class App : Application
     {
         try
         {
-            var logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UltraFrameAI");
+            var logDir = ResolveRepoRoot();
             Directory.CreateDirectory(logDir);
             File.AppendAllText(
                 Path.Combine(logDir, "startup.log"),
@@ -134,6 +134,22 @@ public partial class App : Application
         catch
         {
         }
+    }
+
+    private static string ResolveRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        return Directory.GetCurrentDirectory();
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]

@@ -19,7 +19,7 @@ public sealed class PipelineService
     private sealed record SourceMetadata(double Duration, int Width, int Height, double Fps);
     private sealed record SourceMetadataCacheEntry(double Duration, int Width, int Height, double Fps, bool Complete);
     private sealed record TimestampCacheEntry(double[] Timestamps, bool Complete);
-    private sealed record FrameWriteItem(byte[] Buffer, double? TimestampSeconds);
+    private sealed record FrameWriteItem(byte[] Buffer, int Length, double? TimestampSeconds);
     private const int RawFrameQueueCapacity = 8;
     private const int EncodeFrameQueueCapacity = 4;
 
@@ -211,7 +211,22 @@ public sealed class PipelineService
                     continue;
                 }
 
+                var perfRoot = ResolveRepoRoot();
+                var perfLog = Path.Combine(
+                    perfRoot,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+                var startupLog = Path.Combine(
+                    perfRoot,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.startup.log");
+                var perfLogExe = Path.Combine(
+                    AppContext.BaseDirectory,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+                var perfLogFinal = Path.Combine(
+                    options.OutputFolder,
+                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", "00:00:00", "--:--:--", LocalizedStrings.LogPreparing, item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogStartingItem(item.Title), StageElapsedText: Time(itemWatch.Elapsed)));
+                WriteStartupLog($"Preparing {Path.GetFileName(item.SourcePath)}");
 
                 var metadataCacheHit = TryLoadSourceMetadataCache(item.SourcePath, out var cachedMetadata);
                 var metadata = metadataCacheHit
@@ -250,6 +265,7 @@ public sealed class PipelineService
                 var upscaleFrameBudget = totalFrames;
                 var stageWatch = Stopwatch.StartNew();
                 var etaEstimator = new PipeEtaEstimator();
+                WriteStartupLog($"Video size ready: {rawWidth}x{rawHeight}");
 
                 var overwriteAllowed = options.Overwrite || item.ForceOverwrite;
                 if (File.Exists(item.OutputPath) && !overwriteAllowed)
@@ -263,12 +279,18 @@ public sealed class PipelineService
                 var decodeLastError = string.Empty;
                 var upscaleLastError = string.Empty;
                 var encodeLastError = string.Empty;
+                var decodeStartupStderrCount = 0;
+                var upscaleStartupStderrCount = 0;
                 var timestampBridge = timestampCacheHit ? null : new TimestampStreamBridge(Math.Max(totalFrames, 1));
 
+                var decodeWorkingDirectory = Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory;
+                var decodeArguments = FrameBridge.BuildDecodeArguments(item.SourcePath, !timestampCacheHit);
+                WriteStartupLog($"Decode exe: {options.FfmpegPath}");
+                WriteStartupLog($"Decode cwd: {decodeWorkingDirectory}");
                 using var decode = StartProcess(
                     options.FfmpegPath,
-                    FrameBridge.BuildDecodeArguments(item.SourcePath, !timestampCacheHit),
-                    Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory,
+                    decodeArguments,
+                    decodeWorkingDirectory,
                     cancellationToken,
                     line =>
                     {
@@ -281,15 +303,37 @@ public sealed class PipelineService
                         {
                             decodeLastError = line;
                         }
+
+                        if (decodeStartupStderrCount < 16)
+                        {
+                            decodeStartupStderrCount++;
+                            WriteStartupLog($"Decode stderr: {line}");
+                        }
                     },
                     out var decodeStderr);
+                WriteStartupLog("Starting decode");
+                var upscaleWorkingDirectory = Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory;
+                var upscaleArguments = FrameBridge.BuildUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, options.ModelDir, options.UpscalerThreads, options.TileSize, options.GpuId);
+                WriteStartupLog($"Upscaler exe: {options.UpscalerPath}");
+                WriteStartupLog($"Upscaler cwd: {upscaleWorkingDirectory}");
+                WriteStartupLog($"Upscaler model dir: {options.ModelDir}");
+                WriteStartupLog($"Upscaler args: {upscaleArguments}");
                 using var upscale = StartProcess(
                     options.UpscalerPath,
-                    FrameBridge.BuildUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, options.ModelDir, options.UpscalerThreads, options.TileSize, options.GpuId),
-                    Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory,
+                    upscaleArguments,
+                    upscaleWorkingDirectory,
                     cancellationToken,
-                    line => upscaleLastError = line,
+                    line =>
+                    {
+                        upscaleLastError = line;
+                        if (upscaleStartupStderrCount < 24)
+                        {
+                            upscaleStartupStderrCount++;
+                            WriteStartupLog($"Upscaler stderr: {line}");
+                        }
+                    },
                     out var upscaleStderr);
+                WriteStartupLog("Starting upscaler");
 
                 var decodeOut = decode.Process.StandardOutput.BaseStream;
                 var upscaleIn = upscale.Process.StandardInput.BaseStream;
@@ -322,6 +366,7 @@ public sealed class PipelineService
                     cancellationToken,
                     line => encodeLastError = line);
                 await encodeSession.OpenAsync(cancellationToken).ConfigureAwait(false);
+                WriteStartupLog("Starting encoder");
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
@@ -419,7 +464,7 @@ public sealed class PipelineService
                                     timestampSubmitElapsed += Stopwatch.GetElapsedTime(timestampStart);
                                 }
 
-                                await encodeSession.WriteFrameAsync(itemToWrite.Buffer, pipelineToken).ConfigureAwait(false);
+                                await encodeSession.WriteFrameAsync(itemToWrite.Buffer.AsMemory(0, itemToWrite.Length), pipelineToken).ConfigureAwait(false);
                             }
                             finally
                             {
@@ -436,16 +481,38 @@ public sealed class PipelineService
                         encodeFrameChannel.Writer.TryComplete();
                     }
                 }, pipelineToken);
-                var perfRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-                var perfLog = Path.Combine(
-                    perfRoot,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
-                var perfLogExe = Path.Combine(
-                    AppContext.BaseDirectory,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
-                var perfLogFinal = Path.Combine(
-                    options.OutputFolder,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
+                using var firstFrameHeartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(pipelineToken);
+                var firstFrameHeartbeat = Task.Run(async () =>
+                {
+                    try
+                    {
+                        while (!firstFrameHeartbeatCts.Token.IsCancellationRequested && currentFrames == 0)
+                        {
+                            await Task.Delay(1000, firstFrameHeartbeatCts.Token).ConfigureAwait(false);
+                            if (currentFrames == 0)
+                            {
+                                UpdateProgress(heartbeat: true);
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                }, firstFrameHeartbeatCts.Token);
+
+                void WriteStartupLog(string message)
+                {
+                    try
+                    {
+                        File.AppendAllText(
+                            startupLog,
+                            $"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}",
+                            new UTF8Encoding(false));
+                    }
+                    catch
+                    {
+                    }
+                }
 
                 void WritePerfSnapshot(TimeSpan encodeElapsed, bool final = false)
                 {
@@ -517,6 +584,11 @@ public sealed class PipelineService
                                 break;
                             }
 
+                            if (currentFrames == 0)
+                            {
+                                WriteStartupLog("First raw frame received");
+                            }
+
                             var shouldUpdatePreview = previewEnabled
                                 && (currentFrames == 0 || previewUpdateWatch.ElapsedMilliseconds >= 150);
                             if (shouldUpdatePreview)
@@ -533,12 +605,21 @@ public sealed class PipelineService
 
                             var sectionStart = Stopwatch.GetTimestamp();
                             await upscaleIn.WriteAsync(inputBuffer.AsMemory(0, inputFrameBytes), pipelineToken).ConfigureAwait(false);
+                            await upscaleIn.FlushAsync(pipelineToken).ConfigureAwait(false);
                             upscaleWriteElapsed += Stopwatch.GetElapsedTime(sectionStart);
+                            if (currentFrames == 0)
+                            {
+                                WriteStartupLog("First frame written to upscaler");
+                            }
                             sectionStart = Stopwatch.GetTimestamp();
 
                             var outputBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
-                            await ReadExactAsync(upscaleOut, outputBuffer, pipelineToken).ConfigureAwait(false);
+                            await ReadExactAsync(upscaleOut, outputBuffer.AsMemory(0, outputFrameBytes), pipelineToken).ConfigureAwait(false);
                             upscaleReadElapsed += Stopwatch.GetElapsedTime(sectionStart);
+                            if (currentFrames == 0)
+                            {
+                                WriteStartupLog("First upscaled frame received");
+                            }
 
                             var frameBuffer = outputBuffer;
                             byte[]? processedBuffer = null;
@@ -564,7 +645,7 @@ public sealed class PipelineService
                                 previewReport!(new RenderPreviewFrameUpdate(
                                     item.Index,
                                     false,
-                                    RenderPreviewFramePayload.From(previewBuffer),
+                                    RenderPreviewFramePayload.From(previewBuffer.AsSpan(0, outputFrameBytes)),
                                     upWidth,
                                     upHeight,
                                     upWidth * 3));
@@ -577,11 +658,15 @@ public sealed class PipelineService
                             }
 
                             var encodeEnqueueStart = Stopwatch.GetTimestamp();
-                            await encodeFrameChannel.Writer.WriteAsync(new FrameWriteItem(frameBuffer, timestampSeconds), pipelineToken).ConfigureAwait(false);
+                            await encodeFrameChannel.Writer.WriteAsync(new FrameWriteItem(frameBuffer, outputFrameBytes, timestampSeconds), pipelineToken).ConfigureAwait(false);
                             Interlocked.Add(ref encodeQueueWriteWaitTicks, Stopwatch.GetElapsedTime(encodeEnqueueStart).Ticks);
                             UpdateMax(ref encodeQueueMax, Interlocked.Increment(ref encodeQueueCurrent));
 
                             currentFrames++;
+                            if (currentFrames > 0 && !firstFrameHeartbeatCts.IsCancellationRequested)
+                            {
+                                firstFrameHeartbeatCts.Cancel();
+                            }
                             if (lastTick.ElapsedMilliseconds >= 1000)
                             {
                                 UpdateProgress(heartbeat: true);
@@ -596,6 +681,7 @@ public sealed class PipelineService
                 }
                 finally
                 {
+                    try { firstFrameHeartbeatCts.Cancel(); } catch { }
                     try { antiFlicker?.Dispose(); } catch { }
                     try { upscaleIn.Close(); } catch { }
                     try { await decodeProducer.ConfigureAwait(false); } catch { }
@@ -706,7 +792,7 @@ public sealed class PipelineService
         var width = 0;
         var height = 0;
         var fps = 0.0;
-        var tcs = new TaskCompletionSource<SourceMetadata>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var sizeReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var lease = StartProcess(
             ffmpeg,
             $"-hide_banner -i {Q(sourcePath)} -f null -",
@@ -746,20 +832,20 @@ public sealed class PipelineService
                     }
                 }
 
-                if (duration > 0 && width > 0 && height > 0 && fps > 0)
+                if (width > 0 && height > 0)
                 {
-                    tcs.TrySetResult(new SourceMetadata(duration, width, height, fps));
+                    sizeReady.TrySetResult();
                 }
             },
             out var stderrPump);
 
         try
         {
-            using var cancellationRegistration = ct.Register(() => tcs.TrySetCanceled(ct));
-            var metadata = await tcs.Task.ConfigureAwait(false);
+            using var cancellationRegistration = ct.Register(() => sizeReady.TrySetCanceled(ct));
+            await sizeReady.Task.WaitAsync(TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
             TryKillTree(lease.Process);
             await stderrPump.ConfigureAwait(false);
-            return metadata;
+            return new SourceMetadata(duration, width, height, fps);
         }
         catch
         {
@@ -1057,9 +1143,9 @@ public sealed class PipelineService
         return true;
     }
 
-    private static async Task ReadExactAsync(Stream stream, byte[] buffer, CancellationToken ct)
+    private static async Task ReadExactAsync(Stream stream, Memory<byte> buffer, CancellationToken ct)
     {
-        if (!await TryReadExactAsync(stream, buffer.AsMemory(), ct).ConfigureAwait(false))
+        if (!await TryReadExactAsync(stream, buffer, ct).ConfigureAwait(false))
         {
             throw new EndOfStreamException("Unexpected end of stream while reading a frame.");
         }
@@ -1213,6 +1299,22 @@ public sealed class PipelineService
         catch
         {
         }
+    }
+
+    private static string ResolveRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        return Directory.GetCurrentDirectory();
     }
 
     private static void TryKillTree(Process process)

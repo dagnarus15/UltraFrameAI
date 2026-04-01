@@ -160,6 +160,7 @@ public sealed class PipelineServiceTests
             ContentMode = "Anime",
             AntiFlickerStrength = 65,
             EncoderPreset = "slower",
+            PreserveIncompleteOutput = false,
             UseNativeEncoderBackend = false
         };
     }
