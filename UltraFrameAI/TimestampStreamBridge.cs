@@ -12,6 +12,8 @@ internal sealed class TimestampStreamBridge
     private readonly Queue<double> _timestamps;
     private readonly List<double> _snapshot = new();
     private readonly object _sync = new();
+    private readonly SemaphoreSlim _available = new(0);
+    private bool _completed;
 
     public TimestampStreamBridge(int capacity = 0)
     {
@@ -42,6 +44,7 @@ internal sealed class TimestampStreamBridge
             {
                 _timestamps.Enqueue(pts);
                 _snapshot.Add(pts);
+                _available.Release();
             }
         }
 
@@ -69,6 +72,37 @@ internal sealed class TimestampStreamBridge
 
         timestamp = 0;
         return false;
+    }
+
+    public async ValueTask<double?> DequeueAsync(CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            lock (_sync)
+            {
+                if (_timestamps.Count > 0)
+                {
+                    return _timestamps.Dequeue();
+                }
+
+                if (_completed)
+                {
+                    return null;
+                }
+            }
+
+            await _available.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public void Complete()
+    {
+        lock (_sync)
+        {
+            _completed = true;
+        }
+
+        _available.Release();
     }
 
     public bool HasValues

@@ -282,6 +282,27 @@ public sealed class PipelineService
                 var decodeStartupStderrCount = 0;
                 var upscaleStartupStderrCount = 0;
                 var timestampBridge = timestampCacheHit ? null : new TimestampStreamBridge(Math.Max(totalFrames, 1));
+                var cachedTimestampIndex = 0;
+
+                async ValueTask<double?> GetTimestampForFrameAsync(CancellationToken ct)
+                {
+                    if (timestampCacheHit && cachedTimestamps.Length > 0)
+                    {
+                        if (cachedTimestampIndex < cachedTimestamps.Length)
+                        {
+                            return cachedTimestamps[cachedTimestampIndex++];
+                        }
+
+                        return cachedTimestamps[^1];
+                    }
+
+                    if (timestampBridge is not null)
+                    {
+                        return await timestampBridge.DequeueAsync(ct).ConfigureAwait(false);
+                    }
+
+                    return null;
+                }
 
                 var decodeWorkingDirectory = Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory;
                 var decodeArguments = FrameBridge.BuildDecodeArguments(item.SourcePath, !timestampCacheHit);
@@ -311,6 +332,19 @@ public sealed class PipelineService
                         }
                     },
                     out var decodeStderr);
+                var timestampCompletion = timestampBridge is null
+                    ? Task.CompletedTask
+                    : Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await decodeStderr.ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            timestampBridge.Complete();
+                        }
+                    });
                 WriteStartupLog("Starting decode");
                 var upscaleWorkingDirectory = Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory;
                 var upscaleArguments = FrameBridge.BuildUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, options.ModelDir, options.UpscalerThreads, options.TileSize, options.GpuId);
@@ -365,6 +399,8 @@ public sealed class PipelineService
                     encodeSessionConfig,
                     cancellationToken,
                     line => encodeLastError = line);
+                WriteStartupLog($"Encoder session: {encodeSession.GetType().Name}");
+                var encoderSupportsPerFrameTimestamps = encodeSession is FfmpegApiFrameEncoderSession;
                 await encodeSession.OpenAsync(cancellationToken).ConfigureAwait(false);
                 WriteStartupLog("Starting encoder");
 
@@ -651,10 +687,14 @@ public sealed class PipelineService
                                     upWidth * 3));
                             }
 
-                            double? timestampSeconds = null;
-                            if (timestampBridge is not null && timestampBridge.TryDequeue(out var dequeuedTimestamp))
+                            var timestampSeconds = await GetTimestampForFrameAsync(pipelineToken).ConfigureAwait(false);
+                            if (currentFrames == 0 && timestampSeconds is not null)
                             {
-                                timestampSeconds = dequeuedTimestamp;
+                                WriteStartupLog($"First frame timestamp: {timestampSeconds.Value:0.######}");
+                                if (!encoderSupportsPerFrameTimestamps)
+                                {
+                                    WriteStartupLog("Warning: encoder session does not support per-frame timestamps; timestamp will not affect output timing.");
+                                }
                             }
 
                             var encodeEnqueueStart = Stopwatch.GetTimestamp();
@@ -688,6 +728,7 @@ public sealed class PipelineService
                     try { encodeFrameChannel.Writer.TryComplete(); } catch { }
                     try { await encodeWriter.ConfigureAwait(false); } catch { }
                     try { await encodeSession.FlushAsync(cancellationToken).ConfigureAwait(false); } catch { }
+                    try { await timestampCompletion.ConfigureAwait(false); } catch { }
                 }
 
                 var frameLoopElapsed = frameLoopWatch.Elapsed;

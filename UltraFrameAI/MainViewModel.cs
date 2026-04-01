@@ -1120,7 +1120,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ContentMode = SelectedContentMode,
             AntiFlickerStrength = AntiFlickerStrength,
             EncoderPreset = EncoderPreset,
-            UseNativeEncoderBackend = NativeFrameEncoderBridge.IsAvailable(),
+            UseNativeEncoderBackend = UseNativeEncoderBackend && NativeFrameEncoderBridge.IsAvailable(),
             PreserveIncompleteOutput = PreserveIncompleteOutput
         };
     }
