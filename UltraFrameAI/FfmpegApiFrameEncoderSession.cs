@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using FFmpeg.AutoGen;
 
 namespace UltraFrameAI;
@@ -7,6 +8,8 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
 {
     private readonly FrameEncoderSessionConfig _config;
     private readonly Action<string>? _onStderr;
+    private readonly Stream? _outputStream;
+    private readonly bool _leaveOutputOpen;
     private AVFormatContext* _formatCtx;
     private AVFormatContext* _sourceCtx;
     private AVFormatContext* _subtitleCtx;
@@ -17,6 +20,11 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
     private SwsContext* _sws;
     private AVFrame* _frame;
     private AVPacket* _packet;
+    private AVIOContext* _avioCtx;
+    private byte* _avioBuffer;
+    private GCHandle _outputStreamHandle;
+    private avio_alloc_context_write_packet_func _writePacket;
+    private avio_alloc_context_seek_func _seek;
     private bool _opened;
     private bool _headerWritten;
     private string? _lastError;
@@ -27,10 +35,16 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
     private int _audioStreamIndex = -1;
     private int _subtitleStreamIndex = -1;
 
-    public FfmpegApiFrameEncoderSession(FrameEncoderSessionConfig config, Action<string>? onStderr)
+    public FfmpegApiFrameEncoderSession(
+        FrameEncoderSessionConfig config,
+        Action<string>? onStderr,
+        Stream? outputStream = null,
+        bool leaveOutputOpen = false)
     {
         _config = config;
         _onStderr = onStderr;
+        _outputStream = outputStream;
+        _leaveOutputOpen = leaveOutputOpen;
     }
 
     public int ExitCode => _opened ? 0 : -1;
@@ -129,7 +143,11 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
         OpenSubtitleContext();
         CreateAuxiliaryOutputStreams();
 
-        if ((_formatCtx->oformat->flags & ffmpeg.AVFMT_NOFILE) == 0)
+        if (_outputStream is not null)
+        {
+            OpenManagedOutputStream();
+        }
+        else if ((_formatCtx->oformat->flags & ffmpeg.AVFMT_NOFILE) == 0)
         {
             var ioResult = ffmpeg.avio_open2(&_formatCtx->pb, outputPath, ffmpeg.AVIO_FLAG_WRITE, null, null);
             if (ioResult < 0)
@@ -300,7 +318,11 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
 
         if (_formatCtx != null)
         {
-            if ((_formatCtx->oformat->flags & ffmpeg.AVFMT_NOFILE) == 0)
+            if (_avioCtx != null)
+            {
+                ffmpeg.avio_flush(_avioCtx);
+            }
+            else if ((_formatCtx->oformat->flags & ffmpeg.AVFMT_NOFILE) == 0)
             {
                 var pb = _formatCtx->pb;
                 ffmpeg.avio_closep(&pb);
@@ -313,8 +335,123 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
 
         _headerWritten = false;
 
+        if (_avioCtx != null)
+        {
+            var avio = _avioCtx;
+            ffmpeg.avio_context_free(&avio);
+            _avioCtx = null;
+        }
+
+        if (_outputStreamHandle.IsAllocated)
+        {
+            _outputStreamHandle.Free();
+        }
+
+        if (_outputStream is not null && !_leaveOutputOpen)
+        {
+            try
+            {
+                _outputStream.Dispose();
+            }
+            catch
+            {
+            }
+        }
+
         CloseInputContext(ref _sourceCtx);
         CloseInputContext(ref _subtitleCtx);
+    }
+
+    private void OpenManagedOutputStream()
+    {
+        const int bufferSize = 64 * 1024;
+        _avioBuffer = (byte*)ffmpeg.av_malloc((ulong)bufferSize);
+        if (_avioBuffer == null)
+        {
+            ThrowFfmpeg("Unable to allocate AVIO buffer.", ffmpeg.AVERROR(12));
+        }
+
+        _outputStreamHandle = GCHandle.Alloc(_outputStream);
+        _writePacket = new avio_alloc_context_write_packet_func
+        {
+            Pointer = (IntPtr)(delegate* unmanaged[Cdecl]<void*, byte*, int, int>)&WritePacket
+        };
+        _seek = _outputStream!.CanSeek
+            ? new avio_alloc_context_seek_func
+            {
+                Pointer = (IntPtr)(delegate* unmanaged[Cdecl]<void*, long, int, long>)&Seek
+            }
+            : default;
+        _avioCtx = ffmpeg.avio_alloc_context(
+            _avioBuffer,
+            bufferSize,
+            1,
+            (void*)GCHandle.ToIntPtr(_outputStreamHandle),
+            null,
+            _writePacket,
+            _seek);
+
+        if (_avioCtx == null)
+        {
+            ThrowFfmpeg("Unable to create AVIO context.", ffmpeg.AVERROR(12));
+        }
+
+        _avioCtx->seekable = _outputStream.CanSeek ? ffmpeg.AVIO_SEEKABLE_NORMAL : 0;
+        _formatCtx->pb = _avioCtx;
+        _formatCtx->flags |= ffmpeg.AVFMT_FLAG_CUSTOM_IO;
+    }
+
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+    private static int WritePacket(void* opaque, byte* buffer, int bufferSize)
+    {
+        try
+        {
+            var handle = GCHandle.FromIntPtr((nint)opaque);
+            if (handle.Target is not Stream stream)
+            {
+                return ffmpeg.AVERROR_UNKNOWN;
+            }
+
+            stream.Write(new ReadOnlySpan<byte>(buffer, bufferSize));
+            stream.Flush();
+            return bufferSize;
+        }
+        catch
+        {
+            return ffmpeg.AVERROR_UNKNOWN;
+        }
+    }
+
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+    private static long Seek(void* opaque, long offset, int whence)
+    {
+        try
+        {
+            var handle = GCHandle.FromIntPtr((nint)opaque);
+            if (handle.Target is not Stream stream || !stream.CanSeek)
+            {
+                return ffmpeg.AVERROR_UNKNOWN;
+            }
+
+            if (whence == ffmpeg.AVSEEK_SIZE)
+            {
+                return stream.Length;
+            }
+
+            var origin = whence switch
+            {
+                0 => SeekOrigin.Begin,
+                1 => SeekOrigin.Current,
+                2 => SeekOrigin.End,
+                _ => SeekOrigin.Begin
+            };
+
+            return stream.Seek(offset, origin);
+        }
+        catch
+        {
+            return ffmpeg.AVERROR_UNKNOWN;
+        }
     }
 
     private long GetNextPts()
@@ -546,7 +683,9 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
         return container.Trim().ToLowerInvariant() switch
         {
             "mkv" => "matroska",
-            _ => null
+            "matroska" => "matroska",
+            "nut" => "nut",
+            _ => container.Trim().ToLowerInvariant()
         };
     }
 }

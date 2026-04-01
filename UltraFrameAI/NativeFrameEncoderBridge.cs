@@ -123,7 +123,7 @@ internal sealed class NativeFrameEncoderBridge : IFrameEncoderBridge
         {
             if (SupportsTimestampedProcessFallback())
             {
-                return new TimestampedProcessFrameEncoderSession(config, cancellationToken, onStderr);
+                return new StreamMuxedProcessFrameEncoderSession(config, cancellationToken, onStderr);
             }
 
             return _fallback.CreateSession(config, cancellationToken, onStderr);

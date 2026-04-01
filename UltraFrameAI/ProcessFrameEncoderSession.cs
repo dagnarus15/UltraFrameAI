@@ -36,6 +36,15 @@ internal sealed class ProcessFrameEncoderSession : IFrameEncoderSession
 
     public bool SupportsPerFrameTimestamps => false;
 
+    internal Stream InputStream
+    {
+        get
+        {
+            EnsureOpened();
+            return _process!.StandardInput.BaseStream;
+        }
+    }
+
     public Task OpenAsync(CancellationToken cancellationToken)
     {
         if (_opened)
