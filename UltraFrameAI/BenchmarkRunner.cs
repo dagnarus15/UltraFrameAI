@@ -186,40 +186,53 @@ public static class BenchmarkRunner
 
         var baselineThreads = settings.BaselineThreads;
         var baselineTile = settings.BaselineTileSize;
+        var antiFlickerOnly = string.Equals(settings.Profile, "anti-flicker", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(settings.Profile, "antiflicker", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(settings.Profile, "af", StringComparison.OrdinalIgnoreCase);
 
-        var groups = new List<(string Group, IReadOnlyList<BenchmarkCase> Cases)>
-        {
-            (GroupCodecPreset, new[]
+        var groups = antiFlickerOnly
+            ? new List<(string Group, IReadOnlyList<BenchmarkCase> Cases)>
             {
-                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 46),
-                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 50),
-                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 68),
-                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 73),
-            }),
-            (GroupAntiFlicker, new[]
+                (GroupAntiFlicker, new[]
+                {
+                    new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
+                    new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
+                    new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
+                }),
+            }
+            : new List<(string Group, IReadOnlyList<BenchmarkCase> Cases)>
             {
-                new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
-                new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
-                new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
-            }),
-            (GroupUpscalerThreads, new[]
-            {
-                new BenchmarkCase("4:4:4", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "4:4:4", baselineTile, 58),
-                new BenchmarkCase("6:6:6", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "6:6:6", baselineTile, 58),
-                new BenchmarkCase("8:8:8", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "8:8:8", baselineTile, 58),
-                new BenchmarkCase("2:2:2", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "2:2:2", baselineTile, 58),
-                new BenchmarkCase("1:1:1", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "1:1:1", baselineTile, 58),
-            }),
-            (GroupTileSize, new[]
-            {
-                new BenchmarkCase("1024", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1024, 58),
-                new BenchmarkCase("1536", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1536, 59),
-                new BenchmarkCase("2048", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 2048, 60),
-                new BenchmarkCase("512", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 512, 56),
-                new BenchmarkCase("4096", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 4096, 61),
-                new BenchmarkCase("256", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 256, 53),
-            }),
-        };
+                (GroupCodecPreset, new[]
+                {
+                    new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 46),
+                    new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 50),
+                    new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 68),
+                    new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 73),
+                }),
+                (GroupAntiFlicker, new[]
+                {
+                    new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
+                    new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
+                    new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
+                }),
+                (GroupUpscalerThreads, new[]
+                {
+                    new BenchmarkCase("4:4:4", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "4:4:4", baselineTile, 58),
+                    new BenchmarkCase("6:6:6", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "6:6:6", baselineTile, 58),
+                    new BenchmarkCase("8:8:8", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "8:8:8", baselineTile, 58),
+                    new BenchmarkCase("2:2:2", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "2:2:2", baselineTile, 58),
+                    new BenchmarkCase("1:1:1", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "1:1:1", baselineTile, 58),
+                }),
+                (GroupTileSize, new[]
+                {
+                    new BenchmarkCase("1024", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1024, 58),
+                    new BenchmarkCase("1536", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1536, 59),
+                    new BenchmarkCase("2048", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 2048, 60),
+                    new BenchmarkCase("512", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 512, 56),
+                    new BenchmarkCase("4096", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 4096, 61),
+                    new BenchmarkCase("256", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 256, 53),
+                }),
+            };
 
         var totalSteps = groups.Sum(group => group.Cases.Count);
         var currentStep = 0;
@@ -459,7 +472,8 @@ public static class BenchmarkRunner
             request.BaselineThreads,
             request.BaselineTileSize,
             request.GpuId,
-            null);
+            null,
+            "full");
 
         var repoRoot = FindRepoRoot();
         var ffmpeg = FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe", repoRoot);
@@ -622,7 +636,7 @@ public static class BenchmarkRunner
                 result.Metrics)).ToList());
     }
 
-    private sealed record BenchmarkSettings(string SourcePath, string? OutputDir, int SampleSeconds, string BaselineThreads, int BaselineTileSize, int? GpuId, string? DoneFile);
+    private sealed record BenchmarkSettings(string SourcePath, string? OutputDir, int SampleSeconds, string BaselineThreads, int BaselineTileSize, int? GpuId, string? DoneFile, string Profile);
 
     private static BenchmarkSettings? Parse(string[] args)
     {
@@ -633,6 +647,7 @@ public static class BenchmarkRunner
         string baselineThreads = "4:4:4";
         int baselineTile = 1024;
         int? gpuId = null;
+        string profile = "full";
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -685,6 +700,10 @@ public static class BenchmarkRunner
                     gpuId = parsed;
                 }
             }
+            else if (arg.Equals("--benchmark-profile", StringComparison.OrdinalIgnoreCase) || arg.Equals("--profile", StringComparison.OrdinalIgnoreCase))
+            {
+                profile = (NextValue() ?? profile).Trim();
+            }
         }
 
         if (string.IsNullOrWhiteSpace(source))
@@ -693,7 +712,7 @@ public static class BenchmarkRunner
             return null;
         }
 
-        return new BenchmarkSettings(source!, output, sampleSeconds, baselineThreads, baselineTile, gpuId, doneFile);
+        return new BenchmarkSettings(source!, output, sampleSeconds, baselineThreads, baselineTile, gpuId, doneFile, string.IsNullOrWhiteSpace(profile) ? "full" : profile);
     }
 
     private static string ResolveSource(string source)

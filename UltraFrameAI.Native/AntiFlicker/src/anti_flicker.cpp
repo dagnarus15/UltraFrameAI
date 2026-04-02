@@ -14,6 +14,7 @@ namespace
         int Dx = 0;
         int Dy = 0;
         float Weight = 0.0f;
+        float Reprojection = 1.0f;
     };
 
     enum class ContentMode
@@ -233,12 +234,27 @@ namespace
         void BuildFastMotionField(float sceneCutError)
         {
             const int fastRadius = std::min(1, m_searchRadius);
+            const auto tuning = GetModeTuning();
             for (int by = 0; by < m_blockRows; ++by)
             {
                 for (int bx = 0; bx < m_blockCols; ++bx)
                 {
                     MotionBlock motion = EstimateBlockMotionFast(bx, by, fastRadius);
-                    motion.Weight = EstimateBlockWeightFast(bx, by, motion, sceneCutError);
+                    const int x0 = bx * m_blockSize;
+                    const int y0 = by * m_blockSize;
+                    const int bw = std::min(m_blockSize, m_width - x0);
+                    const int bh = std::min(m_blockSize, m_height - y0);
+                    const int centerX = ClampInt(x0 + bw / 2, 0, m_width - 1);
+                    const int centerY = ClampInt(y0 + bh / 2, 0, m_height - 1);
+                    const float edge = SampleDownscaledEdge(centerX, centerY);
+                    const float diff = SampleDownscaledTemporalDiff(centerX, centerY);
+                    const float motionMag = ClampFloat((std::abs(motion.Dx) + std::abs(motion.Dy)) / 2.0f, 0.0f, 1.0f);
+                    const float stability = 1.0f - ClampFloat(motion.Reprojection * 1.10f + motionMag * 0.45f + diff * 0.60f + sceneCutError * 1.35f, 0.0f, 1.0f);
+                    const float protect = 1.0f - ClampFloat(edge * m_edgeGuard * tuning.EdgeGuardScale * 0.92f, 0.0f, 1.0f);
+                    motion.Weight = ClampFloat(
+                        m_blendStrength * m_strengthScale * stability * protect * tuning.FlickerGain * 0.72f,
+                        0.0f,
+                        m_maxBlend * m_strengthScale * 0.74f);
                     m_motion[static_cast<std::size_t>(by) * m_blockCols + bx] = motion;
                 }
             }
@@ -354,6 +370,8 @@ namespace
             MotionBlock result;
             result.Dx = bestDx;
             result.Dy = bestDy;
+            const float area = static_cast<float>(std::max(1, dsW * dsH));
+            result.Reprojection = ClampFloat(static_cast<float>(bestSad) / (area * 255.0f), 0.0f, 1.0f);
             return result;
         }
 
@@ -560,35 +578,54 @@ namespace
 
         void BlendFlowGuided(std::uint8_t* output, float sceneCutError)
         {
-            const auto tuning = GetModeTuning();
-            for (int y = 0; y < m_height; ++y)
+            std::memcpy(output, m_currFrame.data(), m_currFrame.size());
+            for (int by = 0; by < m_blockRows; ++by)
             {
-                const int by = std::min(y / m_blockSize, m_blockRows - 1);
-                for (int x = 0; x < m_width; ++x)
+                const int y0 = by * m_blockSize;
+                const int bh = std::min(m_blockSize, m_height - y0);
+
+                for (int bx = 0; bx < m_blockCols; ++bx)
                 {
-                    const int bx = std::min(x / m_blockSize, m_blockCols - 1);
                     const MotionBlock& motion = m_motion[static_cast<std::size_t>(by) * m_blockCols + bx];
-                    const float edge = SampleDownscaledEdge(x, y);
+                    const int x0 = bx * m_blockSize;
+                    const int bw = std::min(m_blockSize, m_width - x0);
                     const float weight = ClampFloat(
-                        motion.Weight * (1.0f - ClampFloat(edge * 0.8f * m_edgeGuard, 0.0f, 1.0f)) * (1.0f - sceneCutError) * tuning.FlickerGain,
+                        motion.Weight * (1.0f - sceneCutError * 0.35f),
                         0.0f,
-                        m_maxBlend * m_strengthScale * 0.95f);
-
-                    const int sampleX = ClampInt(x + motion.Dx * m_factor, 0, m_width - 1);
-                    const int sampleY = ClampInt(y + motion.Dy * m_factor, 0, m_height - 1);
-                    const std::size_t currentIndex = (static_cast<std::size_t>(y) * m_width + x) * m_channels;
-                    const std::size_t sampleIndex = (static_cast<std::size_t>(sampleY) * m_width + sampleX) * m_channels;
-
-                    for (int c = 0; c < 3; ++c)
+                        m_maxBlend * m_strengthScale * 0.74f);
+                    const int alpha = ClampInt(static_cast<int>(std::lround(weight * 256.0f)), 0, 256);
+                    if (alpha <= 0)
                     {
-                        const float curr = static_cast<float>(m_currFrame[currentIndex + c]);
-                        const float prev = static_cast<float>(m_prevFrame[sampleIndex + c]);
-                        output[currentIndex + c] = static_cast<std::uint8_t>(std::lround(curr * (1.0f - weight) + prev * weight));
+                        continue;
                     }
 
-                    if (m_channels == 4)
+                    const int dx = motion.Dx * m_factor;
+                    const int dy = motion.Dy * m_factor;
+                    const int invAlpha = 256 - alpha;
+
+                    for (int yy = 0; yy < bh; ++yy)
                     {
-                        output[currentIndex + 3] = m_currFrame[currentIndex + 3];
+                        const int y = y0 + yy;
+                        const int sampleY = ClampInt(y + dy, 0, m_height - 1);
+                        const std::size_t rowBase = static_cast<std::size_t>(y) * m_width * m_channels;
+                        const std::size_t sampleRowBase = static_cast<std::size_t>(sampleY) * m_width * m_channels;
+
+                        for (int xx = 0; xx < bw; ++xx)
+                        {
+                            const int x = x0 + xx;
+                            const int sampleX = ClampInt(x + dx, 0, m_width - 1);
+                            const std::size_t currentIndex = rowBase + static_cast<std::size_t>(x) * m_channels;
+                            const std::size_t sampleIndex = sampleRowBase + static_cast<std::size_t>(sampleX) * m_channels;
+
+                            output[currentIndex + 0] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[currentIndex + 0]) * invAlpha + static_cast<int>(m_prevFrame[sampleIndex + 0]) * alpha + 128) >> 8);
+                            output[currentIndex + 1] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[currentIndex + 1]) * invAlpha + static_cast<int>(m_prevFrame[sampleIndex + 1]) * alpha + 128) >> 8);
+                            output[currentIndex + 2] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[currentIndex + 2]) * invAlpha + static_cast<int>(m_prevFrame[sampleIndex + 2]) * alpha + 128) >> 8);
+
+                            if (m_channels == 4)
+                            {
+                                output[currentIndex + 3] = m_currFrame[currentIndex + 3];
+                            }
+                        }
                     }
                 }
             }
