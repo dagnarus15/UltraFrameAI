@@ -635,10 +635,20 @@ namespace
                             const int sampleX = ClampInt(x + dx, 0, m_width - 1);
                             const std::size_t currentIndex = rowBase + static_cast<std::size_t>(x) * m_channels;
                             const std::size_t sampleIndex = sampleRowBase + static_cast<std::size_t>(sampleX) * m_channels;
+                            const std::uint8_t currB = m_currFrame[currentIndex + 0];
+                            const std::uint8_t currG = m_currFrame[currentIndex + 1];
+                            const std::uint8_t currR = m_currFrame[currentIndex + 2];
+                            const std::uint8_t prevB = m_prevFrame[sampleIndex + 0];
+                            const std::uint8_t prevG = m_prevFrame[sampleIndex + 1];
+                            const std::uint8_t prevR = m_prevFrame[sampleIndex + 2];
+                            const int lumaDelta = std::abs(static_cast<int>(Luma(currB, currG, currR)) - static_cast<int>(Luma(prevB, prevG, prevR)));
+                            const int localGate = ClampInt(256 - lumaDelta * 3, 48, 256);
+                            const int alphaLocal = (alpha * localGate + 128) >> 8;
+                            const int invAlphaLocal = 256 - alphaLocal;
 
-                            output[currentIndex + 0] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[currentIndex + 0]) * invAlpha + static_cast<int>(m_prevFrame[sampleIndex + 0]) * alpha + 128) >> 8);
-                            output[currentIndex + 1] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[currentIndex + 1]) * invAlpha + static_cast<int>(m_prevFrame[sampleIndex + 1]) * alpha + 128) >> 8);
-                            output[currentIndex + 2] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[currentIndex + 2]) * invAlpha + static_cast<int>(m_prevFrame[sampleIndex + 2]) * alpha + 128) >> 8);
+                            output[currentIndex + 0] = static_cast<std::uint8_t>((static_cast<int>(currB) * invAlphaLocal + static_cast<int>(prevB) * alphaLocal + 128) >> 8);
+                            output[currentIndex + 1] = static_cast<std::uint8_t>((static_cast<int>(currG) * invAlphaLocal + static_cast<int>(prevG) * alphaLocal + 128) >> 8);
+                            output[currentIndex + 2] = static_cast<std::uint8_t>((static_cast<int>(currR) * invAlphaLocal + static_cast<int>(prevR) * alphaLocal + 128) >> 8);
 
                             if (m_channels == 4)
                             {
