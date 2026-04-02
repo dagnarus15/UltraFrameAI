@@ -27,6 +27,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string FfmpegThreadsText,
         string UpscalerThreadsText,
         string TileSizeText,
+        string SelectedUpscalerBackend,
+        bool EnableStableSr,
+        bool EnableSupir,
+        string StableSrUpscalerPath,
+        string StableSrUpscalerWorkingDirectory,
+        string StableSrUpscalerModelDir,
+        string StableSrUpscalerArgumentsTemplate,
+        string SupirUpscalerPath,
+        string SupirUpscalerWorkingDirectory,
+        string SupirUpscalerModelDir,
+        string SupirUpscalerArgumentsTemplate,
         bool Overwrite,
         string SelectedContentMode,
         string CurrentLanguage,
@@ -53,6 +64,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AsyncRelayCommand _startSelectedCommand;
     private readonly ObservableCollection<LogEntryViewModel> _logLines = UiCollections.CreateLogCollection();
     private IReadOnlyList<AntiFlickerModeOption> _antiFlickerModeOptions = Array.Empty<AntiFlickerModeOption>();
+    private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
     private readonly string _repoRoot = FindRepoRoot();
     private readonly string _lastRootFolderPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -89,6 +101,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _ffmpegThreadsText = "0";
     private string _upscalerThreadsText = "4:4:4";
     private string _tileSizeText = "1024";
+    private UpscalerBackendKind _selectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
+    private bool _enableStableSr;
+    private bool _enableSupir;
+    private string _stableSrUpscalerPath = string.Empty;
+    private string _stableSrUpscalerWorkingDirectory = string.Empty;
+    private string _stableSrUpscalerModelDir = string.Empty;
+    private string _stableSrUpscalerArgumentsTemplate = string.Empty;
+    private string _supirUpscalerPath = string.Empty;
+    private string _supirUpscalerWorkingDirectory = string.Empty;
+    private string _supirUpscalerModelDir = string.Empty;
+    private string _supirUpscalerArgumentsTemplate = string.Empty;
     private bool _overwrite;
     private bool _useAntiFlicker = true;
     private bool _useNativeEncoderBackend;
@@ -177,6 +200,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _antiFlickerPresets = LoadAntiFlickerPresets();
         _useNativeEncoderBackend = LoadNativeEncoderBackendPreference();
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
+        _upscalerBackendOptions = BuildUpscalerBackendOptions();
         LoadRecentRootFolders();
         _suppressAppSettingsPersistence = true;
         try
@@ -435,6 +459,126 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
         }
     }
+
+    public IReadOnlyList<UpscalerBackendOption> UpscalerBackendOptions => _upscalerBackendOptions;
+
+    public UpscalerBackendKind SelectedUpscalerBackend
+    {
+        get => _selectedUpscalerBackend;
+        set
+        {
+            if (SetField(ref _selectedUpscalerBackend, value))
+            {
+                EnsureSelectedExternalUpscalerDefaults();
+                OnPropertyChanged(nameof(IsExternalUpscalerSelected));
+                OnPropertyChanged(nameof(SelectedExternalUpscalerPath));
+                OnPropertyChanged(nameof(SelectedExternalUpscalerWorkingDirectory));
+                OnPropertyChanged(nameof(SelectedExternalUpscalerModelDir));
+                OnPropertyChanged(nameof(SelectedExternalUpscalerArgumentsTemplate));
+                OnPropertyChanged(nameof(SelectedExternalUpscalerSetupHint));
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public bool IsExternalUpscalerSelected => SelectedUpscalerBackend is UpscalerBackendKind.StableSrExternal or UpscalerBackendKind.SupirExternal;
+
+    public bool EnableStableSr
+    {
+        get => _enableStableSr;
+        set
+        {
+            if (SetField(ref _enableStableSr, value))
+            {
+                if (!value && SelectedUpscalerBackend == UpscalerBackendKind.StableSrExternal)
+                {
+                    SelectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
+                }
+
+                _upscalerBackendOptions = BuildUpscalerBackendOptions();
+                OnPropertyChanged(nameof(UpscalerBackendOptions));
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public bool EnableSupir
+    {
+        get => _enableSupir;
+        set
+        {
+            if (SetField(ref _enableSupir, value))
+            {
+                if (!value && SelectedUpscalerBackend == UpscalerBackendKind.SupirExternal)
+                {
+                    SelectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
+                }
+
+                _upscalerBackendOptions = BuildUpscalerBackendOptions();
+                OnPropertyChanged(nameof(UpscalerBackendOptions));
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalUpscalerPath
+    {
+        get => GetSelectedExternalUpscalerPath();
+        set
+        {
+            if (SetSelectedExternalUpscalerPath(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalUpscalerWorkingDirectory
+    {
+        get => GetSelectedExternalUpscalerWorkingDirectory();
+        set
+        {
+            if (SetSelectedExternalUpscalerWorkingDirectory(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalUpscalerModelDir
+    {
+        get => GetSelectedExternalUpscalerModelDir();
+        set
+        {
+            if (SetSelectedExternalUpscalerModelDir(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalUpscalerArgumentsTemplate
+    {
+        get => GetSelectedExternalUpscalerArgumentsTemplate();
+        set
+        {
+            if (SetSelectedExternalUpscalerArgumentsTemplate(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalUpscalerSetupHint => SelectedUpscalerBackend switch
+    {
+        UpscalerBackendKind.StableSrExternal => LocalizedStrings.ExternalUpscalerStableSrHint,
+        UpscalerBackendKind.SupirExternal => LocalizedStrings.ExternalUpscalerSupirHint,
+        _ => LocalizedStrings.ExternalUpscalerHint
+    };
 
     public bool Overwrite
     {
@@ -1135,6 +1279,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private PipelineOptions BuildOptions()
     {
+        var upscalerBackend = SelectedUpscalerBackend;
+        var useExternalUpscaler = upscalerBackend is UpscalerBackendKind.StableSrExternal or UpscalerBackendKind.SupirExternal;
+        var upscalerPath = useExternalUpscaler
+            ? ResolveExternalUpscalerPath()
+            : FindFile("realesrgan-ncnn-vulkan.exe", Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "realesrgan-ncnn-vulkan.exe"));
+        var upscalerWorkingDirectory = ResolveUpscalerWorkingDirectory(upscalerPath, useExternalUpscaler ? SelectedExternalUpscalerWorkingDirectory : string.Empty);
+        var modelDir = useExternalUpscaler
+            ? ResolveExternalUpscalerModelDir()
+            : FindDirectory("models", Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "models"));
+        var externalArgsTemplate = useExternalUpscaler
+            ? ResolveExternalUpscalerArgumentsTemplate()
+            : string.Empty;
+
         return new PipelineOptions
         {
             RootFolder = RootFolder,
@@ -1148,8 +1305,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             GpuId = null,
             FfmpegPath = FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"),
             FfprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe"),
-            UpscalerPath = FindFile("realesrgan-ncnn-vulkan.exe", Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "realesrgan-ncnn-vulkan.exe")),
-            ModelDir = FindDirectory("models", Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "models")),
+            UpscalerBackend = upscalerBackend,
+            UpscalerPath = upscalerPath,
+            UpscalerWorkingDirectory = upscalerWorkingDirectory,
+            ModelDir = modelDir,
+            ExternalUpscalerArgumentsTemplate = externalArgsTemplate,
             UseAntiFlicker = UseAntiFlicker,
             AntiFlickerMode = SelectedAntiFlickerMode,
             ContentMode = SelectedContentMode,
@@ -1745,10 +1905,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
+        _upscalerBackendOptions = BuildUpscalerBackendOptions();
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(string.Empty);
         OnPropertyChanged(nameof(CurrentLanguageFlagPath));
         OnPropertyChanged(nameof(AntiFlickerModeOptions));
+        OnPropertyChanged(nameof(UpscalerBackendOptions));
 
         if (Items.Count == 0)
         {
@@ -1785,12 +1947,39 @@ public sealed class MainViewModel : INotifyPropertyChanged
             new AntiFlickerModeOption(AntiFlickerMode.FlowGuided, LocalizedStrings.AntiFlickerModeFlowGuided)
         };
 
+    private IReadOnlyList<UpscalerBackendOption> BuildUpscalerBackendOptions()
+    {
+        var options = new List<UpscalerBackendOption>
+        {
+            new(UpscalerBackendKind.RealEsrgan, LocalizedStrings.UpscalerBackendRealEsrgan)
+        };
+
+        if (EnableStableSr)
+        {
+            options.Add(new UpscalerBackendOption(UpscalerBackendKind.StableSrExternal, LocalizedStrings.UpscalerBackendStableSr));
+        }
+
+        if (EnableSupir)
+        {
+            options.Add(new UpscalerBackendOption(UpscalerBackendKind.SupirExternal, LocalizedStrings.UpscalerBackendSupir));
+        }
+
+        return options;
+    }
+
     private static AntiFlickerMode NormalizeAntiFlickerMode(string? raw) => raw?.Trim() switch
     {
         nameof(AntiFlickerMode.FlowGuided) => AntiFlickerMode.FlowGuided,
         "EdgeClamp" => AntiFlickerMode.LumaStabilizer,
         "Legacy" => AntiFlickerMode.LumaStabilizer,
         _ => AntiFlickerMode.LumaStabilizer
+    };
+
+    private static UpscalerBackendKind NormalizeUpscalerBackendKind(string? raw) => raw?.Trim() switch
+    {
+        nameof(UpscalerBackendKind.StableSrExternal) => UpscalerBackendKind.StableSrExternal,
+        nameof(UpscalerBackendKind.SupirExternal) => UpscalerBackendKind.SupirExternal,
+        _ => UpscalerBackendKind.RealEsrgan
     };
 
     private void Log(string message)
@@ -1884,6 +2073,145 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     private static int ParseInt(string? text, int fallback) => int.TryParse(text, out var value) ? value : fallback;
+
+    private string ResolveExternalUpscalerPath()
+    {
+        var path = NormalizeInputPath(SelectedExternalUpscalerPath);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new InvalidOperationException(LocalizedStrings.ExternalUpscalerPathRequired);
+        }
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException(LocalizedStrings.ExternalUpscalerPathRequired, path);
+        }
+
+        return path;
+    }
+
+    private string ResolveExternalUpscalerModelDir()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedExternalUpscalerModelDir))
+        {
+            return string.Empty;
+        }
+
+        return FindDirectory(SelectedExternalUpscalerModelDir, SelectedExternalUpscalerModelDir);
+    }
+
+    private string ResolveExternalUpscalerArgumentsTemplate()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedExternalUpscalerArgumentsTemplate))
+        {
+            throw new InvalidOperationException(LocalizedStrings.ExternalUpscalerArgumentsRequired);
+        }
+
+        return SelectedExternalUpscalerArgumentsTemplate.Trim();
+    }
+
+    private static string ResolveUpscalerWorkingDirectory(string upscalerPath, string configuredWorkingDirectory)
+    {
+        if (!string.IsNullOrWhiteSpace(configuredWorkingDirectory))
+        {
+            var normalized = NormalizeInputPath(configuredWorkingDirectory);
+            if (Directory.Exists(normalized))
+            {
+                return normalized;
+            }
+        }
+
+        return Path.GetDirectoryName(upscalerPath) ?? Environment.CurrentDirectory;
+    }
+
+    private static string GetDefaultExternalUpscalerArgumentsTemplate() =>
+        "-p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -s {scale} -m {modelDirQ} -j {threadsQ}";
+
+    private void EnsureSelectedExternalUpscalerDefaults()
+    {
+        switch (SelectedUpscalerBackend)
+        {
+            case UpscalerBackendKind.StableSrExternal:
+                if (string.IsNullOrWhiteSpace(_stableSrUpscalerArgumentsTemplate))
+                {
+                    _stableSrUpscalerArgumentsTemplate = GetDefaultExternalUpscalerArgumentsTemplate();
+                }
+                break;
+            case UpscalerBackendKind.SupirExternal:
+                if (string.IsNullOrWhiteSpace(_supirUpscalerArgumentsTemplate))
+                {
+                    _supirUpscalerArgumentsTemplate = GetDefaultExternalUpscalerArgumentsTemplate();
+                }
+                break;
+        }
+    }
+
+    private string GetSelectedExternalUpscalerPath() => SelectedUpscalerBackend switch
+    {
+        UpscalerBackendKind.StableSrExternal => _stableSrUpscalerPath,
+        UpscalerBackendKind.SupirExternal => _supirUpscalerPath,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalUpscalerPath(string value)
+    {
+        return SelectedUpscalerBackend switch
+        {
+            UpscalerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerPath, value, nameof(SelectedExternalUpscalerPath)),
+            UpscalerBackendKind.SupirExternal => SetField(ref _supirUpscalerPath, value, nameof(SelectedExternalUpscalerPath)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalUpscalerWorkingDirectory() => SelectedUpscalerBackend switch
+    {
+        UpscalerBackendKind.StableSrExternal => _stableSrUpscalerWorkingDirectory,
+        UpscalerBackendKind.SupirExternal => _supirUpscalerWorkingDirectory,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalUpscalerWorkingDirectory(string value)
+    {
+        return SelectedUpscalerBackend switch
+        {
+            UpscalerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerWorkingDirectory, value, nameof(SelectedExternalUpscalerWorkingDirectory)),
+            UpscalerBackendKind.SupirExternal => SetField(ref _supirUpscalerWorkingDirectory, value, nameof(SelectedExternalUpscalerWorkingDirectory)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalUpscalerModelDir() => SelectedUpscalerBackend switch
+    {
+        UpscalerBackendKind.StableSrExternal => _stableSrUpscalerModelDir,
+        UpscalerBackendKind.SupirExternal => _supirUpscalerModelDir,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalUpscalerModelDir(string value)
+    {
+        return SelectedUpscalerBackend switch
+        {
+            UpscalerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerModelDir, value, nameof(SelectedExternalUpscalerModelDir)),
+            UpscalerBackendKind.SupirExternal => SetField(ref _supirUpscalerModelDir, value, nameof(SelectedExternalUpscalerModelDir)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalUpscalerArgumentsTemplate() => SelectedUpscalerBackend switch
+    {
+        UpscalerBackendKind.StableSrExternal => _stableSrUpscalerArgumentsTemplate,
+        UpscalerBackendKind.SupirExternal => _supirUpscalerArgumentsTemplate,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalUpscalerArgumentsTemplate(string value)
+    {
+        return SelectedUpscalerBackend switch
+        {
+            UpscalerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerArgumentsTemplate, value, nameof(SelectedExternalUpscalerArgumentsTemplate)),
+            UpscalerBackendKind.SupirExternal => SetField(ref _supirUpscalerArgumentsTemplate, value, nameof(SelectedExternalUpscalerArgumentsTemplate)),
+            _ => false
+        };
+    }
 
     private static string FindFile(string fileName, string fallback)
     {
@@ -2012,6 +2340,57 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (!string.IsNullOrWhiteSpace(loaded.TileSizeText))
             {
                 TileSizeText = loaded.TileSizeText;
+            }
+
+            EnableStableSr = loaded.EnableStableSr;
+            EnableSupir = loaded.EnableSupir;
+            var loadedUpscalerBackend = NormalizeUpscalerBackendKind(loaded.SelectedUpscalerBackend);
+            if ((loadedUpscalerBackend == UpscalerBackendKind.StableSrExternal && !EnableStableSr) ||
+                (loadedUpscalerBackend == UpscalerBackendKind.SupirExternal && !EnableSupir))
+            {
+                loadedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
+            }
+
+            SelectedUpscalerBackend = loadedUpscalerBackend;
+
+            if (!string.IsNullOrWhiteSpace(loaded.StableSrUpscalerPath))
+            {
+                _stableSrUpscalerPath = loaded.StableSrUpscalerPath;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.StableSrUpscalerWorkingDirectory))
+            {
+                _stableSrUpscalerWorkingDirectory = loaded.StableSrUpscalerWorkingDirectory;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.StableSrUpscalerModelDir))
+            {
+                _stableSrUpscalerModelDir = loaded.StableSrUpscalerModelDir;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.StableSrUpscalerArgumentsTemplate))
+            {
+                _stableSrUpscalerArgumentsTemplate = loaded.StableSrUpscalerArgumentsTemplate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.SupirUpscalerPath))
+            {
+                _supirUpscalerPath = loaded.SupirUpscalerPath;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.SupirUpscalerWorkingDirectory))
+            {
+                _supirUpscalerWorkingDirectory = loaded.SupirUpscalerWorkingDirectory;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.SupirUpscalerModelDir))
+            {
+                _supirUpscalerModelDir = loaded.SupirUpscalerModelDir;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.SupirUpscalerArgumentsTemplate))
+            {
+                _supirUpscalerArgumentsTemplate = loaded.SupirUpscalerArgumentsTemplate;
             }
 
             Overwrite = loaded.Overwrite;
@@ -2253,6 +2632,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 FfmpegThreadsText,
                 UpscalerThreadsText,
                 TileSizeText,
+                SelectedUpscalerBackend.ToString(),
+                EnableStableSr,
+                EnableSupir,
+                _stableSrUpscalerPath,
+                _stableSrUpscalerWorkingDirectory,
+                _stableSrUpscalerModelDir,
+                _stableSrUpscalerArgumentsTemplate,
+                _supirUpscalerPath,
+                _supirUpscalerWorkingDirectory,
+                _supirUpscalerModelDir,
+                _supirUpscalerArgumentsTemplate,
                 Overwrite,
                 SelectedContentMode,
                 CurrentLanguage.ToString(),

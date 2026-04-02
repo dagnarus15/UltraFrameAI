@@ -6,7 +6,7 @@ internal interface IFramePipelineBridge
 
     string BuildDecodeArguments(string sourcePath, bool captureShowInfo);
 
-    string BuildUpscaleArguments(int rawWidth, int rawHeight, int upscaleFrameBudget, string modelDir, string upscalerThreads, int? tileSize, int? gpuId);
+    string BuildUpscaleArguments(int rawWidth, int rawHeight, int upscaleFrameBudget, UpscalerBackendKind upscalerBackend, string modelDir, string upscalerThreads, int? tileSize, int? gpuId, string? externalArgsTemplate);
 
     string BuildEncodeArguments(int upWidth, int upHeight, double encodeFps, string sourcePath, string subtitlePath, bool hasSubtitles, string codec, string preset, int crf, string outputContainer, int height, string outputPath);
 }

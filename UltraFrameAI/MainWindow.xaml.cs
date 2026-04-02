@@ -172,6 +172,11 @@ public partial class MainWindow : Window
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("AntiFlickerModeHelpTitle"), LocalizedStrings.Get("AntiFlickerModeHelpBody"));
     }
 
+    private void ExternalUpscalerHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("ExternalUpscalerHelpTitle"), LocalizedStrings.Get("ExternalUpscalerHelpBody"));
+    }
+
     private void OpenCodecFormatHelp(object sender, string title, string body)
     {
         if (sender is not System.Windows.Controls.Button button)

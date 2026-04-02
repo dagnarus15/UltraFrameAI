@@ -424,8 +424,11 @@ public sealed class PipelineService
                         }
                     });
                 WriteStartupLog("Starting decode");
-                var upscaleWorkingDirectory = Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory;
-                var upscaleArguments = FrameBridge.BuildUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, options.ModelDir, options.UpscalerThreads, options.TileSize, options.GpuId);
+                var upscaleWorkingDirectory = string.IsNullOrWhiteSpace(options.UpscalerWorkingDirectory)
+                    ? (Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory)
+                    : options.UpscalerWorkingDirectory;
+                var upscaleArguments = FrameBridge.BuildUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, options.UpscalerBackend, options.ModelDir, options.UpscalerThreads, options.TileSize, options.GpuId, options.ExternalUpscalerArgumentsTemplate);
+                WriteStartupLog($"Upscaler backend: {options.UpscalerBackend}");
                 WriteStartupLog($"Upscaler exe: {options.UpscalerPath}");
                 WriteStartupLog($"Upscaler cwd: {upscaleWorkingDirectory}");
                 WriteStartupLog($"Upscaler model dir: {options.ModelDir}");

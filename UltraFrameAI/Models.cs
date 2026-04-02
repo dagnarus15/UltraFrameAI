@@ -252,8 +252,11 @@ public sealed class PipelineOptions
     public required int? GpuId { get; init; }
     public required string FfmpegPath { get; init; }
     public required string FfprobePath { get; init; }
+    public required UpscalerBackendKind UpscalerBackend { get; init; }
     public required string UpscalerPath { get; init; }
+    public required string UpscalerWorkingDirectory { get; init; }
     public required string ModelDir { get; init; }
+    public required string ExternalUpscalerArgumentsTemplate { get; init; }
     public required bool UseAntiFlicker { get; init; }
     public required AntiFlickerMode AntiFlickerMode { get; init; }
     public required string ContentMode { get; init; }
@@ -263,6 +266,18 @@ public sealed class PipelineOptions
     public required bool UseNativeEncoderBackend { get; init; }
     public required bool PreserveIncompleteOutput { get; init; }
     public required bool RepairBrokenTimestamps { get; init; }
+}
+
+public enum UpscalerBackendKind
+{
+    RealEsrgan,
+    StableSrExternal,
+    SupirExternal
+}
+
+public sealed record UpscalerBackendOption(UpscalerBackendKind Value, string Label)
+{
+    public override string ToString() => Label;
 }
 
 public enum AntiFlickerMode

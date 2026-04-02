@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
@@ -20,14 +21,52 @@ internal sealed class ProcessFramePipelineBridge : IFramePipelineBridge
         return args.ToString();
     }
 
-    public string BuildUpscaleArguments(int rawWidth, int rawHeight, int upscaleFrameBudget, string modelDir, string upscalerThreads, int? tileSize, int? gpuId)
+    public string BuildUpscaleArguments(int rawWidth, int rawHeight, int upscaleFrameBudget, UpscalerBackendKind upscalerBackend, string modelDir, string upscalerThreads, int? tileSize, int? gpuId, string? externalArgsTemplate)
     {
+        if (upscalerBackend is UpscalerBackendKind.StableSrExternal or UpscalerBackendKind.SupirExternal)
+        {
+            return BuildExternalUpscaleArguments(rawWidth, rawHeight, upscaleFrameBudget, modelDir, upscalerThreads, tileSize, gpuId, externalArgsTemplate);
+        }
+
         var args = new StringBuilder();
         args.Append($"-p -W {rawWidth} -H {rawHeight} -N {upscaleFrameBudget} -c 3 -i - -o - ");
         args.Append($"-s 2 -m {Q(modelDir)} -n realesr-animevideov3 -j {Q(upscalerThreads)}");
         if (tileSize >= 0) args.Append($" -t {tileSize}");
         if (gpuId.HasValue) args.Append($" -g {gpuId.Value}");
         return args.ToString();
+    }
+
+    private static string BuildExternalUpscaleArguments(int rawWidth, int rawHeight, int upscaleFrameBudget, string modelDir, string upscalerThreads, int? tileSize, int? gpuId, string? externalArgsTemplate)
+    {
+        if (string.IsNullOrWhiteSpace(externalArgsTemplate))
+        {
+            throw new InvalidOperationException("External upscaler arguments template is empty.");
+        }
+
+        var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["{width}"] = rawWidth.ToString(CultureInfo.InvariantCulture),
+            ["{height}"] = rawHeight.ToString(CultureInfo.InvariantCulture),
+            ["{frameBudget}"] = upscaleFrameBudget.ToString(CultureInfo.InvariantCulture),
+            ["{channels}"] = "3",
+            ["{scale}"] = "2",
+            ["{input}"] = "-",
+            ["{output}"] = "-",
+            ["{modelDir}"] = modelDir,
+            ["{modelDirQ}"] = Q(modelDir),
+            ["{threads}"] = upscalerThreads,
+            ["{threadsQ}"] = Q(upscalerThreads),
+            ["{tileSize}"] = (tileSize ?? -1).ToString(CultureInfo.InvariantCulture),
+            ["{gpuId}"] = gpuId?.ToString() ?? "-1"
+        };
+
+        var args = externalArgsTemplate;
+        foreach (var pair in replacements)
+        {
+            args = args.Replace(pair.Key, pair.Value, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return args;
     }
 
     public string BuildEncodeArguments(int upWidth, int upHeight, double encodeFps, string sourcePath, string subtitlePath, bool hasSubtitles, string codec, string preset, int crf, string outputContainer, int height, string outputPath)

@@ -607,6 +607,60 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   <data name="TileSize" xml:space="preserve">
     <value>Kachelgröße</value>
   </data>
+  <data name="UpscalerBackend" xml:space="preserve">
+    <value>Upscaler</value>
+  </data>
+  <data name="UpscalerBackendHint" xml:space="preserve">
+    <value>Wählen Sie das Upscaler-Backend. Extern ist für einen eigenen pipe-kompatiblen Wrapper gedacht.</value>
+  </data>
+  <data name="UpscalerBackendRealEsrgan" xml:space="preserve">
+    <value>RealESRGAN (integriert)</value>
+  </data>
+  <data name="UpscalerBackendStableSr" xml:space="preserve">
+    <value>StableSR (extern)</value>
+  </data>
+  <data name="UpscalerBackendSupir" xml:space="preserve">
+    <value>SUPIR (extern)</value>
+  </data>
+  <data name="EnableStableSr" xml:space="preserve">
+    <value>Enable StableSR (requires manual setup)</value>
+  </data>
+  <data name="EnableSupir" xml:space="preserve">
+    <value>Enable SUPIR (experimental, external)</value>
+  </data>
+  <data name="ExternalUpscalerHint" xml:space="preserve">
+    <value>Dieser Modus ist für einen externen Wrapper gedacht: Er muss rohe BGR24-Frames von stdin lesen und rohe BGR24-Frames nach stdout schreiben.</value>
+  </data>
+  <data name="ExternalUpscalerStableSrHint" xml:space="preserve">
+    <value>StableSR muss manuell installiert und gewrappt werden. Geben Sie hier Ihren eigenen pipe-kompatiblen StableSR-Launcher an.</value>
+  </data>
+  <data name="ExternalUpscalerSupirHint" xml:space="preserve">
+    <value>SUPIR muss manuell installiert und gewrappt werden. Geben Sie hier Ihren eigenen pipe-kompatiblen SUPIR-Launcher an.</value>
+  </data>
+  <data name="ExternalUpscalerPath" xml:space="preserve">
+    <value>Pfad zur EXE</value>
+  </data>
+  <data name="ExternalUpscalerWorkingDirectory" xml:space="preserve">
+    <value>Arbeitsordner (optional)</value>
+  </data>
+  <data name="ExternalUpscalerModelDir" xml:space="preserve">
+    <value>Modellordner (optional)</value>
+  </data>
+  <data name="ExternalUpscalerArgumentsTemplate" xml:space="preserve">
+    <value>Argumentvorlage</value>
+  </data>
+  <data name="ExternalUpscalerHelpTitle" xml:space="preserve">
+    <value>Externes Upscaler-API</value>
+  </data>
+  <data name="ExternalUpscalerHelpBody" xml:space="preserve">
+    <value>Externe Backends müssen als Pipe-Wrapper arbeiten: rohe BGR24-Frames von stdin lesen und rohe BGR24-Frames nach stdout schreiben. In der Argumentvorlage können Platzhalter verwendet werden: {width}, {height}, {frameBudget}, {channels}, {scale}, {input}, {output}, {modelDir}, {modelDirQ}, {threads}, {threadsQ}, {tileSize}, {gpuId}. Beispiel für einen Wrapper mit ähnlichem Vertrag: -p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -s {scale} -m {modelDirQ} -j {threadsQ}</value>
+  </data>
+  <data name="ExternalUpscalerPathRequired" xml:space="preserve">
+    <value>Der Pfad zur externen Upscaler-EXE ist nicht gesetzt.</value>
+  </data>
+  <data name="ExternalUpscalerArgumentsRequired" xml:space="preserve">
+    <value>Die Argumentvorlage für den externen Upscaler ist leer.</value>
+  </data>
   <data name="OverwriteExistingOutput" xml:space="preserve">
     <value>Vorhandene Ausgabe überschreiben</value>
   </data>
