@@ -500,7 +500,7 @@ public sealed class PipelineService
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
                 var antiFlicker = options.UseAntiFlicker && options.AntiFlickerStrength > 0
-                    ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.ContentMode, options.AntiFlickerStrength)
+                    ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.AntiFlickerMode, options.ContentMode, options.AntiFlickerStrength)
                     : null;
                 var currentFrames = 0;
                 var lastTick = Stopwatch.StartNew();

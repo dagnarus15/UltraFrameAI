@@ -157,6 +157,7 @@ public sealed class PipelineServiceTests
             UpscalerPath = upscaler ?? "realesrgan-ncnn-vulkan.exe",
             ModelDir = modelDir ?? Path.Combine(root, "models"),
             UseAntiFlicker = false,
+            AntiFlickerMode = AntiFlickerMode.LumaStabilizer,
             ContentMode = "Anime",
             AntiFlickerStrength = 65,
             EncoderPreset = "slower",

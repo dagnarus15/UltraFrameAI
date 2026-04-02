@@ -255,6 +255,7 @@ public sealed class PipelineOptions
     public required string UpscalerPath { get; init; }
     public required string ModelDir { get; init; }
     public required bool UseAntiFlicker { get; init; }
+    public required AntiFlickerMode AntiFlickerMode { get; init; }
     public required string ContentMode { get; init; }
     public required double AntiFlickerStrength { get; init; }
     public required string EncoderPreset { get; init; }
@@ -262,6 +263,17 @@ public sealed class PipelineOptions
     public required bool UseNativeEncoderBackend { get; init; }
     public required bool PreserveIncompleteOutput { get; init; }
     public required bool RepairBrokenTimestamps { get; init; }
+}
+
+public enum AntiFlickerMode
+{
+    LumaStabilizer,
+    FlowGuided
+}
+
+public sealed record AntiFlickerModeOption(AntiFlickerMode Value, string Label)
+{
+    public override string ToString() => Label;
 }
 
 public sealed class AntiFlickerPresetState

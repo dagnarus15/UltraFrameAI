@@ -342,17 +342,17 @@
   <data name="BenchmarkCaseAntiFlickerOff" xml:space="preserve">
     <value>Aus</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerVideo" xml:space="preserve">
-    <value>Video</value>
+  <data name="BenchmarkCaseAntiFlickerLuma" xml:space="preserve">
+    <value>Luma Stabilizer</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerFaces" xml:space="preserve">
-    <value>Gesichter</value>
+  <data name="BenchmarkCaseAntiFlickerFlow" xml:space="preserve">
+    <value>Flow Guided</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerAnime" xml:space="preserve">
-    <value>Anime</value>
+  <data name="BenchmarkCaseAntiFlickerEdgeClamp" xml:space="preserve">
+    <value>Edge Clamp</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerAnimeUltra" xml:space="preserve">
-    <value>Anime Ultra</value>
+  <data name="BenchmarkCaseAntiFlickerLegacy" xml:space="preserve">
+    <value>Legacy</value>
   </data>
   <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
     <value>Videodateien|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|Alle Dateien|*.*</value>
@@ -485,6 +485,32 @@
   </data>
   <data name="AntiFlickerHint" xml:space="preserve">
     <value>Stabilisiert feines Flimmern, ohne Linien zu verschmieren.</value>
+  </data>
+  <data name="AntiFlickerMode" xml:space="preserve">
+    <value>Modus</value>
+  </data>
+  <data name="AntiFlickerModeHint" xml:space="preserve">
+    <value>Bestimmt, wie das Programm Flimmern reduziert. Wenn du unsicher bist, lass Luma Stabilizer aktiv.</value>
+  </data>
+  <data name="AntiFlickerModeHelpTitle" xml:space="preserve">
+    <value>Anti-Flicker-Modus</value>
+  </data>
+  <data name="AntiFlickerModeHelpBody" xml:space="preserve">
+    <value>Luma Stabilizer ist der Hauptmodus. Er kostet nur wenig zusätzliche Renderzeit und reduziert leichtes Flimmern sanft, ohne zu viele Details weichzuzeichnen.
+
+Flow Guided ist der aufwendigere Modus. Er berücksichtigt Bewegung stärker und kann in schwierigeren Szenen helfen, belastet aber meist die CPU mehr und verlängert die Renderzeit deutlicher.</value>
+  </data>
+  <data name="AntiFlickerModeLumaStabilizer" xml:space="preserve">
+    <value>Luma Stabilizer</value>
+  </data>
+  <data name="AntiFlickerModeFlowGuided" xml:space="preserve">
+    <value>Flow Guided</value>
+  </data>
+  <data name="AntiFlickerModeEdgeClamp" xml:space="preserve">
+    <value>Edge Clamp</value>
+  </data>
+  <data name="AntiFlickerModeLegacy" xml:space="preserve">
+    <value>Legacy</value>
   </data>
   <data name="AntiFlickerStrength" xml:space="preserve">
     <value>Stärke</value>

@@ -21,7 +21,7 @@ public sealed class AntiFlickerProcessor : IDisposable
         _frameBytes = frameBytes;
     }
 
-    public static AntiFlickerProcessor? TryCreate(int width, int height, int channels, string contentMode, double strength)
+    public static AntiFlickerProcessor? TryCreate(int width, int height, int channels, AntiFlickerMode antiFlickerMode, string contentMode, double strength)
     {
         try
         {
@@ -42,6 +42,7 @@ public sealed class AntiFlickerProcessor : IDisposable
                 BlockSize = profile.BlockSize,
                 SearchRadius = profile.SearchRadius,
                 ContentMode = mode,
+                Algorithm = MapAntiFlickerMode(antiFlickerMode),
                 BlendStrength = profile.BlendStrength,
                 MaxBlend = profile.MaxBlend,
                 EdgeGuard = profile.EdgeGuard,
@@ -124,6 +125,7 @@ public sealed class AntiFlickerProcessor : IDisposable
         public int BlockSize;
         public int SearchRadius;
         public int ContentMode;
+        public int Algorithm;
         public float BlendStrength;
         public float MaxBlend;
         public float EdgeGuard;
@@ -148,6 +150,12 @@ public sealed class AntiFlickerProcessor : IDisposable
         "faces" => 2,
         "animeultra" => 3,
         "ultra" => 3,
+        _ => 1
+    };
+
+    private static int MapAntiFlickerMode(AntiFlickerMode mode) => mode switch
+    {
+        AntiFlickerMode.LumaStabilizer => 0,
         _ => 1
     };
 

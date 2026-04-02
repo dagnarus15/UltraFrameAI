@@ -167,6 +167,11 @@ public partial class MainWindow : Window
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("RepairBrokenTimestampsHelpTitle"), LocalizedStrings.Get("RepairBrokenTimestampsHelpBody"));
     }
 
+    private void AntiFlickerModeHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("AntiFlickerModeHelpTitle"), LocalizedStrings.Get("AntiFlickerModeHelpBody"));
+    }
+
     private void OpenCodecFormatHelp(object sender, string title, string body)
     {
         if (sender is not System.Windows.Controls.Button button)

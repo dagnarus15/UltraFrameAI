@@ -63,6 +63,7 @@ public sealed record BenchmarkCaseResult(
     string Codec,
     string Preset,
     bool AntiFlicker,
+    AntiFlickerMode AntiFlickerMode,
     string ContentMode,
     double Strength,
     string UpscalerThreads,
@@ -93,6 +94,7 @@ public static class BenchmarkRunner
         string Codec,
         string Preset,
         bool UseAntiFlicker,
+        AntiFlickerMode AntiFlickerMode,
         string ContentMode,
         double AntiFlickerStrength,
         string UpscalerThreads,
@@ -105,6 +107,7 @@ public static class BenchmarkRunner
         string Codec,
         string Preset,
         bool AntiFlicker,
+        AntiFlickerMode AntiFlickerMode,
         string ContentMode,
         double Strength,
         string UpscalerThreads,
@@ -120,10 +123,8 @@ public static class BenchmarkRunner
         => string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkCaseCodecPreset, codec, LocalizedPresetForCase(preset));
 
     private static string CaseAntiFlickerOff => LocalizedStrings.BenchmarkCaseAntiFlickerOff;
-    private static string CaseAntiFlickerVideo => LocalizedStrings.BenchmarkCaseAntiFlickerVideo;
-    private static string CaseAntiFlickerFaces => LocalizedStrings.BenchmarkCaseAntiFlickerFaces;
-    private static string CaseAntiFlickerAnime => LocalizedStrings.BenchmarkCaseAntiFlickerAnime;
-    private static string CaseAntiFlickerAnimeUltra => LocalizedStrings.BenchmarkCaseAntiFlickerAnimeUltra;
+    private static string CaseAntiFlickerLuma => LocalizedStrings.BenchmarkCaseAntiFlickerLuma;
+    private static string CaseAntiFlickerFlow => LocalizedStrings.BenchmarkCaseAntiFlickerFlow;
 
     internal static string LocalizedPresetForCase(string preset) => preset switch
     {
@@ -161,12 +162,12 @@ public static class BenchmarkRunner
         var modelDir = FindDirectory("models", Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "models"), repoRoot);
 
         var source = ResolveSource(settings.SourcePath);
-        var outputRoot = settings.OutputDir ?? Path.Combine(Path.GetDirectoryName(source) ?? repoRoot, $"UltraFrameAI-benchmark-{DateTime.Now:yyyyMMdd-HHmmss}");
+        var outputRoot = Path.GetFullPath(settings.OutputDir ?? Path.Combine(Path.GetDirectoryName(source) ?? repoRoot, $"UltraFrameAI-benchmark-{DateTime.Now:yyyyMMdd-HHmmss}"));
         Directory.CreateDirectory(outputRoot);
 
         var sampleDir = Path.Combine(outputRoot, "sample");
         Directory.CreateDirectory(sampleDir);
-        var sampleFile = Path.Combine(sampleDir, Path.GetFileNameWithoutExtension(source) + "-sample.mkv");
+        var sampleFile = Path.GetFullPath(Path.Combine(sampleDir, Path.GetFileNameWithoutExtension(source) + "-sample.mkv"));
         cancellationToken.ThrowIfCancellationRequested();
         var sourceDuration = await GetDurationAsync(ffprobe, source, cancellationToken).ConfigureAwait(false);
         var sampleWindow = ChooseSampleWindow(sourceDuration, settings.SampleSeconds);
@@ -190,35 +191,33 @@ public static class BenchmarkRunner
         {
             (GroupCodecPreset, new[]
             {
-                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, "video", 0, baselineThreads, baselineTile, 46),
-                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, "video", 0, baselineThreads, baselineTile, 50),
-                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, "video", 0, baselineThreads, baselineTile, 68),
-                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, "video", 0, baselineThreads, baselineTile, 73),
+                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 46),
+                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 50),
+                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 68),
+                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 73),
             }),
             (GroupAntiFlicker, new[]
             {
-                new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, "video", 0, baselineThreads, baselineTile, 42),
-                new BenchmarkCase(CaseAntiFlickerVideo, "x264", "medium", true, "video", 42, baselineThreads, baselineTile, 55),
-                new BenchmarkCase(CaseAntiFlickerFaces, "x264", "medium", true, "faces", 35, baselineThreads, baselineTile, 60),
-                new BenchmarkCase(CaseAntiFlickerAnime, "x264", "medium", true, "anime", 65, baselineThreads, baselineTile, 69),
-                new BenchmarkCase(CaseAntiFlickerAnimeUltra, "x264", "medium", true, "anime-ultra", 88, baselineThreads, baselineTile, 78),
+                new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
+                new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
+                new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
             }),
             (GroupUpscalerThreads, new[]
             {
-                new BenchmarkCase("4:4:4", "x264", "medium", false, "video", 0, "4:4:4", baselineTile, 58),
-                new BenchmarkCase("6:6:6", "x264", "medium", false, "video", 0, "6:6:6", baselineTile, 58),
-                new BenchmarkCase("8:8:8", "x264", "medium", false, "video", 0, "8:8:8", baselineTile, 58),
-                new BenchmarkCase("2:2:2", "x264", "medium", false, "video", 0, "2:2:2", baselineTile, 58),
-                new BenchmarkCase("1:1:1", "x264", "medium", false, "video", 0, "1:1:1", baselineTile, 58),
+                new BenchmarkCase("4:4:4", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "4:4:4", baselineTile, 58),
+                new BenchmarkCase("6:6:6", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "6:6:6", baselineTile, 58),
+                new BenchmarkCase("8:8:8", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "8:8:8", baselineTile, 58),
+                new BenchmarkCase("2:2:2", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "2:2:2", baselineTile, 58),
+                new BenchmarkCase("1:1:1", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "1:1:1", baselineTile, 58),
             }),
             (GroupTileSize, new[]
             {
-                new BenchmarkCase("1024", "x264", "medium", false, "video", 0, baselineThreads, 1024, 58),
-                new BenchmarkCase("1536", "x264", "medium", false, "video", 0, baselineThreads, 1536, 59),
-                new BenchmarkCase("2048", "x264", "medium", false, "video", 0, baselineThreads, 2048, 60),
-                new BenchmarkCase("512", "x264", "medium", false, "video", 0, baselineThreads, 512, 56),
-                new BenchmarkCase("4096", "x264", "medium", false, "video", 0, baselineThreads, 4096, 61),
-                new BenchmarkCase("256", "x264", "medium", false, "video", 0, baselineThreads, 256, 53),
+                new BenchmarkCase("1024", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1024, 58),
+                new BenchmarkCase("1536", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1536, 59),
+                new BenchmarkCase("2048", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 2048, 60),
+                new BenchmarkCase("512", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 512, 56),
+                new BenchmarkCase("4096", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 4096, 61),
+                new BenchmarkCase("256", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 256, 53),
             }),
         };
 
@@ -332,6 +331,7 @@ public static class BenchmarkRunner
             UpscalerPath = upscaler,
             ModelDir = modelDir,
             UseAntiFlicker = benchCase.UseAntiFlicker,
+            AntiFlickerMode = benchCase.AntiFlickerMode,
             ContentMode = benchCase.ContentMode,
             AntiFlickerStrength = benchCase.AntiFlickerStrength,
             EncoderPreset = benchCase.Preset,
@@ -384,12 +384,15 @@ public static class BenchmarkRunner
                 }
             }, cancellationToken).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
             started.Stop();
             metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
             metricsCaptured = true;
-            return new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UseAntiFlicker, benchCase.ContentMode, benchCase.AntiFlickerStrength, benchCase.UpscalerThreads, benchCase.TileSize, benchCase.QualityScore, started.Elapsed, File.Exists(outputPath) ? new FileInfo(outputPath).Length : 0, false, LocalizedStrings.BenchmarkErrorPipelineFailed, metrics);
+            var error = string.IsNullOrWhiteSpace(ex.Message)
+                ? LocalizedStrings.BenchmarkErrorPipelineFailed
+                : $"{LocalizedStrings.BenchmarkErrorPipelineFailed}: {ex.Message}";
+            return new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UseAntiFlicker, benchCase.AntiFlickerMode, benchCase.ContentMode, benchCase.AntiFlickerStrength, benchCase.UpscalerThreads, benchCase.TileSize, benchCase.QualityScore, started.Elapsed, File.Exists(outputPath) ? new FileInfo(outputPath).Length : 0, false, error, metrics);
         }
         finally
         {
@@ -410,7 +413,7 @@ public static class BenchmarkRunner
             sampleDuration,
             caseDir,
             cancellationToken).ConfigureAwait(false);
-        var result = new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UseAntiFlicker, benchCase.ContentMode, benchCase.AntiFlickerStrength, benchCase.UpscalerThreads, benchCase.TileSize, qualityScore, started.Elapsed, bytes, true, null, metrics);
+        var result = new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UseAntiFlicker, benchCase.AntiFlickerMode, benchCase.ContentMode, benchCase.AntiFlickerStrength, benchCase.UpscalerThreads, benchCase.TileSize, qualityScore, started.Elapsed, bytes, true, null, metrics);
         uiProgress?.Report(new BenchmarkProgressUpdate(
             BenchmarkProgressKind.CaseCompleted,
             stepIndex,
@@ -430,6 +433,7 @@ public static class BenchmarkRunner
                 result.Codec,
                 result.Preset,
                 result.AntiFlicker,
+                result.AntiFlickerMode,
                 result.ContentMode,
                 result.Strength,
                 result.UpscalerThreads,
@@ -464,12 +468,12 @@ public static class BenchmarkRunner
         var modelDir = FindDirectory("models", Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "models"), repoRoot);
 
         var source = ResolveSource(settings.SourcePath);
-        var outputRoot = settings.OutputDir ?? Path.Combine(Path.GetDirectoryName(source) ?? repoRoot, $"UltraFrameAI-benchmark-{DateTime.Now:yyyyMMdd-HHmmss}");
+        var outputRoot = Path.GetFullPath(settings.OutputDir ?? Path.Combine(Path.GetDirectoryName(source) ?? repoRoot, $"UltraFrameAI-benchmark-{DateTime.Now:yyyyMMdd-HHmmss}"));
         Directory.CreateDirectory(outputRoot);
 
         var sampleDir = Path.Combine(outputRoot, "sample");
         Directory.CreateDirectory(sampleDir);
-        var sampleFile = Path.Combine(sampleDir, Path.GetFileNameWithoutExtension(source) + "-sample.mkv");
+        var sampleFile = Path.GetFullPath(Path.Combine(sampleDir, Path.GetFileNameWithoutExtension(source) + "-sample.mkv"));
         cancellationToken.ThrowIfCancellationRequested();
         var sourceDuration = await GetDurationAsync(ffprobe, source, cancellationToken).ConfigureAwait(false);
         var sampleWindow = ChooseSampleWindow(sourceDuration, settings.SampleSeconds);
@@ -493,35 +497,33 @@ public static class BenchmarkRunner
         {
             (GroupCodecPreset, new[]
             {
-                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, "video", 0, baselineThreads, baselineTile, 46),
-                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, "video", 0, baselineThreads, baselineTile, 50),
-                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, "video", 0, baselineThreads, baselineTile, 68),
-                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, "video", 0, baselineThreads, baselineTile, 73),
+                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 46),
+                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 50),
+                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 68),
+                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 73),
             }),
             (GroupAntiFlicker, new[]
             {
-                new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, "video", 0, baselineThreads, baselineTile, 42),
-                new BenchmarkCase(CaseAntiFlickerVideo, "x264", "medium", true, "video", 42, baselineThreads, baselineTile, 55),
-                new BenchmarkCase(CaseAntiFlickerFaces, "x264", "medium", true, "faces", 35, baselineThreads, baselineTile, 60),
-                new BenchmarkCase(CaseAntiFlickerAnime, "x264", "medium", true, "anime", 65, baselineThreads, baselineTile, 69),
-                new BenchmarkCase(CaseAntiFlickerAnimeUltra, "x264", "medium", true, "anime-ultra", 88, baselineThreads, baselineTile, 78),
+                new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
+                new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
+                new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
             }),
             (GroupUpscalerThreads, new[]
             {
-                new BenchmarkCase("4:4:4", "x264", "medium", false, "video", 0, "4:4:4", baselineTile, 58),
-                new BenchmarkCase("6:6:6", "x264", "medium", false, "video", 0, "6:6:6", baselineTile, 58),
-                new BenchmarkCase("8:8:8", "x264", "medium", false, "video", 0, "8:8:8", baselineTile, 58),
-                new BenchmarkCase("2:2:2", "x264", "medium", false, "video", 0, "2:2:2", baselineTile, 58),
-                new BenchmarkCase("1:1:1", "x264", "medium", false, "video", 0, "1:1:1", baselineTile, 58),
+                new BenchmarkCase("4:4:4", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "4:4:4", baselineTile, 58),
+                new BenchmarkCase("6:6:6", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "6:6:6", baselineTile, 58),
+                new BenchmarkCase("8:8:8", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "8:8:8", baselineTile, 58),
+                new BenchmarkCase("2:2:2", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "2:2:2", baselineTile, 58),
+                new BenchmarkCase("1:1:1", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "1:1:1", baselineTile, 58),
             }),
             (GroupTileSize, new[]
             {
-                new BenchmarkCase("1024", "x264", "medium", false, "video", 0, baselineThreads, 1024, 58),
-                new BenchmarkCase("1536", "x264", "medium", false, "video", 0, baselineThreads, 1536, 59),
-                new BenchmarkCase("2048", "x264", "medium", false, "video", 0, baselineThreads, 2048, 60),
-                new BenchmarkCase("512", "x264", "medium", false, "video", 0, baselineThreads, 512, 56),
-                new BenchmarkCase("4096", "x264", "medium", false, "video", 0, baselineThreads, 4096, 61),
-                new BenchmarkCase("256", "x264", "medium", false, "video", 0, baselineThreads, 256, 53),
+                new BenchmarkCase("1024", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1024, 58),
+                new BenchmarkCase("1536", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1536, 59),
+                new BenchmarkCase("2048", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 2048, 60),
+                new BenchmarkCase("512", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 512, 56),
+                new BenchmarkCase("4096", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 4096, 61),
+                new BenchmarkCase("256", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 256, 53),
             }),
         };
 
@@ -607,6 +609,7 @@ public static class BenchmarkRunner
                 result.Codec,
                 result.Preset,
                 result.AntiFlicker,
+                result.AntiFlickerMode,
                 result.ContentMode,
                 result.Strength,
                 result.UpscalerThreads,
@@ -717,6 +720,7 @@ public static class BenchmarkRunner
 
     private static async Task CreateSampleClipAsync(string ffmpeg, string source, string output, double start, int sampleSeconds, CancellationToken ct)
     {
+        output = Path.GetFullPath(output);
         if (File.Exists(output))
         {
             File.Delete(output);
@@ -724,11 +728,19 @@ public static class BenchmarkRunner
 
         var length = Math.Max(1, sampleSeconds > 0 ? sampleSeconds : 20);
         var args = $"-hide_banner -y -ss {start.ToString("0.###", CultureInfo.InvariantCulture)} -i {Quote(source)} -t {length.ToString(CultureInfo.InvariantCulture)} -map 0:v:0 -map 0:a? -c copy -avoid_negative_ts make_zero {Quote(output)}";
-        var runner = ProcessRunner.RunAsync(ffmpeg, args, Path.GetDirectoryName(output) ?? Environment.CurrentDirectory, _ => { }, _ => { }, ct);
+        var stderr = new List<string>();
+        var runner = ProcessRunner.RunAsync(ffmpeg, args, Path.GetDirectoryName(output) ?? Environment.CurrentDirectory, _ => { }, line =>
+        {
+            if (stderr.Count < 40)
+            {
+                stderr.Add(line);
+            }
+        }, ct);
         var exitCode = await runner.ConfigureAwait(false);
         if (exitCode != 0)
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkErrorUnableToCreateSampleClipWithExitCode, exitCode));
+            var errorDetails = stderr.Count > 0 ? $"{Environment.NewLine}{string.Join(Environment.NewLine, stderr)}" : string.Empty;
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkErrorUnableToCreateSampleClipWithExitCode, exitCode) + errorDetails);
         }
 
         if (!File.Exists(output))

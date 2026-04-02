@@ -7,7 +7,7 @@ public sealed class AntiFlickerNativeTests
     [Fact]
     public void AntiFlickerProcessor_Softens_Small_Flicker()
     {
-        var processor = AntiFlickerProcessor.TryCreate(64, 64, 3, "Anime", 75);
+        var processor = AntiFlickerProcessor.TryCreate(64, 64, 3, AntiFlickerMode.LumaStabilizer, "Anime", 75);
         Assert.NotNull(processor);
 
         using var _ = processor;

@@ -61,6 +61,7 @@ public sealed class PipelineIntegrationTests
                 UpscalerPath = upscaler,
                 ModelDir = modelDir,
                 UseAntiFlicker = true,
+                AntiFlickerMode = AntiFlickerMode.LumaStabilizer,
                 ContentMode = "Anime",
                 AntiFlickerStrength = 65,
                 EncoderPreset = "slower",

@@ -31,6 +31,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string SelectedContentMode,
         string CurrentLanguage,
         bool? UseAntiFlicker,
+        string? SelectedAntiFlickerMode,
         bool PreserveIncompleteOutput,
         bool UseNativeEncoderBackend,
         bool? RepairBrokenTimestamps,
@@ -51,6 +52,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AsyncRelayCommand _startCommand;
     private readonly AsyncRelayCommand _startSelectedCommand;
     private readonly ObservableCollection<LogEntryViewModel> _logLines = UiCollections.CreateLogCollection();
+    private IReadOnlyList<AntiFlickerModeOption> _antiFlickerModeOptions = Array.Empty<AntiFlickerModeOption>();
     private readonly string _repoRoot = FindRepoRoot();
     private readonly string _lastRootFolderPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -93,6 +95,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _preserveIncompleteOutput;
     private bool _repairBrokenTimestamps = true;
     private double _antiFlickerStrength = 65;
+    private AntiFlickerMode _selectedAntiFlickerMode = AntiFlickerMode.LumaStabilizer;
     private string _selectedContentMode = "Anime";
     private bool _suppressAntiFlickerPresetPersistence;
     private bool _suppressAppSettingsPersistence;
@@ -173,6 +176,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerPresets = LoadAntiFlickerPresets();
         _useNativeEncoderBackend = LoadNativeEncoderBackendPreference();
+        _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         LoadRecentRootFolders();
         _suppressAppSettingsPersistence = true;
         try
@@ -214,6 +218,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public IEnumerable<string> ContainerOptions { get; }
 
     public IEnumerable<string> EncoderPresetOptions { get; }
+
+    public IReadOnlyList<AntiFlickerModeOption> AntiFlickerModeOptions => _antiFlickerModeOptions;
 
     public ICommand BrowseRootFolderCommand => _browseRootFolderCommand;
 
@@ -500,6 +506,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _antiFlickerStrength, Math.Clamp(value, 0, 100)))
             {
                 PersistCurrentAntiFlickerPreset();
+            }
+        }
+    }
+
+    public AntiFlickerMode SelectedAntiFlickerMode
+    {
+        get => _selectedAntiFlickerMode;
+        set
+        {
+            if (SetField(ref _selectedAntiFlickerMode, value))
+            {
+                PersistAppSettings();
             }
         }
     }
@@ -1133,6 +1151,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UpscalerPath = FindFile("realesrgan-ncnn-vulkan.exe", Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "realesrgan-ncnn-vulkan.exe")),
             ModelDir = FindDirectory("models", Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "models")),
             UseAntiFlicker = UseAntiFlicker,
+            AntiFlickerMode = SelectedAntiFlickerMode,
             ContentMode = SelectedContentMode,
             AntiFlickerStrength = AntiFlickerStrength,
             EncoderPreset = EncoderPreset,
@@ -1725,9 +1744,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void RefreshLocalizedText()
     {
         _currentLanguage = LocalizedStrings.CurrentLanguage;
+        _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(string.Empty);
         OnPropertyChanged(nameof(CurrentLanguageFlagPath));
+        OnPropertyChanged(nameof(AntiFlickerModeOptions));
 
         if (Items.Count == 0)
         {
@@ -1756,6 +1777,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ScanFoundText = LocalizedStrings.LogFoundVideoFiles(_scanFoundCount);
         }
     }
+
+    private static IReadOnlyList<AntiFlickerModeOption> BuildAntiFlickerModeOptions() =>
+        new[]
+        {
+            new AntiFlickerModeOption(AntiFlickerMode.LumaStabilizer, LocalizedStrings.AntiFlickerModeLumaStabilizer),
+            new AntiFlickerModeOption(AntiFlickerMode.FlowGuided, LocalizedStrings.AntiFlickerModeFlowGuided)
+        };
+
+    private static AntiFlickerMode NormalizeAntiFlickerMode(string? raw) => raw?.Trim() switch
+    {
+        nameof(AntiFlickerMode.FlowGuided) => AntiFlickerMode.FlowGuided,
+        "EdgeClamp" => AntiFlickerMode.LumaStabilizer,
+        "Legacy" => AntiFlickerMode.LumaStabilizer,
+        _ => AntiFlickerMode.LumaStabilizer
+    };
 
     private void Log(string message)
     {
@@ -1995,6 +2031,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 UseAntiFlicker = useAntiFlicker;
             }
 
+            if (!string.IsNullOrWhiteSpace(loaded.SelectedAntiFlickerMode))
+            {
+                SelectedAntiFlickerMode = NormalizeAntiFlickerMode(loaded.SelectedAntiFlickerMode);
+            }
+
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
             UseNativeEncoderBackend = loaded.UseNativeEncoderBackend;
             RepairBrokenTimestamps = loaded.RepairBrokenTimestamps ?? true;
@@ -2216,6 +2257,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 SelectedContentMode,
                 CurrentLanguage.ToString(),
                 UseAntiFlicker,
+                SelectedAntiFlickerMode.ToString(),
                 PreserveIncompleteOutput,
                 UseNativeEncoderBackend,
                 RepairBrokenTimestamps,

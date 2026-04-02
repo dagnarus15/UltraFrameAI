@@ -22,6 +22,7 @@ struct af_config
     int block_size;
     int search_radius;
     int content_mode;
+    int algorithm;
     float blend_strength;
     float max_blend;
     float edge_guard;

@@ -342,17 +342,17 @@
   <data name="BenchmarkCaseAntiFlickerOff" xml:space="preserve">
     <value>Выкл</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerVideo" xml:space="preserve">
-    <value>Видео</value>
+  <data name="BenchmarkCaseAntiFlickerLuma" xml:space="preserve">
+    <value>Luma Stabilizer</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerFaces" xml:space="preserve">
-    <value>Лица</value>
+  <data name="BenchmarkCaseAntiFlickerFlow" xml:space="preserve">
+    <value>Flow Guided</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerAnime" xml:space="preserve">
-    <value>Аниме</value>
+  <data name="BenchmarkCaseAntiFlickerEdgeClamp" xml:space="preserve">
+    <value>Edge Clamp</value>
   </data>
-  <data name="BenchmarkCaseAntiFlickerAnimeUltra" xml:space="preserve">
-    <value>Аниме Ultra</value>
+  <data name="BenchmarkCaseAntiFlickerLegacy" xml:space="preserve">
+    <value>Legacy</value>
   </data>
   <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
     <value>Видео файлы|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|Все файлы|*.*</value>
@@ -485,6 +485,32 @@
   </data>
   <data name="AntiFlickerHint" xml:space="preserve">
     <value>Убирает мелкое мерцание, не размывая линии.</value>
+  </data>
+  <data name="AntiFlickerMode" xml:space="preserve">
+    <value>Режим</value>
+  </data>
+  <data name="AntiFlickerModeHint" xml:space="preserve">
+    <value>Выбирает, как именно программа уменьшает мерцание. Если не уверены, оставьте Luma Stabilizer.</value>
+  </data>
+  <data name="AntiFlickerModeHelpTitle" xml:space="preserve">
+    <value>Режим анти-мерцания</value>
+  </data>
+  <data name="AntiFlickerModeHelpBody" xml:space="preserve">
+    <value>Luma Stabilizer — основной режим. Почти не замедляет рендер и мягко уменьшает лёгкое мерцание без сильного размытия.
+
+Flow Guided — более сложный режим. Сильнее учитывает движение и может помочь в трудных сценах, но обычно заметнее нагружает процессор и увеличивает время рендера.</value>
+  </data>
+  <data name="AntiFlickerModeLumaStabilizer" xml:space="preserve">
+    <value>Luma Stabilizer</value>
+  </data>
+  <data name="AntiFlickerModeFlowGuided" xml:space="preserve">
+    <value>Flow Guided</value>
+  </data>
+  <data name="AntiFlickerModeEdgeClamp" xml:space="preserve">
+    <value>Edge Clamp</value>
+  </data>
+  <data name="AntiFlickerModeLegacy" xml:space="preserve">
+    <value>Legacy</value>
   </data>
   <data name="AntiFlickerStrength" xml:space="preserve">
     <value>Сила</value>

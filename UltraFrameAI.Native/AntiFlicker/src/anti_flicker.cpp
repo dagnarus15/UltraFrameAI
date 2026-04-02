@@ -24,6 +24,12 @@ namespace
         AnimeUltra = 3
     };
 
+    enum class Algorithm
+    {
+        LumaStabilizer = 0,
+        FlowGuided = 1
+    };
+
     struct ModeTuning
     {
         float FlickerGain;
@@ -59,6 +65,7 @@ namespace
             , m_blockSize(std::max(16, config.block_size))
             , m_searchRadius(std::max(1, config.search_radius))
             , m_contentMode(static_cast<ContentMode>(std::clamp(config.content_mode, 0, 3)))
+            , m_algorithm(static_cast<Algorithm>(std::clamp(config.algorithm, 0, 1)))
             , m_blendStrength(ClampFloat(config.blend_strength, 0.0f, 1.0f))
             , m_maxBlend(ClampFloat(config.max_blend, 0.0f, 1.0f))
             , m_edgeGuard(ClampFloat(config.edge_guard, 0.0f, 2.0f))
@@ -71,6 +78,9 @@ namespace
             , m_currFrame(m_prevFrame.size(), 0)
             , m_prevDownLuma(static_cast<std::size_t>(m_downWidth) * m_downHeight, 0)
             , m_currDownLuma(m_prevDownLuma.size(), 0)
+            , m_downEdge(m_prevDownLuma.size(), 0.0f)
+            , m_downTemporalDiff(m_prevDownLuma.size(), 0.0f)
+            , m_downLumaWeight(m_prevDownLuma.size(), 0.0f)
             , m_motion(static_cast<std::size_t>(m_blockCols) * m_blockRows)
         {
         }
@@ -79,6 +89,9 @@ namespace
         {
             std::fill(m_prevFrame.begin(), m_prevFrame.end(), std::uint8_t{0});
             std::fill(m_prevDownLuma.begin(), m_prevDownLuma.end(), std::uint8_t{0});
+            std::fill(m_downEdge.begin(), m_downEdge.end(), 0.0f);
+            std::fill(m_downTemporalDiff.begin(), m_downTemporalDiff.end(), 0.0f);
+            std::fill(m_downLumaWeight.begin(), m_downLumaWeight.end(), 0.0f);
             std::fill(m_motion.begin(), m_motion.end(), MotionBlock{});
             m_hasPrev = false;
         }
@@ -111,8 +124,19 @@ namespace
                 return 0;
             }
 
-            BuildMotionField(sceneCutError);
-            BlendFrame(output);
+            BuildDownscaledGuidance();
+
+            switch (m_algorithm)
+            {
+            case Algorithm::LumaStabilizer:
+            default:
+                BlendLumaStabilizer(output, sceneCutError);
+                break;
+            case Algorithm::FlowGuided:
+                BuildFastMotionField(sceneCutError);
+                BlendFlowGuided(output, sceneCutError);
+                break;
+            }
 
             std::memcpy(m_prevFrame.data(), output, m_prevFrame.size());
             std::memcpy(m_prevDownLuma.data(), m_currDownLuma.data(), m_currDownLuma.size());
@@ -174,6 +198,25 @@ namespace
             return pixels > 0 ? static_cast<float>(sad) / static_cast<float>(pixels * 255.0) : 0.0f;
         }
 
+        void BuildDownscaledGuidance()
+        {
+            for (int y = 0; y < m_downHeight; ++y)
+            {
+                const int nextY = ClampInt(y + 1, 0, m_downHeight - 1);
+                for (int x = 0; x < m_downWidth; ++x)
+                {
+                    const int nextX = ClampInt(x + 1, 0, m_downWidth - 1);
+                    const std::size_t index = static_cast<std::size_t>(y) * m_downWidth + x;
+                    const int center = static_cast<int>(m_currDownLuma[index]);
+                    const int right = static_cast<int>(m_currDownLuma[static_cast<std::size_t>(y) * m_downWidth + nextX]);
+                    const int down = static_cast<int>(m_currDownLuma[static_cast<std::size_t>(nextY) * m_downWidth + x]);
+                    const int prev = static_cast<int>(m_prevDownLuma[index]);
+                    m_downEdge[index] = ClampFloat((std::abs(center - right) + std::abs(center - down)) / 255.0f, 0.0f, 1.0f);
+                    m_downTemporalDiff[index] = ClampFloat(std::abs(center - prev) / 255.0f, 0.0f, 1.0f);
+                }
+            }
+        }
+
         void BuildMotionField(float sceneCutError)
         {
             for (int by = 0; by < m_blockRows; ++by)
@@ -182,6 +225,20 @@ namespace
                 {
                     MotionBlock motion = EstimateBlockMotion(bx, by);
                     motion.Weight = EstimateBlockWeight(bx, by, motion, sceneCutError);
+                    m_motion[static_cast<std::size_t>(by) * m_blockCols + bx] = motion;
+                }
+            }
+        }
+
+        void BuildFastMotionField(float sceneCutError)
+        {
+            const int fastRadius = std::min(1, m_searchRadius);
+            for (int by = 0; by < m_blockRows; ++by)
+            {
+                for (int bx = 0; bx < m_blockCols; ++bx)
+                {
+                    MotionBlock motion = EstimateBlockMotionFast(bx, by, fastRadius);
+                    motion.Weight = EstimateBlockWeightFast(bx, by, motion, sceneCutError);
                     m_motion[static_cast<std::size_t>(by) * m_blockCols + bx] = motion;
                 }
             }
@@ -230,6 +287,58 @@ namespace
                         if (sad >= bestSad)
                         {
                             break;
+                        }
+                    }
+
+                    if (sad < bestSad)
+                    {
+                        bestSad = sad;
+                        bestDx = dx;
+                        bestDy = dy;
+                    }
+                }
+            }
+
+            MotionBlock result;
+            result.Dx = bestDx;
+            result.Dy = bestDy;
+            return result;
+        }
+
+        MotionBlock EstimateBlockMotionFast(int blockX, int blockY, int searchRadius) const
+        {
+            const int x0 = blockX * m_blockSize;
+            const int y0 = blockY * m_blockSize;
+            const int bw = std::min(m_blockSize, m_width - x0);
+            const int bh = std::min(m_blockSize, m_height - y0);
+            const int dsX0 = x0 / m_factor;
+            const int dsY0 = y0 / m_factor;
+            const int dsW = std::max(1, (bw + m_factor - 1) / m_factor);
+            const int dsH = std::max(1, (bh + m_factor - 1) / m_factor);
+
+            int bestDx = 0;
+            int bestDy = 0;
+            int bestSad = std::numeric_limits<int>::max();
+
+            for (int dy = -searchRadius; dy <= searchRadius; ++dy)
+            {
+                for (int dx = -searchRadius; dx <= searchRadius; ++dx)
+                {
+                    const int candX0 = dsX0 + dx;
+                    const int candY0 = dsY0 + dy;
+                    if (candX0 < 0 || candY0 < 0 || candX0 + dsW > m_downWidth || candY0 + dsH > m_downHeight)
+                    {
+                        continue;
+                    }
+
+                    int sad = 0;
+                    for (int yy = 0; yy < dsH; ++yy)
+                    {
+                        const std::size_t currRow = static_cast<std::size_t>(dsY0 + yy) * m_downWidth + dsX0;
+                        const std::size_t prevRow = static_cast<std::size_t>(candY0 + yy) * m_downWidth + candX0;
+                        for (int xx = 0; xx < dsW; ++xx)
+                        {
+                            sad += std::abs(static_cast<int>(m_currDownLuma[currRow + xx]) - static_cast<int>(m_prevDownLuma[prevRow + xx]));
                         }
                     }
 
@@ -298,6 +407,231 @@ namespace
             const float weight = m_blendStrength * tunedFlickerScore * (1.0f - detailPenalty) * sceneGate * m_strengthScale;
 
             return ClampFloat(weight, 0.0f, m_maxBlend * m_strengthScale * tuning.MaxBlendScale);
+        }
+
+        float EstimateBlockWeightFast(int blockX, int blockY, const MotionBlock& motion, float sceneCutError) const
+        {
+            const int x0 = blockX * m_blockSize;
+            const int y0 = blockY * m_blockSize;
+            const int bw = std::min(m_blockSize, m_width - x0);
+            const int bh = std::min(m_blockSize, m_height - y0);
+            const int dsX0 = x0 / m_factor;
+            const int dsY0 = y0 / m_factor;
+            const int dsW = std::max(1, (bw + m_factor - 1) / m_factor);
+            const int dsH = std::max(1, (bh + m_factor - 1) / m_factor);
+
+            const int candX0 = ClampInt(dsX0 + motion.Dx, 0, std::max(0, m_downWidth - dsW));
+            const int candY0 = ClampInt(dsY0 + motion.Dy, 0, std::max(0, m_downHeight - dsH));
+
+            int sad = 0;
+            int edge = 0;
+            for (int yy = 0; yy < dsH; ++yy)
+            {
+                const std::size_t currRow = static_cast<std::size_t>(dsY0 + yy) * m_downWidth + dsX0;
+                const std::size_t prevRow = static_cast<std::size_t>(candY0 + yy) * m_downWidth + candX0;
+                for (int xx = 0; xx < dsW; ++xx)
+                {
+                    const int curr = static_cast<int>(m_currDownLuma[currRow + xx]);
+                    const int prev = static_cast<int>(m_prevDownLuma[prevRow + xx]);
+                    sad += std::abs(curr - prev);
+                    if (xx + 1 < dsW)
+                    {
+                        edge += std::abs(curr - static_cast<int>(m_currDownLuma[currRow + xx + 1]));
+                    }
+                }
+            }
+
+            const float area = static_cast<float>(std::max(1, dsW * dsH));
+            const float reprojection = ClampFloat(static_cast<float>(sad) / (area * 255.0f), 0.0f, 1.0f);
+            const float edgeMag = ClampFloat(static_cast<float>(edge) / (area * 255.0f), 0.0f, 1.0f);
+            const float motionMag = ClampFloat((std::abs(motion.Dx) + std::abs(motion.Dy)) / 2.0f, 0.0f, 1.0f);
+            const auto tuning = GetModeTuning();
+
+            const float stability = 1.0f - ClampFloat(reprojection * 1.3f + motionMag * 0.6f + sceneCutError * 1.5f, 0.0f, 1.0f);
+            const float protect = 1.0f - ClampFloat(edgeMag * m_edgeGuard * tuning.EdgeGuardScale, 0.0f, 1.0f);
+            const float weight = m_blendStrength * m_strengthScale * stability * protect * tuning.MaxBlendScale;
+            return ClampFloat(weight, 0.0f, m_maxBlend * m_strengthScale * tuning.MaxBlendScale);
+        }
+
+        float SampleDownscaledEdge(int x, int y) const
+        {
+            const int dsX = ClampInt(x / m_factor, 0, m_downWidth - 1);
+            const int dsY = ClampInt(y / m_factor, 0, m_downHeight - 1);
+            return m_downEdge[static_cast<std::size_t>(dsY) * m_downWidth + dsX];
+        }
+
+        float SampleDownscaledTemporalDiff(int x, int y) const
+        {
+            const int dsX = ClampInt(x / m_factor, 0, m_downWidth - 1);
+            const int dsY = ClampInt(y / m_factor, 0, m_downHeight - 1);
+            return m_downTemporalDiff[static_cast<std::size_t>(dsY) * m_downWidth + dsX];
+        }
+
+        float SampleDownscaledLumaWeightBilinear(int x, int y) const
+        {
+            if (m_downWidth == 1 || m_downHeight == 1)
+            {
+                return m_downLumaWeight.front();
+            }
+
+            const float fx = (static_cast<float>(x) + 0.5f) / static_cast<float>(m_factor) - 0.5f;
+            const float fy = (static_cast<float>(y) + 0.5f) / static_cast<float>(m_factor) - 0.5f;
+            const int x0 = ClampInt(static_cast<int>(std::floor(fx)), 0, m_downWidth - 1);
+            const int y0 = ClampInt(static_cast<int>(std::floor(fy)), 0, m_downHeight - 1);
+            const int x1 = ClampInt(x0 + 1, 0, m_downWidth - 1);
+            const int y1 = ClampInt(y0 + 1, 0, m_downHeight - 1);
+            const float tx = ClampFloat(fx - static_cast<float>(x0), 0.0f, 1.0f);
+            const float ty = ClampFloat(fy - static_cast<float>(y0), 0.0f, 1.0f);
+
+            const float w00 = m_downLumaWeight[static_cast<std::size_t>(y0) * m_downWidth + x0];
+            const float w10 = m_downLumaWeight[static_cast<std::size_t>(y0) * m_downWidth + x1];
+            const float w01 = m_downLumaWeight[static_cast<std::size_t>(y1) * m_downWidth + x0];
+            const float w11 = m_downLumaWeight[static_cast<std::size_t>(y1) * m_downWidth + x1];
+
+            const float top = Lerp(w00, w10, tx);
+            const float bottom = Lerp(w01, w11, tx);
+            return Lerp(top, bottom, ty);
+        }
+
+        void BlendLumaStabilizer(std::uint8_t* output, float sceneCutError)
+        {
+            const auto tuning = GetModeTuning();
+            std::memcpy(output, m_currFrame.data(), m_currFrame.size());
+            for (int dsY = 0; dsY < m_downHeight; ++dsY)
+            {
+                for (int dsX = 0; dsX < m_downWidth; ++dsX)
+                {
+                    const std::size_t downIndex = static_cast<std::size_t>(dsY) * m_downWidth + dsX;
+                    const float diff = m_downTemporalDiff[downIndex];
+                    const float edge = m_downEdge[downIndex];
+                    const float flat = 1.0f - edge;
+                    const float stability = 1.0f - ClampFloat(diff * 1.6f + sceneCutError * 1.5f, 0.0f, 1.0f);
+                    const float detailProtect = 1.0f - ClampFloat(edge * m_edgeGuard * tuning.EdgeGuardScale, 0.0f, 1.0f);
+                    const float softenedProtect = detailProtect * detailProtect;
+                    m_downLumaWeight[downIndex] = ClampFloat(
+                        m_blendStrength * m_strengthScale * stability * (0.52f + flat * (0.25f + tuning.FlatBoost * 0.55f)) * softenedProtect,
+                        0.0f,
+                        m_maxBlend * m_strengthScale * 0.62f);
+                }
+            }
+
+            for (int y = 0; y < m_height; ++y)
+            {
+                const std::size_t rowBase = static_cast<std::size_t>(y) * m_width * m_channels;
+                for (int x = 0; x < m_width; ++x)
+                {
+                    const std::size_t index = rowBase + static_cast<std::size_t>(x) * m_channels;
+                    const float localDiff = SampleDownscaledTemporalDiff(x, y);
+                    const float localEdge = SampleDownscaledEdge(x, y);
+                    const float detailGate = 1.0f - ClampFloat(localEdge * (0.90f + m_edgeGuard * 0.55f), 0.0f, 1.0f);
+                    const float flickerGate = 1.0f - ClampFloat(localDiff * 1.35f + sceneCutError * 1.2f, 0.0f, 1.0f);
+                    const float weight = ClampFloat(
+                        SampleDownscaledLumaWeightBilinear(x, y) * detailGate * flickerGate,
+                        0.0f,
+                        m_maxBlend * m_strengthScale * 0.56f);
+
+                    const int alpha = ClampInt(static_cast<int>(std::lround(weight * 256.0f)), 0, 256);
+                    if (alpha <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (alpha >= 256)
+                    {
+                        output[index + 0] = m_prevFrame[index + 0];
+                        output[index + 1] = m_prevFrame[index + 1];
+                        output[index + 2] = m_prevFrame[index + 2];
+                    }
+                    else
+                    {
+                        const int invAlpha = 256 - alpha;
+                        output[index + 0] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[index + 0]) * invAlpha + static_cast<int>(m_prevFrame[index + 0]) * alpha + 128) >> 8);
+                        output[index + 1] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[index + 1]) * invAlpha + static_cast<int>(m_prevFrame[index + 1]) * alpha + 128) >> 8);
+                        output[index + 2] = static_cast<std::uint8_t>((static_cast<int>(m_currFrame[index + 2]) * invAlpha + static_cast<int>(m_prevFrame[index + 2]) * alpha + 128) >> 8);
+                    }
+
+                    if (m_channels == 4)
+                    {
+                        output[index + 3] = m_currFrame[index + 3];
+                    }
+                }
+            }
+        }
+
+        void BlendFlowGuided(std::uint8_t* output, float sceneCutError)
+        {
+            const auto tuning = GetModeTuning();
+            for (int y = 0; y < m_height; ++y)
+            {
+                const int by = std::min(y / m_blockSize, m_blockRows - 1);
+                for (int x = 0; x < m_width; ++x)
+                {
+                    const int bx = std::min(x / m_blockSize, m_blockCols - 1);
+                    const MotionBlock& motion = m_motion[static_cast<std::size_t>(by) * m_blockCols + bx];
+                    const float edge = SampleDownscaledEdge(x, y);
+                    const float weight = ClampFloat(
+                        motion.Weight * (1.0f - ClampFloat(edge * 0.8f * m_edgeGuard, 0.0f, 1.0f)) * (1.0f - sceneCutError) * tuning.FlickerGain,
+                        0.0f,
+                        m_maxBlend * m_strengthScale * 0.95f);
+
+                    const int sampleX = ClampInt(x + motion.Dx * m_factor, 0, m_width - 1);
+                    const int sampleY = ClampInt(y + motion.Dy * m_factor, 0, m_height - 1);
+                    const std::size_t currentIndex = (static_cast<std::size_t>(y) * m_width + x) * m_channels;
+                    const std::size_t sampleIndex = (static_cast<std::size_t>(sampleY) * m_width + sampleX) * m_channels;
+
+                    for (int c = 0; c < 3; ++c)
+                    {
+                        const float curr = static_cast<float>(m_currFrame[currentIndex + c]);
+                        const float prev = static_cast<float>(m_prevFrame[sampleIndex + c]);
+                        output[currentIndex + c] = static_cast<std::uint8_t>(std::lround(curr * (1.0f - weight) + prev * weight));
+                    }
+
+                    if (m_channels == 4)
+                    {
+                        output[currentIndex + 3] = m_currFrame[currentIndex + 3];
+                    }
+                }
+            }
+        }
+
+        void BlendEdgeClamp(std::uint8_t* output, float sceneCutError)
+        {
+            const auto tuning = GetModeTuning();
+            for (int y = 0; y < m_height; ++y)
+            {
+                for (int x = 0; x < m_width; ++x)
+                {
+                    const std::size_t index = (static_cast<std::size_t>(y) * m_width + x) * m_channels;
+                    const float diff = SampleDownscaledTemporalDiff(x, y);
+                    const float edge = SampleDownscaledEdge(x, y);
+                    const float flat = 1.0f - edge;
+                    const float sceneGate = 1.0f - ClampFloat(sceneCutError * 1.8f, 0.0f, 1.0f);
+                    const float clampWeight = ClampFloat(
+                        m_blendStrength * m_strengthScale * sceneGate *
+                        (1.0f - ClampFloat(diff * 1.25f, 0.0f, 1.0f)) *
+                        (1.0f - ClampFloat(edge * m_edgeGuard * tuning.EdgeGuardScale, 0.0f, 1.0f)) *
+                        (0.85f + flat * tuning.FlatBoost),
+                        0.0f,
+                        m_maxBlend * m_strengthScale * 1.05f);
+
+                    const int clampRadius = ClampInt(static_cast<int>(std::lround(4.0f + edge * 16.0f + diff * 8.0f)), 2, 28);
+
+                    for (int c = 0; c < 3; ++c)
+                    {
+                        const int curr = static_cast<int>(m_currFrame[index + c]);
+                        const int prev = static_cast<int>(m_prevFrame[index + c]);
+                        const int lo = std::max(0, prev - clampRadius);
+                        const int hi = std::min(255, prev + clampRadius);
+                        const float clamped = static_cast<float>(ClampInt(curr, lo, hi));
+                        output[index + c] = static_cast<std::uint8_t>(std::lround(curr * (1.0f - clampWeight) + clamped * clampWeight));
+                    }
+
+                    if (m_channels == 4)
+                    {
+                        output[index + 3] = m_currFrame[index + 3];
+                    }
+                }
+            }
         }
 
         void BlendFrame(std::uint8_t* output)
@@ -385,6 +719,7 @@ namespace
         const int m_blockSize;
         const int m_searchRadius;
         const ContentMode m_contentMode;
+        const Algorithm m_algorithm;
         const float m_blendStrength;
         const float m_maxBlend;
         const float m_edgeGuard;
@@ -399,6 +734,9 @@ namespace
         std::vector<std::uint8_t> m_currFrame;
         std::vector<std::uint8_t> m_prevDownLuma;
         std::vector<std::uint8_t> m_currDownLuma;
+        std::vector<float> m_downEdge;
+        std::vector<float> m_downTemporalDiff;
+        std::vector<float> m_downLumaWeight;
         std::vector<MotionBlock> m_motion;
     };
 }

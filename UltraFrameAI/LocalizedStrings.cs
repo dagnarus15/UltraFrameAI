@@ -136,10 +136,8 @@ public static class LocalizedStrings
     public static string BenchmarkReportTableVramGb => GetText(nameof(BenchmarkReportTableVramGb));
     public static string BenchmarkCaseCodecPreset => GetText(nameof(BenchmarkCaseCodecPreset));
     public static string BenchmarkCaseAntiFlickerOff => GetText(nameof(BenchmarkCaseAntiFlickerOff));
-    public static string BenchmarkCaseAntiFlickerVideo => GetText(nameof(BenchmarkCaseAntiFlickerVideo));
-    public static string BenchmarkCaseAntiFlickerFaces => GetText(nameof(BenchmarkCaseAntiFlickerFaces));
-    public static string BenchmarkCaseAntiFlickerAnime => GetText(nameof(BenchmarkCaseAntiFlickerAnime));
-    public static string BenchmarkCaseAntiFlickerAnimeUltra => GetText(nameof(BenchmarkCaseAntiFlickerAnimeUltra));
+    public static string BenchmarkCaseAntiFlickerLuma => GetText(nameof(BenchmarkCaseAntiFlickerLuma));
+    public static string BenchmarkCaseAntiFlickerFlow => GetText(nameof(BenchmarkCaseAntiFlickerFlow));
     public static string BenchmarkVideoFilesFilter => GetText(nameof(BenchmarkVideoFilesFilter));
     public static string BenchmarkErrorRequiresSource => GetText(nameof(BenchmarkErrorRequiresSource));
     public static string BenchmarkErrorNoVideoFilesFound => GetText(nameof(BenchmarkErrorNoVideoFilesFound));
@@ -184,6 +182,12 @@ public static class LocalizedStrings
     public static string BenchmarkStop => GetText(nameof(BenchmarkStop));
     public static string AntiFlicker => GetText(nameof(AntiFlicker));
     public static string AntiFlickerHint => GetText(nameof(AntiFlickerHint));
+    public static string AntiFlickerMode => GetText(nameof(AntiFlickerMode));
+    public static string AntiFlickerModeHint => GetText(nameof(AntiFlickerModeHint));
+    public static string AntiFlickerModeHelpTitle => GetText(nameof(AntiFlickerModeHelpTitle));
+    public static string AntiFlickerModeHelpBody => GetText(nameof(AntiFlickerModeHelpBody));
+    public static string AntiFlickerModeLumaStabilizer => GetText(nameof(AntiFlickerModeLumaStabilizer));
+    public static string AntiFlickerModeFlowGuided => GetText(nameof(AntiFlickerModeFlowGuided));
     public static string AntiFlickerStrength => GetText(nameof(AntiFlickerStrength));
     public static string AntiFlickerPreset => GetText(nameof(AntiFlickerPreset));
     public static string AntiFlickerPresetHint => GetText(nameof(AntiFlickerPresetHint));
