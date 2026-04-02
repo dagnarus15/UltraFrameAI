@@ -11,7 +11,6 @@ public partial class MainWindow : Window
     private bool _isAdditionalOverlayAnimating;
     private bool _isScanOverlayAnimating;
     private RenderWindow? _renderWindow;
-    private bool _isClosingAfterStop;
     private bool _suppressClosePrompt;
 
     public MainWindow()
@@ -557,11 +556,6 @@ public partial class MainWindow : Window
         else if (e.PropertyName == nameof(MainViewModel.IsBusy))
         {
             UpdateDeleteButtonStates();
-            if (_isClosingAfterStop && !_viewModel.IsBusy)
-            {
-                _suppressClosePrompt = true;
-                Close();
-            }
         }
         else if (e.PropertyName == nameof(MainViewModel.IsRenderMode))
         {
@@ -646,30 +640,11 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        if (_suppressClosePrompt)
+        _suppressClosePrompt = true;
+        if (_viewModel.IsBusy)
         {
-            return;
+            _viewModel.CancelCommand.Execute(null);
         }
-
-        if (!_viewModel.IsBusy)
-        {
-            return;
-        }
-
-        e.Cancel = true;
-        var dialog = new RenderCloseDialog
-        {
-            Owner = this
-        };
-
-        var result = dialog.ShowDialog();
-        if (result != true || dialog.Decision != RenderCloseDecision.StopRendering)
-        {
-            return;
-        }
-
-        _isClosingAfterStop = true;
-        _viewModel.CancelCommand.Execute(null);
     }
 
     private async Task OpenScanOverlayAsync()

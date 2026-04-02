@@ -138,6 +138,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly Dictionary<int, (int current, int total)> _sessionFrameProgress = new();
     private OutputConflictDecision? _sessionOutputDecision;
     private bool _isRenderMode;
+    private bool _closeRenderModeAfterCurrentSkip;
     private string _lastRunProcessedFiles = "--";
     private string _lastRunElapsed = "--:--:--";
     private string _lastRunFps = "--";
@@ -1064,6 +1065,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             await Task.Yield();
             RememberRecentFolder(RootFolder, persist: true);
             _runCts = new CancellationTokenSource();
+            _closeRenderModeAfterCurrentSkip = false;
             ResetItemUi(runItems);
             CurrentRenderItems.Clear();
             foreach (var item in runItems)
@@ -1181,6 +1183,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Log(progress.LogLine);
             }
 
+            if (_closeRenderModeAfterCurrentSkip
+                && progress.Progress >= 100
+                && string.Equals(progress.CurrentStatus, LocalizedStrings.LogSkippingEncode, StringComparison.Ordinal))
+            {
+                _closeRenderModeAfterCurrentSkip = false;
+                IsRenderMode = false;
+            }
+
             OnQueueStateChanged();
         });
     }
@@ -1198,9 +1208,32 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        _closeRenderModeAfterCurrentSkip = IsLastPendingRenderItem(current);
         current.SkipRequested = true;
         current.IsInterrupted = true;
+        if (_closeRenderModeAfterCurrentSkip)
+        {
+            IsRenderMode = false;
+        }
         Log(LocalizedStrings.LogSkippingEncode);
+    }
+
+    private bool IsLastPendingRenderItem(QueueItemViewModel current)
+    {
+        foreach (var item in CurrentRenderItems)
+        {
+            if (ReferenceEquals(item, current))
+            {
+                continue;
+            }
+
+            if (!item.IsCompleted && !item.IsInterruptedOrSkipped)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private QueueItemViewModel? GetCurrentItem()
