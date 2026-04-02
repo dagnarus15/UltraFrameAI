@@ -331,10 +331,30 @@ namespace
             const int dsY0 = y0 / m_factor;
             const int dsW = std::max(1, (bw + m_factor - 1) / m_factor);
             const int dsH = std::max(1, (bh + m_factor - 1) / m_factor);
+            const float area = static_cast<float>(std::max(1, dsW * dsH));
 
             int bestDx = 0;
             int bestDy = 0;
             int bestSad = std::numeric_limits<int>::max();
+
+            int centerSad = 0;
+            for (int yy = 0; yy < dsH; ++yy)
+            {
+                const std::size_t currRow = static_cast<std::size_t>(dsY0 + yy) * m_downWidth + dsX0;
+                const std::size_t prevRow = static_cast<std::size_t>(dsY0 + yy) * m_downWidth + dsX0;
+                for (int xx = 0; xx < dsW; ++xx)
+                {
+                    centerSad += std::abs(static_cast<int>(m_currDownLuma[currRow + xx]) - static_cast<int>(m_prevDownLuma[prevRow + xx]));
+                }
+            }
+
+            const float centerReprojection = ClampFloat(static_cast<float>(centerSad) / (area * 255.0f), 0.0f, 1.0f);
+            if (centerReprojection <= 0.040f)
+            {
+                MotionBlock stable;
+                stable.Reprojection = centerReprojection;
+                return stable;
+            }
 
             for (int dy = -searchRadius; dy <= searchRadius; ++dy)
             {
@@ -370,7 +390,6 @@ namespace
             MotionBlock result;
             result.Dx = bestDx;
             result.Dy = bestDy;
-            const float area = static_cast<float>(std::max(1, dsW * dsH));
             result.Reprojection = ClampFloat(static_cast<float>(bestSad) / (area * 255.0f), 0.0f, 1.0f);
             return result;
         }
