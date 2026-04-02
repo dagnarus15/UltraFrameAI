@@ -91,7 +91,7 @@
     <value>Сбросить масштаб</value>
   </data>
   <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
-    <value>Сравнить текущий кадр</value>
+    <value>Сравнить кадры</value>
   </data>
   <data name="RenderSkipFile" xml:space="preserve">
     <value>Пропустить файл</value>
