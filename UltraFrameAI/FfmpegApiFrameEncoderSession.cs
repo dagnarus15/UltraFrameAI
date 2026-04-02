@@ -30,6 +30,9 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
     private string? _lastError;
     private bool _hasPendingTimestamp;
     private double _pendingTimestampSeconds;
+    private bool _hasPreviousTimestampSeconds;
+    private double _previousTimestampSeconds;
+    private long _lastFrameDurationTicks;
     private long _nextPts;
     private AVRational _timeBase;
     private int _audioStreamIndex = -1;
@@ -112,6 +115,7 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
         var fpsDen = 1000;
         var fpsNum = (int)Math.Round(fps * fpsDen);
         _timeBase = new AVRational { num = 1, den = fpsDen };
+        _lastFrameDurationTicks = Math.Max(1, (long)Math.Round((1.0 / fps) * _timeBase.den / _timeBase.num));
         _codecCtx->time_base = _timeBase;
         _codecCtx->framerate = new AVRational { num = fpsNum, den = fpsDen };
 
@@ -239,6 +243,7 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
         }
 
         _frame->pts = GetNextPts();
+        _frame->duration = _lastFrameDurationTicks;
 
         var sendResult = ffmpeg.avcodec_send_frame(_codecCtx, _frame);
         if (sendResult < 0)
@@ -252,6 +257,17 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
 
     public ValueTask SubmitTimestampAsync(double timestampSeconds, CancellationToken cancellationToken)
     {
+        if (_hasPreviousTimestampSeconds)
+        {
+            var deltaSeconds = timestampSeconds - _previousTimestampSeconds;
+            if (deltaSeconds > 0)
+            {
+                _lastFrameDurationTicks = Math.Max(1, (long)Math.Round(deltaSeconds * _timeBase.den / _timeBase.num));
+            }
+        }
+
+        _previousTimestampSeconds = timestampSeconds;
+        _hasPreviousTimestampSeconds = true;
         _pendingTimestampSeconds = timestampSeconds;
         _hasPendingTimestamp = true;
         return ValueTask.CompletedTask;

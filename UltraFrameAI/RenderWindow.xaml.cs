@@ -72,6 +72,17 @@ public partial class RenderWindow : Window
         viewModel.RenderPreviewPanY = 0;
     }
 
+    private void CompareCurrentFrame_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        ShowPreviewWindow(RenderPreviewKind.Original, viewModel);
+        ShowPreviewWindow(RenderPreviewKind.Result, viewModel);
+    }
+
     private void OriginalPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         BeginPreviewInteraction(RenderPreviewKind.Original, sender, e);

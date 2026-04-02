@@ -214,12 +214,31 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="290" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{local:Loc RenderPreviewOriginal}"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RenderPreviewZoomText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <Slider Minimum="1"
+                                    Maximum="4"
+                                    Width="130"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding RenderPreviewZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Content="{local:Loc RenderPreviewResetZoom}"
+                                    Margin="10,0,0,0"
+                                    Padding="8,6"
+                                    Click="ResetRenderPreviewZoom_Click" />
+                        </StackPanel>
                     </Grid>
                     <Border Grid.Row="2"
                             Background="#050A12"
@@ -227,13 +246,25 @@
                             Padding="8"
                             BorderThickness="1"
                             BorderBrush="#1D2940"
-                            ClipToBounds="True">
+                            ClipToBounds="True"
+                            Cursor="{Binding RenderPreviewCursor}"
+                            MouseLeftButtonDown="OriginalPreview_MouseLeftButtonDown"
+                            MouseMove="OriginalPreview_MouseMove"
+                            MouseLeftButtonUp="OriginalPreview_MouseLeftButtonUp">
                         <Grid>
                             <Image Source="{Binding RenderPreviewOriginalImage}"
                                    Stretch="Uniform"
                                    RenderOptions.BitmapScalingMode="HighQuality"
                                    HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
+                                   VerticalAlignment="Center"
+                                   RenderTransformOrigin="0.5,0.5">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="{Binding RenderPreviewZoom}" ScaleY="{Binding RenderPreviewZoom}" />
+                                        <TranslateTransform X="{Binding RenderPreviewPanX}" Y="{Binding RenderPreviewPanY}" />
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
                             <Border VerticalAlignment="Top"
                                     Height="1"
                                     Background="#22FFFFFF"
@@ -246,6 +277,70 @@
                     </Border>
                 </Grid>
             </Border>
+
+            <Grid Grid.Column="1"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Panel.ZIndex="2">
+                <Border Width="48"
+                        Height="48"
+                        CornerRadius="24"
+                        Background="#D8142236"
+                        BorderBrush="#35537A"
+                        BorderThickness="1"
+                        Padding="6">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="14"
+                                          ShadowDepth="0"
+                                          Opacity="0.35"
+                                          Color="#000000" />
+                    </Border.Effect>
+                    <Button Width="34"
+                            Height="34"
+                            Padding="0"
+                            Background="#182742"
+                            BorderBrush="#496A96"
+                            BorderThickness="1"
+                            ToolTip="{local:Loc RenderPreviewCompareCurrentFrame}"
+                            Click="CompareCurrentFrame_Click"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Button.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </Button.RenderTransform>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#22375B" />
+                                        <Setter Property="BorderBrush" Value="#6EA3E8" />
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1.06" ScaleY="1.06" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#16243D" />
+                                        <Setter Property="BorderBrush" Value="#7CB5FF" />
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="&#xE721;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="16"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                    </Button>
+                </Border>
+            </Grid>
 
             <Border Grid.Column="2"
                     Style="{StaticResource CardStyle}"
@@ -263,12 +358,31 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="290" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{local:Loc RenderPreviewResult}"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RenderPreviewZoomText}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0" />
+                            <Slider Minimum="1"
+                                    Maximum="4"
+                                    Width="130"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding RenderPreviewZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Content="{local:Loc RenderPreviewResetZoom}"
+                                    Margin="10,0,0,0"
+                                    Padding="8,6"
+                                    Click="ResetRenderPreviewZoom_Click" />
+                        </StackPanel>
                     </Grid>
                     <Border Grid.Row="2"
                             Background="#070D18"
@@ -276,13 +390,25 @@
                             Padding="8"
                             BorderThickness="1"
                             BorderBrush="#2D4566"
-                            ClipToBounds="True">
+                            ClipToBounds="True"
+                            Cursor="{Binding RenderPreviewCursor}"
+                            MouseLeftButtonDown="ResultPreview_MouseLeftButtonDown"
+                            MouseMove="ResultPreview_MouseMove"
+                            MouseLeftButtonUp="ResultPreview_MouseLeftButtonUp">
                         <Grid>
                             <Image Source="{Binding RenderPreviewResultImage}"
                                    Stretch="Uniform"
                                    RenderOptions.BitmapScalingMode="HighQuality"
                                    HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
+                                   VerticalAlignment="Center"
+                                   RenderTransformOrigin="0.5,0.5">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="{Binding RenderPreviewZoom}" ScaleY="{Binding RenderPreviewZoom}" />
+                                        <TranslateTransform X="{Binding RenderPreviewPanX}" Y="{Binding RenderPreviewPanY}" />
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
                             <Border VerticalAlignment="Top"
                                     Height="1"
                                     Background="#30B8D8FF"

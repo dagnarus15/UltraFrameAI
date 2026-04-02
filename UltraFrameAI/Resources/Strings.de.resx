@@ -90,6 +90,9 @@
   <data name="RenderPreviewResetZoom" xml:space="preserve">
     <value>Zoom zurücksetzen</value>
   </data>
+  <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
+    <value>Aktuelles Bild vergleichen</value>
+  </data>
   <data name="RenderSkipFile" xml:space="preserve">
     <value>Datei überspringen</value>
   </data>

@@ -72,6 +72,7 @@ This is the current canonical key set for `Resources/Strings.resx`.
 - `RenderPreviewOriginal`
 - `RenderPreviewResult`
 - `RenderPreviewResetZoom`
+- `RenderPreviewCompareCurrentFrame`
 - `Elapsed`
 - `ETA`
 - `Queue`

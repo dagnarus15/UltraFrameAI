@@ -90,6 +90,9 @@
   <data name="RenderPreviewResetZoom" xml:space="preserve">
     <value>Reset zoom</value>
   </data>
+  <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
+    <value>Compare current frame</value>
+  </data>
   <data name="RenderSkipFile" xml:space="preserve">
     <value>Skip file</value>
   </data>

@@ -27,9 +27,36 @@
                 Padding="16"
                 ClipToBounds="True">
             <Grid>
-                <TextBlock Text="{Binding PreviewLabel, RelativeSource={RelativeSource AncestorType=Window}}"
-                           FontSize="18"
-                           FontWeight="SemiBold" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="{Binding PreviewLabel, RelativeSource={RelativeSource AncestorType=Window}}"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RenderPreviewZoomText, RelativeSource={RelativeSource AncestorType=Window}}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <Slider Minimum="1"
+                            Maximum="4"
+                            Width="140"
+                            VerticalAlignment="Center"
+                            Value="{Binding PreviewZoom, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Content="{local:Loc RenderPreviewResetZoom}"
+                            Margin="12,0,0,0"
+                            Padding="10,6"
+                            Click="ResetZoom_Click" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -45,7 +72,22 @@
                        Stretch="Uniform"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality" />
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       RenderTransformOrigin="0.5,0.5"
+                       MouseLeftButtonDown="Preview_MouseLeftButtonDown"
+                       MouseMove="Preview_MouseMove"
+                       MouseLeftButtonUp="Preview_MouseLeftButtonUp"
+                       MouseWheel="Preview_MouseWheel"
+                       Cursor="SizeAll">
+                    <Image.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="{Binding PreviewZoom, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            ScaleY="{Binding PreviewZoom, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <TranslateTransform X="{Binding PreviewPanX, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                Y="{Binding PreviewPanY, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        </TransformGroup>
+                    </Image.RenderTransform>
+                </Image>
 
                 <Border VerticalAlignment="Top"
                         Height="1"
