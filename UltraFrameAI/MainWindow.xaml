@@ -1323,6 +1323,57 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{local:Loc RefinerBackend}"
+                                               Style="{StaticResource CaptionStyle}" />
+                                    <ComboBox ItemsSource="{Binding RefinerBackendOptions}"
+                                              DisplayMemberPath="Label"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding SelectedRefinerBackend}"
+                                              HorizontalAlignment="Stretch"
+                                              ToolTip="{local:Loc RefinerBackendHint}" />
+                                    <TextBlock Text="{local:Loc RefinerBackendHint}"
+                                               Margin="0,4,0,0"
+                                               Style="{StaticResource CaptionStyle}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="0,0,0,10"
+                                        Visibility="{Binding IsExternalRefinerSelected, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding SelectedExternalRefinerSetupHint}"
+                                           Style="{StaticResource CaptionStyle}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,10" />
+                                <TextBlock Text="{local:Loc ExternalUpscalerPath}"
+                                           Style="{StaticResource CaptionStyle}" />
+                                <TextBox Text="{Binding SelectedExternalRefinerPath, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,8" />
+                                <TextBlock Text="{local:Loc ExternalUpscalerWorkingDirectory}"
+                                           Style="{StaticResource CaptionStyle}" />
+                                <TextBox Text="{Binding SelectedExternalRefinerWorkingDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,8" />
+                                <TextBlock Text="{local:Loc ExternalUpscalerModelDir}"
+                                           Style="{StaticResource CaptionStyle}" />
+                                <TextBox Text="{Binding SelectedExternalRefinerModelDir, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,8" />
+                                <TextBlock Text="{local:Loc ExternalUpscalerArgumentsTemplate}"
+                                           Style="{StaticResource CaptionStyle}" />
+                                <TextBox Text="{Binding SelectedExternalRefinerArgumentsTemplate, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         MinHeight="88" />
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
                                     <Grid Margin="0,0,0,6">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />

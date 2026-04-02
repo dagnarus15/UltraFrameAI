@@ -28,6 +28,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string UpscalerThreadsText,
         string TileSizeText,
         string SelectedUpscalerBackend,
+        string SelectedRefinerBackend,
         bool EnableStableSr,
         bool EnableSupir,
         string StableSrUpscalerPath,
@@ -65,6 +66,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly ObservableCollection<LogEntryViewModel> _logLines = UiCollections.CreateLogCollection();
     private IReadOnlyList<AntiFlickerModeOption> _antiFlickerModeOptions = Array.Empty<AntiFlickerModeOption>();
     private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
+    private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
     private readonly string _repoRoot = FindRepoRoot();
     private readonly string _lastRootFolderPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -102,6 +104,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _upscalerThreadsText = "4:4:4";
     private string _tileSizeText = "1024";
     private UpscalerBackendKind _selectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
+    private RefinerBackendKind _selectedRefinerBackend = RefinerBackendKind.None;
     private bool _enableStableSr;
     private bool _enableSupir;
     private string _stableSrUpscalerPath = string.Empty;
@@ -201,6 +204,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _useNativeEncoderBackend = LoadNativeEncoderBackendPreference();
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
+        _refinerBackendOptions = BuildRefinerBackendOptions();
         LoadRecentRootFolders();
         _suppressAppSettingsPersistence = true;
         try
@@ -462,6 +466,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<UpscalerBackendOption> UpscalerBackendOptions => _upscalerBackendOptions;
 
+    public IReadOnlyList<RefinerBackendOption> RefinerBackendOptions => _refinerBackendOptions;
+
     public UpscalerBackendKind SelectedUpscalerBackend
     {
         get => _selectedUpscalerBackend;
@@ -481,7 +487,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public RefinerBackendKind SelectedRefinerBackend
+    {
+        get => _selectedRefinerBackend;
+        set
+        {
+            if (SetField(ref _selectedRefinerBackend, value))
+            {
+                EnsureSelectedExternalRefinerDefaults();
+                OnPropertyChanged(nameof(IsExternalRefinerSelected));
+                OnPropertyChanged(nameof(SelectedExternalRefinerPath));
+                OnPropertyChanged(nameof(SelectedExternalRefinerWorkingDirectory));
+                OnPropertyChanged(nameof(SelectedExternalRefinerModelDir));
+                OnPropertyChanged(nameof(SelectedExternalRefinerArgumentsTemplate));
+                OnPropertyChanged(nameof(SelectedExternalRefinerSetupHint));
+                PersistAppSettings();
+            }
+        }
+    }
+
     public bool IsExternalUpscalerSelected => SelectedUpscalerBackend is UpscalerBackendKind.StableSrExternal or UpscalerBackendKind.SupirExternal;
+
+    public bool IsExternalRefinerSelected => SelectedRefinerBackend is RefinerBackendKind.StableSrExternal or RefinerBackendKind.SupirExternal;
 
     public bool EnableStableSr
     {
@@ -494,9 +521,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 {
                     SelectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
                 }
+                if (!value && SelectedRefinerBackend == RefinerBackendKind.StableSrExternal)
+                {
+                    SelectedRefinerBackend = RefinerBackendKind.None;
+                }
 
                 _upscalerBackendOptions = BuildUpscalerBackendOptions();
+                _refinerBackendOptions = BuildRefinerBackendOptions();
                 OnPropertyChanged(nameof(UpscalerBackendOptions));
+                OnPropertyChanged(nameof(RefinerBackendOptions));
                 PersistAppSettings();
             }
         }
@@ -513,9 +546,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 {
                     SelectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
                 }
+                if (!value && SelectedRefinerBackend == RefinerBackendKind.SupirExternal)
+                {
+                    SelectedRefinerBackend = RefinerBackendKind.None;
+                }
 
                 _upscalerBackendOptions = BuildUpscalerBackendOptions();
+                _refinerBackendOptions = BuildRefinerBackendOptions();
                 OnPropertyChanged(nameof(UpscalerBackendOptions));
+                OnPropertyChanged(nameof(RefinerBackendOptions));
                 PersistAppSettings();
             }
         }
@@ -578,6 +617,65 @@ public sealed class MainViewModel : INotifyPropertyChanged
         UpscalerBackendKind.StableSrExternal => LocalizedStrings.ExternalUpscalerStableSrHint,
         UpscalerBackendKind.SupirExternal => LocalizedStrings.ExternalUpscalerSupirHint,
         _ => LocalizedStrings.ExternalUpscalerHint
+    };
+
+    public string SelectedExternalRefinerPath
+    {
+        get => GetSelectedExternalRefinerPath();
+        set
+        {
+            if (SetSelectedExternalRefinerPath(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalRefinerWorkingDirectory
+    {
+        get => GetSelectedExternalRefinerWorkingDirectory();
+        set
+        {
+            if (SetSelectedExternalRefinerWorkingDirectory(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalRefinerModelDir
+    {
+        get => GetSelectedExternalRefinerModelDir();
+        set
+        {
+            if (SetSelectedExternalRefinerModelDir(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalRefinerArgumentsTemplate
+    {
+        get => GetSelectedExternalRefinerArgumentsTemplate();
+        set
+        {
+            if (SetSelectedExternalRefinerArgumentsTemplate(value))
+            {
+                OnPropertyChanged();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedExternalRefinerSetupHint => SelectedRefinerBackend switch
+    {
+        RefinerBackendKind.StableSrExternal => LocalizedStrings.ExternalRefinerStableSrHint,
+        RefinerBackendKind.SupirExternal => LocalizedStrings.ExternalRefinerSupirHint,
+        _ => LocalizedStrings.ExternalRefinerHint
     };
 
     public bool Overwrite
@@ -1291,6 +1389,20 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var externalArgsTemplate = useExternalUpscaler
             ? ResolveExternalUpscalerArgumentsTemplate()
             : string.Empty;
+        var refinerBackend = SelectedRefinerBackend;
+        var useExternalRefiner = refinerBackend is RefinerBackendKind.StableSrExternal or RefinerBackendKind.SupirExternal;
+        var refinerPath = useExternalRefiner
+            ? ResolveExternalRefinerPath()
+            : string.Empty;
+        var refinerWorkingDirectory = useExternalRefiner
+            ? ResolveUpscalerWorkingDirectory(refinerPath, SelectedExternalRefinerWorkingDirectory)
+            : string.Empty;
+        var refinerModelDir = useExternalRefiner
+            ? ResolveExternalRefinerModelDir()
+            : string.Empty;
+        var refinerArgsTemplate = useExternalRefiner
+            ? ResolveExternalRefinerArgumentsTemplate()
+            : string.Empty;
 
         return new PipelineOptions
         {
@@ -1310,6 +1422,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UpscalerWorkingDirectory = upscalerWorkingDirectory,
             ModelDir = modelDir,
             ExternalUpscalerArgumentsTemplate = externalArgsTemplate,
+            RefinerBackend = refinerBackend,
+            RefinerPath = refinerPath,
+            RefinerWorkingDirectory = refinerWorkingDirectory,
+            RefinerModelDir = refinerModelDir,
+            RefinerArgumentsTemplate = refinerArgsTemplate,
             UseAntiFlicker = UseAntiFlicker,
             AntiFlickerMode = SelectedAntiFlickerMode,
             ContentMode = SelectedContentMode,
@@ -1906,11 +2023,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
+        _refinerBackendOptions = BuildRefinerBackendOptions();
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(string.Empty);
         OnPropertyChanged(nameof(CurrentLanguageFlagPath));
         OnPropertyChanged(nameof(AntiFlickerModeOptions));
         OnPropertyChanged(nameof(UpscalerBackendOptions));
+        OnPropertyChanged(nameof(RefinerBackendOptions));
 
         if (Items.Count == 0)
         {
@@ -1967,6 +2086,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return options;
     }
 
+    private IReadOnlyList<RefinerBackendOption> BuildRefinerBackendOptions()
+    {
+        var options = new List<RefinerBackendOption>
+        {
+            new(RefinerBackendKind.None, LocalizedStrings.RefinerBackendNone)
+        };
+
+        if (EnableStableSr)
+        {
+            options.Add(new RefinerBackendOption(RefinerBackendKind.StableSrExternal, LocalizedStrings.RefinerBackendStableSr));
+        }
+
+        if (EnableSupir)
+        {
+            options.Add(new RefinerBackendOption(RefinerBackendKind.SupirExternal, LocalizedStrings.RefinerBackendSupir));
+        }
+
+        return options;
+    }
+
     private static AntiFlickerMode NormalizeAntiFlickerMode(string? raw) => raw?.Trim() switch
     {
         nameof(AntiFlickerMode.FlowGuided) => AntiFlickerMode.FlowGuided,
@@ -1980,6 +2119,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         nameof(UpscalerBackendKind.StableSrExternal) => UpscalerBackendKind.StableSrExternal,
         nameof(UpscalerBackendKind.SupirExternal) => UpscalerBackendKind.SupirExternal,
         _ => UpscalerBackendKind.RealEsrgan
+    };
+
+    private static RefinerBackendKind NormalizeRefinerBackendKind(string? raw) => raw?.Trim() switch
+    {
+        nameof(RefinerBackendKind.StableSrExternal) => RefinerBackendKind.StableSrExternal,
+        nameof(RefinerBackendKind.SupirExternal) => RefinerBackendKind.SupirExternal,
+        _ => RefinerBackendKind.None
     };
 
     private void Log(string message)
@@ -2109,6 +2255,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return SelectedExternalUpscalerArgumentsTemplate.Trim();
     }
 
+    private string ResolveExternalRefinerPath()
+    {
+        var path = NormalizeInputPath(SelectedExternalRefinerPath);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new InvalidOperationException(LocalizedStrings.ExternalUpscalerPathRequired);
+        }
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException(LocalizedStrings.ExternalUpscalerPathRequired, path);
+        }
+
+        return path;
+    }
+
+    private string ResolveExternalRefinerModelDir()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedExternalRefinerModelDir))
+        {
+            return string.Empty;
+        }
+
+        return FindDirectory(SelectedExternalRefinerModelDir, SelectedExternalRefinerModelDir);
+    }
+
+    private string ResolveExternalRefinerArgumentsTemplate()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedExternalRefinerArgumentsTemplate))
+        {
+            throw new InvalidOperationException(LocalizedStrings.ExternalUpscalerArgumentsRequired);
+        }
+
+        return SelectedExternalRefinerArgumentsTemplate.Trim();
+    }
+
     private static string ResolveUpscalerWorkingDirectory(string upscalerPath, string configuredWorkingDirectory)
     {
         if (!string.IsNullOrWhiteSpace(configuredWorkingDirectory))
@@ -2126,6 +2307,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private static string GetDefaultExternalUpscalerArgumentsTemplate() =>
         "-p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -s {scale} -m {modelDirQ} -j {threadsQ}";
 
+    private static string GetDefaultExternalRefinerArgumentsTemplate() =>
+        "-p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -m {modelDirQ} -j {threadsQ}";
+
     private void EnsureSelectedExternalUpscalerDefaults()
     {
         switch (SelectedUpscalerBackend)
@@ -2140,6 +2324,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (string.IsNullOrWhiteSpace(_supirUpscalerArgumentsTemplate))
                 {
                     _supirUpscalerArgumentsTemplate = GetDefaultExternalUpscalerArgumentsTemplate();
+                }
+                break;
+        }
+    }
+
+    private void EnsureSelectedExternalRefinerDefaults()
+    {
+        switch (SelectedRefinerBackend)
+        {
+            case RefinerBackendKind.StableSrExternal:
+                if (string.IsNullOrWhiteSpace(_stableSrUpscalerArgumentsTemplate))
+                {
+                    _stableSrUpscalerArgumentsTemplate = GetDefaultExternalRefinerArgumentsTemplate();
+                }
+                break;
+            case RefinerBackendKind.SupirExternal:
+                if (string.IsNullOrWhiteSpace(_supirUpscalerArgumentsTemplate))
+                {
+                    _supirUpscalerArgumentsTemplate = GetDefaultExternalRefinerArgumentsTemplate();
                 }
                 break;
         }
@@ -2209,6 +2412,74 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             UpscalerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerArgumentsTemplate, value, nameof(SelectedExternalUpscalerArgumentsTemplate)),
             UpscalerBackendKind.SupirExternal => SetField(ref _supirUpscalerArgumentsTemplate, value, nameof(SelectedExternalUpscalerArgumentsTemplate)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalRefinerPath() => SelectedRefinerBackend switch
+    {
+        RefinerBackendKind.StableSrExternal => _stableSrUpscalerPath,
+        RefinerBackendKind.SupirExternal => _supirUpscalerPath,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalRefinerPath(string value)
+    {
+        return SelectedRefinerBackend switch
+        {
+            RefinerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerPath, value, nameof(SelectedExternalRefinerPath)),
+            RefinerBackendKind.SupirExternal => SetField(ref _supirUpscalerPath, value, nameof(SelectedExternalRefinerPath)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalRefinerWorkingDirectory() => SelectedRefinerBackend switch
+    {
+        RefinerBackendKind.StableSrExternal => _stableSrUpscalerWorkingDirectory,
+        RefinerBackendKind.SupirExternal => _supirUpscalerWorkingDirectory,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalRefinerWorkingDirectory(string value)
+    {
+        return SelectedRefinerBackend switch
+        {
+            RefinerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerWorkingDirectory, value, nameof(SelectedExternalRefinerWorkingDirectory)),
+            RefinerBackendKind.SupirExternal => SetField(ref _supirUpscalerWorkingDirectory, value, nameof(SelectedExternalRefinerWorkingDirectory)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalRefinerModelDir() => SelectedRefinerBackend switch
+    {
+        RefinerBackendKind.StableSrExternal => _stableSrUpscalerModelDir,
+        RefinerBackendKind.SupirExternal => _supirUpscalerModelDir,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalRefinerModelDir(string value)
+    {
+        return SelectedRefinerBackend switch
+        {
+            RefinerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerModelDir, value, nameof(SelectedExternalRefinerModelDir)),
+            RefinerBackendKind.SupirExternal => SetField(ref _supirUpscalerModelDir, value, nameof(SelectedExternalRefinerModelDir)),
+            _ => false
+        };
+    }
+
+    private string GetSelectedExternalRefinerArgumentsTemplate() => SelectedRefinerBackend switch
+    {
+        RefinerBackendKind.StableSrExternal => _stableSrUpscalerArgumentsTemplate,
+        RefinerBackendKind.SupirExternal => _supirUpscalerArgumentsTemplate,
+        _ => string.Empty
+    };
+
+    private bool SetSelectedExternalRefinerArgumentsTemplate(string value)
+    {
+        return SelectedRefinerBackend switch
+        {
+            RefinerBackendKind.StableSrExternal => SetField(ref _stableSrUpscalerArgumentsTemplate, value, nameof(SelectedExternalRefinerArgumentsTemplate)),
+            RefinerBackendKind.SupirExternal => SetField(ref _supirUpscalerArgumentsTemplate, value, nameof(SelectedExternalRefinerArgumentsTemplate)),
             _ => false
         };
     }
@@ -2352,6 +2623,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             SelectedUpscalerBackend = loadedUpscalerBackend;
+            var loadedRefinerBackend = NormalizeRefinerBackendKind(loaded.SelectedRefinerBackend);
+            if ((loadedRefinerBackend == RefinerBackendKind.StableSrExternal && !EnableStableSr) ||
+                (loadedRefinerBackend == RefinerBackendKind.SupirExternal && !EnableSupir))
+            {
+                loadedRefinerBackend = RefinerBackendKind.None;
+            }
+
+            SelectedRefinerBackend = loadedRefinerBackend;
 
             if (!string.IsNullOrWhiteSpace(loaded.StableSrUpscalerPath))
             {
@@ -2633,6 +2912,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 UpscalerThreadsText,
                 TileSizeText,
                 SelectedUpscalerBackend.ToString(),
+                SelectedRefinerBackend.ToString(),
                 EnableStableSr,
                 EnableSupir,
                 _stableSrUpscalerPath,
@@ -2692,10 +2972,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private string GetOutputSuffix()
     {
-        var resolution = SelectedTarget == "2160p" ? "2160p" : "1080p";
-        var codec = SelectedCodec == "x265" ? "x265" : "x264";
-        var extension = ".mkv";
-        return $"_{resolution}_{codec}{extension}";
+        return ".mkv";
     }
 
     private static string GetInputDirectory(string inputPath)

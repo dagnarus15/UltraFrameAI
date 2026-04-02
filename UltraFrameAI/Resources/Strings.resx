@@ -619,6 +619,21 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   <data name="UpscalerBackendSupir" xml:space="preserve">
     <value>SUPIR (external)</value>
   </data>
+  <data name="RefinerBackend" xml:space="preserve">
+    <value>Refiner</value>
+  </data>
+  <data name="RefinerBackendHint" xml:space="preserve">
+    <value>Optional cleanup step after the upscaler and before encoding.</value>
+  </data>
+  <data name="RefinerBackendNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="RefinerBackendStableSr" xml:space="preserve">
+    <value>StableSR (external)</value>
+  </data>
+  <data name="RefinerBackendSupir" xml:space="preserve">
+    <value>SUPIR (external)</value>
+  </data>
   <data name="EnableStableSr" xml:space="preserve">
     <value>Enable StableSR (requires manual setup)</value>
   </data>
@@ -633,6 +648,15 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   </data>
   <data name="ExternalUpscalerSupirHint" xml:space="preserve">
     <value>SUPIR must be installed and wrapped manually. Point this to your own pipe-compatible SUPIR launcher.</value>
+  </data>
+  <data name="ExternalRefinerHint" xml:space="preserve">
+    <value>The selected external tool will refine already upscaled frames before they are sent to the encoder.</value>
+  </data>
+  <data name="ExternalRefinerStableSrHint" xml:space="preserve">
+    <value>StableSR will run as an external refinement step after the built-in upscaler. Manual setup is required.</value>
+  </data>
+  <data name="ExternalRefinerSupirHint" xml:space="preserve">
+    <value>SUPIR will run as an experimental external refinement step after the built-in upscaler.</value>
   </data>
   <data name="ExternalUpscalerPath" xml:space="preserve">
     <value>Executable path</value>

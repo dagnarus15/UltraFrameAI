@@ -257,6 +257,11 @@ public sealed class PipelineOptions
     public required string UpscalerWorkingDirectory { get; init; }
     public required string ModelDir { get; init; }
     public required string ExternalUpscalerArgumentsTemplate { get; init; }
+    public RefinerBackendKind RefinerBackend { get; init; } = RefinerBackendKind.None;
+    public string RefinerPath { get; init; } = string.Empty;
+    public string RefinerWorkingDirectory { get; init; } = string.Empty;
+    public string RefinerModelDir { get; init; } = string.Empty;
+    public string RefinerArgumentsTemplate { get; init; } = string.Empty;
     public required bool UseAntiFlicker { get; init; }
     public required AntiFlickerMode AntiFlickerMode { get; init; }
     public required string ContentMode { get; init; }
@@ -276,6 +281,18 @@ public enum UpscalerBackendKind
 }
 
 public sealed record UpscalerBackendOption(UpscalerBackendKind Value, string Label)
+{
+    public override string ToString() => Label;
+}
+
+public enum RefinerBackendKind
+{
+    None,
+    StableSrExternal,
+    SupirExternal
+}
+
+public sealed record RefinerBackendOption(RefinerBackendKind Value, string Label)
 {
     public override string ToString() => Label;
 }

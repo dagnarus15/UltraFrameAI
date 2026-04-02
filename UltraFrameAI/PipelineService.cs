@@ -450,6 +450,54 @@ public sealed class PipelineService
                     out var upscaleStderr);
                 WriteStartupLog("Starting upscaler");
 
+                ProcessLease? refiner = null;
+                Task refinerStderr = Task.CompletedTask;
+                string refinerLastError = string.Empty;
+                var refinerStartupStderrCount = 0;
+                Stream? refinerIn = null;
+                Stream? refinerOut = null;
+                if (options.RefinerBackend != RefinerBackendKind.None)
+                {
+                    var refinerWorkingDirectory = string.IsNullOrWhiteSpace(options.RefinerWorkingDirectory)
+                        ? (Path.GetDirectoryName(options.RefinerPath) ?? upscaleWorkingDirectory)
+                        : options.RefinerWorkingDirectory;
+                    var refinerArguments = FrameBridge.BuildUpscaleArguments(
+                        upWidth,
+                        upHeight,
+                        upscaleFrameBudget,
+                        options.RefinerBackend == RefinerBackendKind.StableSrExternal
+                            ? UpscalerBackendKind.StableSrExternal
+                            : UpscalerBackendKind.SupirExternal,
+                        options.RefinerModelDir,
+                        options.UpscalerThreads,
+                        options.TileSize,
+                        options.GpuId,
+                        options.RefinerArgumentsTemplate);
+                    WriteStartupLog($"Refiner backend: {options.RefinerBackend}");
+                    WriteStartupLog($"Refiner exe: {options.RefinerPath}");
+                    WriteStartupLog($"Refiner cwd: {refinerWorkingDirectory}");
+                    WriteStartupLog($"Refiner model dir: {options.RefinerModelDir}");
+                    WriteStartupLog($"Refiner args: {refinerArguments}");
+                    refiner = StartProcess(
+                        options.RefinerPath,
+                        refinerArguments,
+                        refinerWorkingDirectory,
+                        cancellationToken,
+                        line =>
+                        {
+                            refinerLastError = line;
+                            if (refinerStartupStderrCount < 24)
+                            {
+                                refinerStartupStderrCount++;
+                                WriteStartupLog($"Refiner stderr: {line}");
+                            }
+                        },
+                        out refinerStderr);
+                    refinerIn = refiner.Process.StandardInput.BaseStream;
+                    refinerOut = refiner.Process.StandardOutput.BaseStream;
+                    WriteStartupLog("Starting refiner");
+                }
+
                 var decodeOut = decode.Process.StandardOutput.BaseStream;
                 var upscaleIn = upscale.Process.StandardInput.BaseStream;
                 var upscaleOut = upscale.Process.StandardOutput.BaseStream;
@@ -707,6 +755,8 @@ public sealed class PipelineService
                 {
                     await foreach (var inputBuffer in rawFrameChannel.Reader.ReadAllAsync(pipelineToken).ConfigureAwait(false))
                     {
+                        byte[]? frameBuffer = null;
+                        var frameQueued = false;
                         try
                         {
                             Interlocked.Decrement(ref rawQueueCurrent);
@@ -745,20 +795,44 @@ public sealed class PipelineService
                             }
                             sectionStart = Stopwatch.GetTimestamp();
 
-                            var outputBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
-                            await ReadExactAsync(upscaleOut, outputBuffer.AsMemory(0, outputFrameBytes), pipelineToken).ConfigureAwait(false);
+                            frameBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
+                            await ReadExactAsync(upscaleOut, frameBuffer.AsMemory(0, outputFrameBytes), pipelineToken).ConfigureAwait(false);
                             upscaleReadElapsed += Stopwatch.GetElapsedTime(sectionStart);
                             if (currentFrames == 0)
                             {
                                 WriteStartupLog("First upscaled frame received");
                             }
 
-                            var frameBuffer = outputBuffer;
+                            if (refinerIn is not null && refinerOut is not null)
+                            {
+                                sectionStart = Stopwatch.GetTimestamp();
+                                await refinerIn.WriteAsync(frameBuffer.AsMemory(0, outputFrameBytes), pipelineToken).ConfigureAwait(false);
+                                await refinerIn.FlushAsync(pipelineToken).ConfigureAwait(false);
+                                var refinedBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
+                                try
+                                {
+                                    await ReadExactAsync(refinerOut, refinedBuffer.AsMemory(0, outputFrameBytes), pipelineToken).ConfigureAwait(false);
+                                }
+                                catch
+                                {
+                                    ArrayPool<byte>.Shared.Return(refinedBuffer);
+                                    throw;
+                                }
+
+                                upscaleReadElapsed += Stopwatch.GetElapsedTime(sectionStart);
+                                ArrayPool<byte>.Shared.Return(frameBuffer);
+                                frameBuffer = refinedBuffer;
+                                if (currentFrames == 0)
+                                {
+                                    WriteStartupLog("First refined frame received");
+                                }
+                            }
+
                             byte[]? processedBuffer = null;
                             if (antiFlicker is not null)
                             {
                                 processedBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
-                                if (!antiFlicker.Process(outputBuffer, processedBuffer))
+                                if (!antiFlicker.Process(frameBuffer, processedBuffer))
                                 {
                                     antiFlicker.Dispose();
                                     antiFlicker = null;
@@ -767,8 +841,9 @@ public sealed class PipelineService
                                 }
                                 else
                                 {
+                                    ArrayPool<byte>.Shared.Return(frameBuffer);
                                     frameBuffer = processedBuffer;
-                                    ArrayPool<byte>.Shared.Return(outputBuffer);
+                                    processedBuffer = null;
                                 }
                             }
                             if (shouldUpdatePreview)
@@ -813,6 +888,8 @@ public sealed class PipelineService
                             await encodeFrameChannel.Writer.WriteAsync(new FrameWriteItem(frameBuffer, outputFrameBytes, timestampSeconds), pipelineToken).ConfigureAwait(false);
                             Interlocked.Add(ref encodeQueueWriteWaitTicks, Stopwatch.GetElapsedTime(encodeEnqueueStart).Ticks);
                             UpdateMax(ref encodeQueueMax, Interlocked.Increment(ref encodeQueueCurrent));
+                            frameQueued = true;
+                            frameBuffer = null;
 
                             currentFrames++;
                             if (currentFrames > 0 && !firstFrameHeartbeatCts.IsCancellationRequested)
@@ -827,6 +904,10 @@ public sealed class PipelineService
                         }
                         finally
                         {
+                            if (!frameQueued && frameBuffer is not null)
+                            {
+                                ArrayPool<byte>.Shared.Return(frameBuffer);
+                            }
                             ArrayPool<byte>.Shared.Return(inputBuffer);
                         }
                     }
@@ -835,6 +916,7 @@ public sealed class PipelineService
                 {
                     try { firstFrameHeartbeatCts.Cancel(); } catch { }
                     try { antiFlicker?.Dispose(); } catch { }
+                    try { refinerIn?.Close(); } catch { }
                     try { upscaleIn.Close(); } catch { }
                     try { await decodeProducer.ConfigureAwait(false); } catch { }
                     try { encodeFrameChannel.Writer.TryComplete(); } catch { }
@@ -860,11 +942,16 @@ public sealed class PipelineService
                 draining = true;
                 await decode.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
                 await upscale.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                if (refiner is not null)
+                {
+                    await refiner.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                }
                 await encodeSession.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                await Task.WhenAll(decodeStderr, upscaleStderr).ConfigureAwait(false);
+                await Task.WhenAll(decodeStderr, upscaleStderr, refinerStderr).ConfigureAwait(false);
 
                 var decodeExitCode = decode.Process.ExitCode;
                 var upscaleExitCode = upscale.Process.ExitCode;
+                var refinerExitCode = refiner?.Process.ExitCode ?? 0;
                 var encodeExitCode = encodeSession.ExitCode;
                 if (decodeExitCode != 0)
                 {
@@ -878,6 +965,13 @@ public sealed class PipelineService
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(upscaleLastError)
                         ? LocalizedStrings.LogBatchFailed(item.Title)
                         : $"{LocalizedStrings.LogBatchFailed(item.Title)} {upscaleLastError}");
+                }
+
+                if (refinerExitCode != 0)
+                {
+                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(refinerLastError)
+                        ? LocalizedStrings.LogBatchFailed(item.Title)
+                        : $"{LocalizedStrings.LogBatchFailed(item.Title)} {refinerLastError}");
                 }
 
                 if (encodeExitCode != 0)

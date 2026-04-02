@@ -622,6 +622,21 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   <data name="UpscalerBackendSupir" xml:space="preserve">
     <value>SUPIR (extern)</value>
   </data>
+  <data name="RefinerBackend" xml:space="preserve">
+    <value>Veredelung</value>
+  </data>
+  <data name="RefinerBackendHint" xml:space="preserve">
+    <value>Optionaler Verfeinerungsschritt zwischen Upscaler und Encoder.</value>
+  </data>
+  <data name="RefinerBackendNone" xml:space="preserve">
+    <value>Keine</value>
+  </data>
+  <data name="RefinerBackendStableSr" xml:space="preserve">
+    <value>StableSR (extern)</value>
+  </data>
+  <data name="RefinerBackendSupir" xml:space="preserve">
+    <value>SUPIR (extern)</value>
+  </data>
   <data name="EnableStableSr" xml:space="preserve">
     <value>Enable StableSR (requires manual setup)</value>
   </data>
@@ -636,6 +651,15 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   </data>
   <data name="ExternalUpscalerSupirHint" xml:space="preserve">
     <value>SUPIR muss manuell installiert und gewrappt werden. Geben Sie hier Ihren eigenen pipe-kompatiblen SUPIR-Launcher an.</value>
+  </data>
+  <data name="ExternalRefinerHint" xml:space="preserve">
+    <value>Das gewählte externe Werkzeug veredelt bereits hochskalierte Frames, bevor sie an den Encoder gehen.</value>
+  </data>
+  <data name="ExternalRefinerStableSrHint" xml:space="preserve">
+    <value>StableSR läuft als externer Veredelungsschritt nach dem eingebauten Upscaler. Manuelle Einrichtung ist erforderlich.</value>
+  </data>
+  <data name="ExternalRefinerSupirHint" xml:space="preserve">
+    <value>SUPIR läuft als experimenteller externer Veredelungsschritt nach dem eingebauten Upscaler.</value>
   </data>
   <data name="ExternalUpscalerPath" xml:space="preserve">
     <value>Pfad zur EXE</value>
