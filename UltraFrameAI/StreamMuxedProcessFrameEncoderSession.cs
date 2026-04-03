@@ -137,16 +137,35 @@ internal sealed class StreamMuxedProcessFrameEncoderSession : IFrameEncoderSessi
     {
         var args = new StringBuilder("-hide_banner -y -nostats -loglevel error -progress pipe:2 ");
         args.Append("-f nut -i pipe:0 ");
-        args.Append($"-i {Q(_config.SourcePath)} ");
-        if (_config.HasSubtitles)
+        var hasSourceMedia = !string.IsNullOrWhiteSpace(_config.SourcePath);
+        if (hasSourceMedia)
+        {
+            args.Append($"-i {Q(_config.SourcePath)} ");
+        }
+
+        if (_config.HasSubtitles && hasSourceMedia)
         {
             args.Append($"-i {Q(_config.SubtitlePath)} ");
         }
 
-        args.Append($"-map 0:v:0 -map 1:a? -fps_mode passthrough -enc_time_base -1 -vf {Q($"scale=-2:{_config.Height}:flags=lanczos,setsar=1")} ");
+        args.Append("-map 0:v:0 ");
+        if (hasSourceMedia)
+        {
+            args.Append("-map 1:a? ");
+        }
+
+        args.Append($"-fps_mode passthrough -enc_time_base -1 -vf {Q($"scale=-2:{_config.Height}:flags=lanczos,setsar=1")} ");
         args.Append($"-c:v {_config.Codec} -preset {_config.Preset} -tune animation -crf {_config.Crf} -pix_fmt yuv420p ");
-        args.Append("-c:a copy ");
-        if (_config.HasSubtitles)
+        if (hasSourceMedia)
+        {
+            args.Append("-c:a copy ");
+        }
+        else
+        {
+            args.Append("-an ");
+        }
+
+        if (_config.HasSubtitles && hasSourceMedia)
         {
             args.Append("-map 2:s? -c:s copy ");
         }

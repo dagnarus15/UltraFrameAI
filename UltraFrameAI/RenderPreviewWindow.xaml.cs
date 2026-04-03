@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -16,7 +18,7 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
     private double _previewPanX;
     private double _previewPanY;
 
-    public RenderPreviewWindow(ImageSource? previewSource, RenderPreviewKind kind)
+    public RenderPreviewWindow(ImageSource? previewSource, RenderPreviewKind kind, string? frameTimestampText = null)
     {
         InitializeComponent();
         DataContext = this;
@@ -24,6 +26,7 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
         PreviewLabel = kind == RenderPreviewKind.Original
             ? LocalizedStrings.Get("RenderPreviewOriginal")
             : LocalizedStrings.Get("RenderPreviewResult");
+        FrameTimestampText = string.IsNullOrWhiteSpace(frameTimestampText) ? string.Empty : frameTimestampText.Trim();
         Title = PreviewLabel;
         Loaded += (_, _) => Dispatcher.BeginInvoke(Focus);
     }
@@ -31,6 +34,8 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string PreviewLabel { get; }
+
+    public string FrameTimestampText { get; }
 
     public ImageSource? PreviewSource { get; }
 
@@ -138,6 +143,78 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
         PreviewZoom = 1.0;
         PreviewPanX = 0;
         PreviewPanY = 0;
+    }
+
+    private void SaveFrame_Click(object sender, RoutedEventArgs e)
+    {
+        if (PreviewSource is null)
+        {
+            return;
+        }
+
+        var bitmap = GetBitmapForSave(PreviewSource);
+        if (bitmap is null)
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = LocalizedStrings.Get("RenderPreviewSaveFrame"),
+            Filter = "PNG image|*.png",
+            DefaultExt = ".png",
+            AddExtension = true,
+            FileName = BuildDefaultSaveFileName()
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(dialog.FileName);
+        encoder.Save(stream);
+    }
+
+    private string BuildDefaultSaveFileName()
+    {
+        var baseName = PreviewLabel.Replace(' ', '_');
+        if (!string.IsNullOrWhiteSpace(FrameTimestampText))
+        {
+            baseName += $"_{FrameTimestampText}";
+        }
+
+        return baseName + ".png";
+    }
+
+    private static BitmapSource? GetBitmapForSave(ImageSource source)
+    {
+        if (source is BitmapSource bitmapSource)
+        {
+            return bitmapSource;
+        }
+
+        try
+        {
+            var width = (int)Math.Max(1, Math.Round(source.Width));
+            var height = (int)Math.Max(1, Math.Round(source.Height));
+            var renderTarget = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            var visual = new DrawingVisual();
+            using (var context = visual.RenderOpen())
+            {
+                context.DrawImage(source, new Rect(0, 0, width, height));
+            }
+
+            renderTarget.Render(visual);
+            renderTarget.Freeze();
+            return renderTarget;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private void OnPropertyChanged(string propertyName)

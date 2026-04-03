@@ -235,7 +235,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="290" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{local:Loc RenderPreviewOriginal}"
@@ -249,7 +249,9 @@
                             <TextBlock Text="{Binding RenderPreviewZoomText}"
                                        Foreground="{StaticResource TextSecondaryBrush}"
                                        VerticalAlignment="Center"
-                                       Margin="0,0,8,0" />
+                                       MinWidth="44"
+                                       TextAlignment="Right"
+                                       Margin="0,0,4,0" />
                             <Slider Minimum="1"
                                     Maximum="4"
                                     Width="130"
@@ -392,7 +394,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="290" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{local:Loc RenderPreviewResult}"
@@ -406,7 +408,9 @@
                             <TextBlock Text="{Binding RenderPreviewZoomText}"
                                        Foreground="{StaticResource TextSecondaryBrush}"
                                        VerticalAlignment="Center"
-                                       Margin="0,0,8,0" />
+                                       MinWidth="44"
+                                       TextAlignment="Right"
+                                       Margin="0,0,4,0" />
                             <Slider Minimum="1"
                                     Maximum="4"
                                     Width="130"

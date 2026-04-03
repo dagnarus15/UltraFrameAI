@@ -6,9 +6,9 @@
         Icon="pack://application:,,,/images/icon.png"
         Width="1440"
         Height="900"
-        MinWidth="900"
-        MinHeight="600"
-        WindowStartupLocation="CenterOwner"
+        MinWidth="640"
+        MinHeight="520"
+        WindowStartupLocation="Manual"
         ResizeMode="CanResize"
         Background="#050A12"
         UseLayoutRounding="True"
@@ -43,10 +43,13 @@
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
+                    <Button Content="{local:Loc RenderPreviewSaveFrame}"
+                            Padding="10,6"
+                            Click="SaveFrame_Click" />
                     <TextBlock Text="{Binding RenderPreviewZoomText, RelativeSource={RelativeSource AncestorType=Window}}"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                VerticalAlignment="Center"
-                               Margin="0,0,8,0" />
+                               Margin="12,0,8,0" />
                     <Slider Minimum="1"
                             Maximum="4"
                             Width="140"

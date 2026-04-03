@@ -1,11 +1,11 @@
-<Window x:Class="UltraFrameAI.OutputConflictDialog"
+<Window x:Class="UltraFrameAI.ResumeUnavailableDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:UltraFrameAI"
-        Title="{local:Loc OutputConflictTitle}"
-        Width="780"
+        Title="{local:Loc ResumeUnavailableTitle}"
+        Width="720"
         SizeToContent="Height"
-        MinWidth="720"
+        MinWidth="640"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -13,8 +13,7 @@
         ShowInTaskbar="False"
         Background="Transparent"
         Closing="Window_Closing">
-    <Border Margin="0"
-            Background="#0B1220"
+    <Border Background="#0B1220"
             BorderBrush="{StaticResource CardBorderBrush}"
             BorderThickness="1"
             CornerRadius="18"
@@ -24,9 +23,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="10" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="12" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="8" />
+                <RowDefinition Height="14" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -37,7 +34,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="{local:Loc OutputConflictTitle}"
+                        <TextBlock Text="{local:Loc ResumeUnavailableTitle}"
                                    FontSize="22"
                                    FontWeight="SemiBold" />
                         <TextBlock Text="{Binding MessageText}"
@@ -72,34 +69,19 @@
             </Border>
 
             <Grid Grid.Row="4">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="10" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="12" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Button Content="{local:Loc OutputConflictResume}"
-                        Click="Resume_Click"
-                        Height="48"
-                        MinWidth="170"
-                        Background="#143247"
-                        BorderBrush="#5AA9D6"
-                        Foreground="{StaticResource TextPrimaryBrush}" />
-                <Button Grid.Column="2"
-                        Content="{local:Loc OutputConflictReplace}"
+                <Button Content="{local:Loc OutputConflictReplace}"
                         Click="Replace_Click"
                         Height="48"
                         MinWidth="170"
                         Background="#1F3A52"
                         BorderBrush="{StaticResource AccentBrush}"
                         Foreground="{StaticResource TextPrimaryBrush}" />
-                <Button Grid.Column="4"
+                <Button Grid.Column="2"
                         Content="{local:Loc OutputConflictSkip}"
                         Click="Skip_Click"
                         Height="48"
@@ -107,32 +89,6 @@
                         Background="#16243D"
                         BorderBrush="{StaticResource CardBorderBrush}"
                         Foreground="{StaticResource TextPrimaryBrush}" />
-                <Button Grid.Row="2"
-                        Content="{local:Loc OutputConflictResumeAll}"
-                        Click="ResumeAll_Click"
-                        Height="48"
-                        MinWidth="170"
-                        Background="#1A2A3D"
-                        BorderBrush="#537A99"
-                        Foreground="{StaticResource TextPrimaryBrush}" />
-                <Button Grid.Row="2"
-                        Grid.Column="2"
-                        Content="{local:Loc OutputConflictReplaceAll}"
-                        Click="ReplaceAll_Click"
-                        Height="48"
-                        MinWidth="170"
-                        Background="#2A1B21"
-                        BorderBrush="#5A2B34"
-                        Foreground="{StaticResource DangerBrush}" />
-                <Button Grid.Row="2"
-                        Grid.Column="4"
-                        Content="{local:Loc OutputConflictSkipAll}"
-                        Click="SkipAll_Click"
-                        Height="48"
-                        MinWidth="170"
-                        Background="#2A2218"
-                        BorderBrush="#6A4320"
-                        Foreground="{StaticResource WarningBrush}" />
             </Grid>
         </Grid>
     </Border>

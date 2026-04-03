@@ -79,8 +79,7 @@ public partial class RenderWindow : Window
             return;
         }
 
-        ShowPreviewWindow(RenderPreviewKind.Original, viewModel);
-        ShowPreviewWindow(RenderPreviewKind.Result, viewModel);
+        ShowComparePreviewWindows(viewModel);
     }
 
     private void OriginalPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -203,13 +202,104 @@ public partial class RenderWindow : Window
 
         source = CreateStaticPreviewSource(source);
 
-        var window = new RenderPreviewWindow(source, kind)
+        var timestamp = viewModel.CurrentFrameTimestampText;
+        var window = new RenderPreviewWindow(source, kind, timestamp)
         {
-            Owner = this
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.Manual
         };
 
+        ApplyPreviewWindowSize(window, source, SystemParameters.WorkArea.Width * 0.78, SystemParameters.WorkArea.Height * 0.78);
         window.Show();
         window.Activate();
+    }
+
+    private void ShowComparePreviewWindows(MainViewModel viewModel)
+    {
+        var original = viewModel.RenderPreviewOriginalImage;
+        var result = viewModel.RenderPreviewResultImage;
+        if (original is null || result is null)
+        {
+            return;
+        }
+
+        var originalSource = CreateStaticPreviewSource(original);
+        var resultSource = CreateStaticPreviewSource(result);
+        var timestamp = viewModel.CurrentFrameTimestampText;
+        var originalWindow = new RenderPreviewWindow(originalSource, RenderPreviewKind.Original, timestamp)
+        {
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.Manual
+        };
+        var resultWindow = new RenderPreviewWindow(resultSource, RenderPreviewKind.Result, timestamp)
+        {
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.Manual
+        };
+
+        ArrangeCompareWindows(originalWindow, resultWindow, originalSource, resultSource);
+
+        originalWindow.Show();
+        resultWindow.Show();
+        resultWindow.Activate();
+        originalWindow.Activate();
+    }
+
+    private static void ArrangeCompareWindows(RenderPreviewWindow leftWindow, RenderPreviewWindow rightWindow, ImageSource leftSource, ImageSource rightSource)
+    {
+        var workArea = SystemParameters.WorkArea;
+        const double gap = 16;
+        const double horizontalMargin = 32;
+        const double verticalMargin = 32;
+
+        var availableWidth = Math.Max(640, workArea.Width - horizontalMargin * 2 - gap);
+        var slotWidth = Math.Max(320, availableWidth / 2.0);
+        var maxHeight = Math.Max(420, workArea.Height - verticalMargin * 2);
+
+        ApplyPreviewWindowSize(leftWindow, leftSource, slotWidth, maxHeight);
+        ApplyPreviewWindowSize(rightWindow, rightSource, slotWidth, maxHeight);
+
+        var totalWidth = leftWindow.Width + gap + rightWindow.Width;
+        var availableTotalWidth = workArea.Width - horizontalMargin * 2;
+        if (totalWidth > availableTotalWidth)
+        {
+            slotWidth = Math.Max(280, (availableTotalWidth - gap) / 2.0);
+            ApplyPreviewWindowSize(leftWindow, leftSource, slotWidth, maxHeight);
+            ApplyPreviewWindowSize(rightWindow, rightSource, slotWidth, maxHeight);
+            totalWidth = leftWindow.Width + gap + rightWindow.Width;
+        }
+
+        var startX = Math.Max(workArea.Left + horizontalMargin, workArea.Left + (workArea.Width - totalWidth) / 2.0);
+        var top = Math.Max(workArea.Top + verticalMargin, workArea.Top + (workArea.Height - Math.Max(leftWindow.Height, rightWindow.Height)) / 2.0);
+
+        leftWindow.Left = startX;
+        leftWindow.Top = top;
+        rightWindow.Left = leftWindow.Left + leftWindow.Width + gap;
+        rightWindow.Top = top;
+    }
+
+    private static void ApplyPreviewWindowSize(RenderPreviewWindow window, ImageSource source, double maxWidth, double maxHeight)
+    {
+        const double frameChromeWidth = 48;
+        const double frameChromeHeight = 150;
+
+        var sourceWidth = Math.Max(1.0, source.Width);
+        var sourceHeight = Math.Max(1.0, source.Height);
+        var aspect = sourceWidth / sourceHeight;
+
+        var contentMaxWidth = Math.Max(540, maxWidth - frameChromeWidth);
+        var contentMaxHeight = Math.Max(380, maxHeight - frameChromeHeight);
+
+        var contentWidth = contentMaxWidth;
+        var contentHeight = contentWidth / aspect;
+        if (contentHeight > contentMaxHeight)
+        {
+            contentHeight = contentMaxHeight;
+            contentWidth = contentHeight * aspect;
+        }
+
+        window.Width = Math.Max(window.MinWidth, contentWidth + frameChromeWidth);
+        window.Height = Math.Max(window.MinHeight, contentHeight + frameChromeHeight);
     }
 
     private static ImageSource CreateStaticPreviewSource(ImageSource source)

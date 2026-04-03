@@ -18,6 +18,8 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     private bool _isChecked;
     private bool _isBusy;
     private bool _forceOverwrite;
+    private bool _resumeRequested;
+    private int _resumeProcessedFrames;
     private bool _skipRequested;
     private bool _isSkipped;
     private bool _isInterrupted;
@@ -107,6 +109,18 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         set => SetField(ref _forceOverwrite, value);
     }
 
+    public bool ResumeRequested
+    {
+        get => _resumeRequested;
+        set => SetField(ref _resumeRequested, value);
+    }
+
+    public int ResumeProcessedFrames
+    {
+        get => _resumeProcessedFrames;
+        set => SetField(ref _resumeProcessedFrames, value);
+    }
+
     public bool SkipRequested
     {
         get => _skipRequested;
@@ -155,6 +169,8 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         IsInterrupted = false;
         SkipRequested = false;
         ForceOverwrite = false;
+        ResumeRequested = false;
+        ResumeProcessedFrames = 0;
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -172,6 +188,8 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
 
 public enum OutputConflictDecision
 {
+    Resume,
+    ResumeAll,
     Skip,
     Replace,
     SkipAll,
@@ -329,7 +347,8 @@ public sealed record PipelineProgress(
     string Summary,
     string? LogLine = null,
     bool IsHeartbeat = false,
-    string StageElapsedText = "--:--:--");
+    string StageElapsedText = "--:--:--",
+    string? CurrentFrameTimestampText = null);
 
 public static class UiCollections
 {

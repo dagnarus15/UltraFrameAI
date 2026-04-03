@@ -8,11 +8,18 @@ internal sealed class ProcessFramePipelineBridge : IFramePipelineBridge
 {
     public TimestampStreamBridge CreateTimestampCollector(int capacity) => new(capacity);
 
-    public string BuildDecodeArguments(string sourcePath, bool captureShowInfo)
+    public string BuildDecodeArguments(string sourcePath, bool captureShowInfo, int startFrame = 0)
     {
         var args = new StringBuilder("-hide_banner -y -nostats -loglevel info ");
         args.Append($"-i {Q(sourcePath)} -an -sn -dn ");
-        if (captureShowInfo)
+        if (startFrame > 0)
+        {
+            var filter = captureShowInfo
+                ? $"select='gte(n\\,{startFrame})',showinfo"
+                : $"select='gte(n\\,{startFrame})'";
+            args.Append($"-vf {Q(filter)} ");
+        }
+        else if (captureShowInfo)
         {
             args.Append("-vf showinfo ");
         }
@@ -73,15 +80,34 @@ internal sealed class ProcessFramePipelineBridge : IFramePipelineBridge
     {
         var args = new StringBuilder("-hide_banner -y -nostats -loglevel error -progress pipe:2 ");
         args.Append($"-f rawvideo -pix_fmt bgr24 -s {upWidth}x{upHeight} -r {encodeFps.ToString("0.######", CultureInfo.InvariantCulture)} -i pipe:0 ");
-        args.Append($"-i {Q(sourcePath)} ");
-        if (hasSubtitles)
+        var hasSourceMedia = !string.IsNullOrWhiteSpace(sourcePath);
+        if (hasSourceMedia)
+        {
+            args.Append($"-i {Q(sourcePath)} ");
+        }
+
+        if (hasSubtitles && hasSourceMedia)
         {
             args.Append($"-i {Q(subtitlePath)} ");
         }
 
-        args.Append($"-map 0:v:0 -map 1:a? -fps_mode cfr -vf {Q($"scale=-2:{height}:flags=lanczos,setsar=1")} -c:v {codec} -preset {preset} -tune animation -crf {crf} -pix_fmt yuv420p ");
-        args.Append("-c:a copy ");
-        if (hasSubtitles)
+        args.Append("-map 0:v:0 ");
+        if (hasSourceMedia)
+        {
+            args.Append("-map 1:a? ");
+        }
+
+        args.Append($"-fps_mode cfr -vf {Q($"scale=-2:{height}:flags=lanczos,setsar=1")} -c:v {codec} -preset {preset} -tune animation -crf {crf} -pix_fmt yuv420p ");
+        if (hasSourceMedia)
+        {
+            args.Append("-c:a copy ");
+        }
+        else
+        {
+            args.Append("-an ");
+        }
+
+        if (hasSubtitles && hasSourceMedia)
         {
             args.Append("-map 2:s? -c:s copy ");
         }

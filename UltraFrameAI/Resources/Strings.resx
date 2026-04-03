@@ -90,6 +90,9 @@
   <data name="RenderPreviewResetZoom" xml:space="preserve">
     <value>Reset zoom</value>
   </data>
+  <data name="RenderPreviewSaveFrame" xml:space="preserve">
+    <value>Save frame</value>
+  </data>
   <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
     <value>Compare current frame</value>
   </data>
@@ -108,14 +111,26 @@
   <data name="OutputConflictSkip" xml:space="preserve">
     <value>Skip</value>
   </data>
+  <data name="OutputConflictResume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
   <data name="OutputConflictReplace" xml:space="preserve">
     <value>Replace</value>
+  </data>
+  <data name="OutputConflictResumeAll" xml:space="preserve">
+    <value>Resume all</value>
   </data>
   <data name="OutputConflictSkipAll" xml:space="preserve">
     <value>Skip all</value>
   </data>
   <data name="OutputConflictReplaceAll" xml:space="preserve">
     <value>Replace all</value>
+  </data>
+  <data name="ResumeUnavailableTitle" xml:space="preserve">
+    <value>Cannot resume file</value>
+  </data>
+  <data name="ResumeUnavailableMessage" xml:space="preserve">
+    <value>This file cannot be resumed from the saved state.\nYou can replace it or skip it.</value>
   </data>
   <data name="FileList" xml:space="preserve">
     <value>File list</value>

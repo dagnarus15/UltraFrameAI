@@ -25,9 +25,13 @@ public partial class OutputConflictDialog : Window
 
     public OutputConflictDecision Decision { get; private set; } = OutputConflictDecision.Cancel;
 
+    private void Resume_Click(object sender, RoutedEventArgs e) => Finish(OutputConflictDecision.Resume);
+
     private void Skip_Click(object sender, RoutedEventArgs e) => Finish(OutputConflictDecision.Skip);
 
     private void Replace_Click(object sender, RoutedEventArgs e) => Finish(OutputConflictDecision.Replace);
+
+    private void ResumeAll_Click(object sender, RoutedEventArgs e) => Finish(OutputConflictDecision.ResumeAll);
 
     private void SkipAll_Click(object sender, RoutedEventArgs e) => Finish(OutputConflictDecision.SkipAll);
 

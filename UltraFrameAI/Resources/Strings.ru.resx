@@ -90,6 +90,9 @@
   <data name="RenderPreviewResetZoom" xml:space="preserve">
     <value>Сбросить масштаб</value>
   </data>
+  <data name="RenderPreviewSaveFrame" xml:space="preserve">
+    <value>Сохранить кадр</value>
+  </data>
   <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
     <value>Сравнить кадры</value>
   </data>
@@ -108,14 +111,26 @@
   <data name="OutputConflictSkip" xml:space="preserve">
     <value>Пропустить</value>
   </data>
+  <data name="OutputConflictResume" xml:space="preserve">
+    <value>Дорендерить</value>
+  </data>
   <data name="OutputConflictReplace" xml:space="preserve">
     <value>Заменить</value>
+  </data>
+  <data name="OutputConflictResumeAll" xml:space="preserve">
+    <value>Дорендерить всё</value>
   </data>
   <data name="OutputConflictSkipAll" xml:space="preserve">
     <value>Пропустить всё</value>
   </data>
   <data name="OutputConflictReplaceAll" xml:space="preserve">
     <value>Заменить всё</value>
+  </data>
+  <data name="ResumeUnavailableTitle" xml:space="preserve">
+    <value>Файл нельзя дорендерить</value>
+  </data>
+  <data name="ResumeUnavailableMessage" xml:space="preserve">
+    <value>Этот файл нельзя продолжить из сохранённого состояния.\nМожно перезаписать его или пропустить.</value>
   </data>
   <data name="FileList" xml:space="preserve">
     <value>Список файлов</value>

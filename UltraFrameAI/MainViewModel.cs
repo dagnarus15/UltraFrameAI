@@ -130,6 +130,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _currentStage = string.Empty;
     private string _currentItemTitle = string.Empty;
     private string _currentItemDetail = string.Empty;
+    private string _currentFrameTimestampText = string.Empty;
     private string _currentStatusLine = string.Empty;
     private string _currentStageDisplayText = string.Empty;
     private string _elapsedText = "--:--:--";
@@ -814,6 +815,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetField(ref _currentItemDetail, value);
     }
 
+    public string CurrentFrameTimestampText
+    {
+        get => _currentFrameTimestampText;
+        private set => SetField(ref _currentFrameTimestampText, value);
+    }
+
     public string CurrentStatusLine
     {
         get => _currentStatusLine;
@@ -1139,8 +1146,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 BeginScanOverlay(inputPath);
             }
-            Items.Clear();
-            UpdateActionStates();
             Log(LocalizedStrings.LogScanningFiles);
 
             var scanRoot = GetScanRoot(inputPath);
@@ -1155,9 +1160,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var outputFolder = OutputFolder;
             Directory.CreateDirectory(outputFolder);
             var total = videos.Length;
+            var addedCount = 0;
             for (var i = 0; i < total; i++)
             {
                 var video = videos[i];
+                if (Items.Any(existing => string.Equals(existing.SourcePath, video, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
                 var baseName = Path.GetFileNameWithoutExtension(video);
                 var videoDir = Path.GetDirectoryName(video) ?? scanRoot;
                 var relativeDir = Path.GetRelativePath(scanRoot, videoDir);
@@ -1180,21 +1191,23 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
                 var item = new QueueItemViewModel()
                 {
-                    Index = i + 1,
+                    Index = Items.Count + 1,
                     Title = displayTitle,
                     SourcePath = video,
                     OutputPath = Path.Combine(outputDir, baseName + suffix),
                 };
                 AttachQueueItem(item);
                 Items.Add(item);
+                addedCount++;
             }
 
+            ReindexItems();
             UpdateQueueSummary();
             UpdateActionStates();
-            Log(LocalizedStrings.LogFoundVideoFiles(total));
+            Log(LocalizedStrings.LogFoundVideoFiles(addedCount));
             if (Items.Count > 0)
             {
-                SelectedItem = Items[0];
+                SelectedItem ??= Items[0];
                 UpdateSelectionDetails();
             }
         }
@@ -1220,7 +1233,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         var ffprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
         var outputFolder = string.IsNullOrWhiteSpace(OutputFolder) ? null : Path.GetFullPath(OutputFolder);
-        var scanRoot = GetScanRoot(inputPath);
         var candidates = await Task.Run(() =>
         {
             if (File.Exists(inputPath))
@@ -1229,7 +1241,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             var list = new List<string>();
-            foreach (var path in Directory.EnumerateFiles(inputPath, "*", SearchOption.AllDirectories))
+            foreach (var path in Directory.EnumerateFiles(inputPath, "*", SearchOption.TopDirectoryOnly))
             {
                 ct.ThrowIfCancellationRequested();
                 if (ShouldSkipScanCandidate(path, outputFolder) || !IsLikelyVideoFile(path))
@@ -1241,9 +1253,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             return list
-                .OrderBy(path => GetFolderDepth(path, scanRoot))
-                .ThenBy(path => GetRelativeDirectory(path, scanRoot), StringComparer.OrdinalIgnoreCase)
-                .ThenBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+                .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
                 .ToArray();
         }, ct).ConfigureAwait(false);
 
@@ -1274,25 +1284,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         progress?.Invoke(candidates.Length, candidates.Length, matches.Count, matches.Count > 0 ? Path.GetFileName(matches[^1]) : string.Empty);
         return matches.ToArray();
-    }
-
-    private static int GetFolderDepth(string path, string scanRoot)
-    {
-        var directory = Path.GetDirectoryName(path) ?? scanRoot;
-        var relative = Path.GetRelativePath(scanRoot, directory);
-        if (string.IsNullOrWhiteSpace(relative) || relative == ".")
-        {
-            return 0;
-        }
-
-        return relative.Count(ch => ch == Path.DirectorySeparatorChar || ch == Path.AltDirectorySeparatorChar) + 1;
-    }
-
-    private static string GetRelativeDirectory(string path, string scanRoot)
-    {
-        var directory = Path.GetDirectoryName(path) ?? scanRoot;
-        var relative = Path.GetRelativePath(scanRoot, directory);
-        return relative == "." ? string.Empty : relative;
     }
 
     private Task StartAsync() => StartPipelineAsync(Items.Where(item => !item.IsBusy).ToArray(), LocalizedStrings.LogStartingBatch);
@@ -1463,6 +1454,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             EtaText = progress.EtaText;
             CurrentItemTitle = progress.ItemTitle;
             CurrentItemDetail = progress.CurrentDetail;
+            CurrentFrameTimestampText = progress.CurrentFrameTimestampText ?? string.Empty;
             CurrentStatusLine = progress.CurrentStatus;
             _currentItemIndex = progress.ItemIndex;
             UpdateCurrentStageDisplayText();
@@ -1608,6 +1600,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ct.ThrowIfCancellationRequested();
             item.SkipRequested = false;
             item.ForceOverwrite = false;
+            item.ResumeRequested = false;
+            item.ResumeProcessedFrames = 0;
             item.IsSkipped = false;
             item.IsInterrupted = false;
 
@@ -1617,6 +1611,45 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 var decision = await ResolveOutputConflictAsync(item).ConfigureAwait(true);
                 switch (decision)
                 {
+                    case OutputConflictDecision.ResumeAll:
+                        _sessionOutputDecision = OutputConflictDecision.ResumeAll;
+                        if (TryGetResumeInfo(item, options, out var resumeProcessedFrames))
+                        {
+                            item.ResumeRequested = true;
+                            item.ResumeProcessedFrames = resumeProcessedFrames;
+                            list.Add(item);
+                            continue;
+                        }
+                        decision = await ResolveResumeFallbackAsync(item, options).ConfigureAwait(true);
+                        if (decision == OutputConflictDecision.Replace)
+                        {
+                            _sessionOutputDecision = OutputConflictDecision.ReplaceAll;
+                            item.ForceOverwrite = true;
+                            list.Add(item);
+                            continue;
+                        }
+
+                        _sessionOutputDecision = OutputConflictDecision.SkipAll;
+                        MarkItemSkipped(item);
+                        continue;
+                    case OutputConflictDecision.Resume:
+                        if (TryGetResumeInfo(item, options, out resumeProcessedFrames))
+                        {
+                            item.ResumeRequested = true;
+                            item.ResumeProcessedFrames = resumeProcessedFrames;
+                            list.Add(item);
+                            continue;
+                        }
+                        decision = await ResolveResumeFallbackAsync(item, options).ConfigureAwait(true);
+                        if (decision == OutputConflictDecision.Replace)
+                        {
+                            item.ForceOverwrite = true;
+                            list.Add(item);
+                            continue;
+                        }
+
+                        MarkItemSkipped(item);
+                        continue;
                     case OutputConflictDecision.ReplaceAll:
                         _sessionOutputDecision = OutputConflictDecision.ReplaceAll;
                         item.ForceOverwrite = true;
@@ -1647,7 +1680,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private async Task<OutputConflictDecision> ResolveOutputConflictAsync(QueueItemViewModel item)
     {
         if (_sessionOutputDecision == OutputConflictDecision.SkipAll ||
-            _sessionOutputDecision == OutputConflictDecision.ReplaceAll)
+            _sessionOutputDecision == OutputConflictDecision.ReplaceAll ||
+            _sessionOutputDecision == OutputConflictDecision.ResumeAll)
         {
             return _sessionOutputDecision.Value;
         }
@@ -1672,6 +1706,76 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         return result;
+    }
+
+    private async Task<OutputConflictDecision> ResolveResumeFallbackAsync(QueueItemViewModel item, PipelineOptions options)
+    {
+        await Task.Yield();
+        return ShowResumeUnavailableDialog(item);
+    }
+
+    private bool TryGetResumeInfo(QueueItemViewModel item, PipelineOptions options, out int processedFrames)
+    {
+        processedFrames = 0;
+        if (!PipelineService.TryLoadResumeState(item.OutputPath, out var json) || string.IsNullOrWhiteSpace(json))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var sourcePath = root.TryGetProperty("SourcePath", out var sourcePathNode) ? sourcePathNode.GetString() ?? string.Empty : string.Empty;
+            var outputPath = root.TryGetProperty("OutputPath", out var outputPathNode) ? outputPathNode.GetString() ?? string.Empty : string.Empty;
+            var codec = root.TryGetProperty("Codec", out var codecNode) ? codecNode.GetString() ?? string.Empty : string.Empty;
+            var targetHeight = root.TryGetProperty("TargetHeight", out var targetHeightNode) ? targetHeightNode.GetInt32() : 0;
+            var upscalerBackend = root.TryGetProperty("UpscalerBackend", out var upscalerBackendNode) ? upscalerBackendNode.GetString() ?? string.Empty : string.Empty;
+            var refinerBackend = root.TryGetProperty("RefinerBackend", out var refinerBackendNode) ? refinerBackendNode.GetString() ?? string.Empty : string.Empty;
+            var parsedProcessedFrames = root.TryGetProperty("ProcessedFrames", out var processedFramesNode) ? processedFramesNode.GetInt32() : 0;
+            var totalFrames = root.TryGetProperty("TotalFrames", out var totalFramesNode) ? totalFramesNode.GetInt32() : 0;
+            var complete = root.TryGetProperty("Complete", out var completeNode) && completeNode.GetBoolean();
+            var canResume = root.TryGetProperty("CanResume", out var canResumeNode) && canResumeNode.GetBoolean();
+            var expectedCodec = options.UseX265 ? "libx265" : "libx264";
+            var expectedTargetHeight = options.UseX265 ? 2160 : 1080;
+            var isValid = canResume
+                && !complete
+                && parsedProcessedFrames > 0
+                && totalFrames > parsedProcessedFrames
+                && string.Equals(sourcePath, item.SourcePath, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(outputPath, item.OutputPath, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(codec, expectedCodec, StringComparison.OrdinalIgnoreCase)
+                && targetHeight == expectedTargetHeight
+                && string.Equals(upscalerBackend, options.UpscalerBackend.ToString(), StringComparison.Ordinal)
+                && string.Equals(refinerBackend, options.RefinerBackend.ToString(), StringComparison.Ordinal);
+            if (!isValid)
+            {
+                processedFrames = 0;
+            }
+            else
+            {
+                processedFrames = parsedProcessedFrames;
+            }
+
+            return isValid;
+        }
+        catch
+        {
+            processedFrames = 0;
+            return false;
+        }
+    }
+
+    private OutputConflictDecision ShowResumeUnavailableDialog(QueueItemViewModel item)
+    {
+        var owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
+        var dialog = new ResumeUnavailableDialog(item.OutputPath);
+        if (owner is not null)
+        {
+            dialog.Owner = owner;
+        }
+
+        return dialog.ShowDialog() == true ? dialog.Decision : OutputConflictDecision.Skip;
     }
 
     private void MarkItemSkipped(QueueItemViewModel item)
@@ -1760,6 +1864,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             CurrentItemTitle = LocalizedStrings.LogNoItemSelected;
             CurrentItemDetail = string.Empty;
+            CurrentFrameTimestampText = string.Empty;
             CurrentFileName = string.Empty;
             ClearRenderPreviewPaths();
             return;
@@ -1767,6 +1872,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         CurrentItemTitle = SelectedItem.Title;
         CurrentItemDetail = SelectedItem.SourcePath;
+        CurrentFrameTimestampText = string.Empty;
         CurrentFileName = Path.GetFileName(SelectedItem.SourcePath);
         ClearRenderPreviewPaths();
     }
@@ -1894,6 +2000,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         RenderPreviewOriginalImage = null;
         RenderPreviewResultImage = null;
+        CurrentFrameTimestampText = string.Empty;
         _currentItemIndex = -1;
         if (resetTransforms)
         {
@@ -2038,6 +2145,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             CurrentStage = LocalizedStrings.LogIdle;
             CurrentItemTitle = LocalizedStrings.LogNoItemSelected;
             CurrentItemDetail = string.Empty;
+            CurrentFrameTimestampText = string.Empty;
             CurrentStatusLine = LocalizedStrings.LogWaitingForInput;
             UpdateCurrentStageDisplayText();
             QueueSummary = LocalizedStrings.LogItemCount(0);
@@ -2160,6 +2268,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         if (_attachedQueueItems.Add(item))
         {
             item.PropertyChanged += QueueItem_PropertyChanged;
+        }
+    }
+
+    private void ReindexItems()
+    {
+        for (var i = 0; i < Items.Count; i++)
+        {
+            Items[i].Index = i + 1;
         }
     }
 
@@ -2724,36 +2840,42 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         try
         {
-            Items.Clear();
-
             await Task.Yield();
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException(LocalizedStrings.LogRootNotFound(filePath), filePath);
             }
 
+            if (Items.Any(existing => string.Equals(existing.SourcePath, filePath, StringComparison.OrdinalIgnoreCase)))
+            {
+                UpdateQueueSummary();
+                UpdateActionStates();
+                Log(LocalizedStrings.LogFoundVideoFiles(0));
+                return;
+            }
+
             var baseName = Path.GetFileNameWithoutExtension(filePath);
-            var scanRoot = GetScanRoot(filePath);
             var suffix = GetOutputSuffix();
             var outputFolder = OutputFolder;
             Directory.CreateDirectory(outputFolder);
 
-        var outputPath = Path.Combine(outputFolder, baseName + suffix);
+            var outputPath = Path.Combine(outputFolder, baseName + suffix);
 
-        var item = new QueueItemViewModel
-        {
-            Index = 1,
-            Title = Path.GetFileName(filePath),
-            SourcePath = filePath,
-            OutputPath = outputPath
-        };
-        AttachQueueItem(item);
-        Items.Add(item);
+            var item = new QueueItemViewModel
+            {
+                Index = Items.Count + 1,
+                Title = Path.GetFileName(filePath),
+                SourcePath = filePath,
+                OutputPath = outputPath
+            };
+            AttachQueueItem(item);
+            Items.Add(item);
 
+            ReindexItems();
             UpdateQueueSummary();
             UpdateActionStates();
             Log(LocalizedStrings.LogFoundVideoFiles(1));
-            SelectedItem = Items[0];
+            SelectedItem = item;
             ClearRenderPreviewPaths();
             UpdateSelectionDetails();
             OnQueueStateChanged();

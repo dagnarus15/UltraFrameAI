@@ -4,7 +4,7 @@ internal interface IFramePipelineBridge
 {
     TimestampStreamBridge CreateTimestampCollector(int capacity);
 
-    string BuildDecodeArguments(string sourcePath, bool captureShowInfo);
+    string BuildDecodeArguments(string sourcePath, bool captureShowInfo, int startFrame = 0);
 
     string BuildUpscaleArguments(int rawWidth, int rawHeight, int upscaleFrameBudget, UpscalerBackendKind upscalerBackend, string modelDir, string upscalerThreads, int? tileSize, int? gpuId, string? externalArgsTemplate);
 

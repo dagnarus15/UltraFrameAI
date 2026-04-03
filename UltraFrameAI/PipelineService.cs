@@ -19,6 +19,20 @@ public sealed class PipelineService
     private sealed record SourceMetadata(double Duration, int Width, int Height, double Fps);
     private sealed record SourceMetadataCacheEntry(double Duration, int Width, int Height, double Fps, bool Complete);
     private sealed record TimestampCacheEntry(double[] Timestamps, bool Complete);
+    private sealed record ResumeStateEntry(
+        int Version,
+        string SourcePath,
+        string OutputPath,
+        string Codec,
+        int TargetHeight,
+        string UpscalerBackend,
+        string RefinerBackend,
+        int ProcessedFrames,
+        int TotalFrames,
+        string Stage,
+        bool Complete,
+        bool CanResume,
+        DateTime UpdatedUtc);
     private sealed record FrameWriteItem(byte[] Buffer, int Length, double? TimestampSeconds);
     private const int RawFrameQueueCapacity = 8;
     private const int EncodeFrameQueueCapacity = 4;
@@ -278,8 +292,27 @@ public sealed class PipelineService
             cancellationToken.ThrowIfCancellationRequested();
             var item = items[i];
             var itemWatch = Stopwatch.StartNew();
+            var resumeStatePath = GetResumeStatePath(item.OutputPath);
+            var resumeCodec = options.UseX265 ? "libx265" : "libx264";
+            var resumeTargetHeight = options.UseX265 ? 2160 : 1080;
+            var resumeTotalFrames = 0;
+            var resumeProcessedFrames = 0;
+            var isResumeRun = item.ResumeRequested && item.ResumeProcessedFrames > 0 && File.Exists(item.OutputPath);
+            var resumeStartFrame = isResumeRun ? item.ResumeProcessedFrames : 0;
+            var resumeWorkingDirectory = isResumeRun
+                ? Path.Combine(Path.GetTempPath(), "UltraFrameAI", "resume-stage", Guid.NewGuid().ToString("N"))
+                : string.Empty;
+            var resumeContinuationOutputPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "continuation.mkv") : string.Empty;
+            var resumePartialVideoPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "partial-video.mkv") : string.Empty;
+            var resumeMergedVideoPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "merged-video.mkv") : string.Empty;
+            var resumeMuxedOutputPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "final-output.mkv") : string.Empty;
             try
             {
+                if (isResumeRun)
+                {
+                    Directory.CreateDirectory(resumeWorkingDirectory);
+                }
+
                 if (item.SkipRequested)
                 {
                     report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogSkippingEncode, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed)));
@@ -314,9 +347,9 @@ public sealed class PipelineService
 
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogCheckingCache"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogCheckingCache"), StageElapsedText: Time(itemWatch.Elapsed)));
                 var estimatedFrames = EstimateFrameCount(metadata.Duration, metadata.Fps);
-                var codec = options.UseX265 ? "libx265" : "libx264";
+                var codec = resumeCodec;
                 var crf = options.UseX265 ? 18 : 16;
-                var height = options.UseX265 ? 2160 : 1080;
+                var height = resumeTargetHeight;
                 var subtitle = Path.Combine(Path.GetDirectoryName(item.SourcePath) ?? string.Empty, Path.GetFileNameWithoutExtension(item.SourcePath) + ".RG Genshiken.ass");
 
                 if (metadata.Width <= 0 || metadata.Height <= 0)
@@ -337,7 +370,24 @@ public sealed class PipelineService
                 var totalFrames = timestampCacheHit && cachedTimestamps.Length > 0
                     ? cachedTimestamps.Length
                     : Math.Max(estimatedFrames, 1);
-                var upscaleFrameBudget = totalFrames;
+                resumeTotalFrames = totalFrames;
+                var upscaleFrameBudget = Math.Max(0, totalFrames - resumeStartFrame);
+                WriteResumeState(
+                    resumeStatePath,
+                    new ResumeStateEntry(
+                        1,
+                        item.SourcePath,
+                        item.OutputPath,
+                        codec,
+                        height,
+                        options.UpscalerBackend.ToString(),
+                        options.RefinerBackend.ToString(),
+                        0,
+                        totalFrames,
+                        "Preparing",
+                        Complete: false,
+                        CanResume: true,
+                        DateTime.UtcNow));
                 var stageWatch = Stopwatch.StartNew();
                 var etaEstimator = new PipeEtaEstimator();
                 WriteStartupLog($"Video size ready: {rawWidth}x{rawHeight}");
@@ -357,10 +407,11 @@ public sealed class PipelineService
                 var decodeStartupStderrCount = 0;
                 var upscaleStartupStderrCount = 0;
                 var timestampBridge = timestampCacheHit ? null : new TimestampStreamBridge(Math.Max(totalFrames, 1));
-                var cachedTimestampIndex = 0;
+                var cachedTimestampIndex = resumeStartFrame;
                 var timestampRepairState = options.RepairBrokenTimestamps ? new TimestampRepairState() : null;
                 var emittedTimestamps = new List<double>(Math.Max(totalFrames, 1));
                 var timestampRepairLogged = false;
+                double? latestFrameTimestampSeconds = null;
 
                 async ValueTask<double?> GetTimestampForFrameAsync(CancellationToken ct)
                 {
@@ -368,22 +419,25 @@ public sealed class PipelineService
                     {
                         if (cachedTimestampIndex < cachedTimestamps.Length)
                         {
-                            return cachedTimestamps[cachedTimestampIndex++];
+                            latestFrameTimestampSeconds = cachedTimestamps[cachedTimestampIndex++];
+                            return latestFrameTimestampSeconds;
                         }
 
-                        return cachedTimestamps[^1];
+                        latestFrameTimestampSeconds = cachedTimestamps[^1];
+                        return latestFrameTimestampSeconds;
                     }
 
                     if (timestampBridge is not null)
                     {
-                        return await timestampBridge.DequeueAsync(ct).ConfigureAwait(false);
+                        latestFrameTimestampSeconds = await timestampBridge.DequeueAsync(ct).ConfigureAwait(false);
+                        return latestFrameTimestampSeconds;
                     }
 
                     return null;
                 }
 
                 var decodeWorkingDirectory = Path.GetDirectoryName(item.SourcePath) ?? Environment.CurrentDirectory;
-                var decodeArguments = FrameBridge.BuildDecodeArguments(item.SourcePath, !timestampCacheHit);
+                var decodeArguments = FrameBridge.BuildDecodeArguments(item.SourcePath, !timestampCacheHit, resumeStartFrame);
                 WriteStartupLog($"Decode exe: {options.FfmpegPath}");
                 WriteStartupLog($"Decode cwd: {decodeWorkingDirectory}");
                 using var decode = StartProcess(
@@ -529,15 +583,15 @@ public sealed class PipelineService
                     upWidth,
                     upHeight,
                     encodeFps,
-                    item.SourcePath,
-                    subtitle,
-                    hasSub,
+                    isResumeRun ? string.Empty : item.SourcePath,
+                    isResumeRun ? string.Empty : subtitle,
+                    isResumeRun ? false : hasSub,
                     codec,
                     options.EncoderPreset,
                     crf,
                     outputContainer,
                     height,
-                    item.OutputPath,
+                    isResumeRun ? resumeContinuationOutputPath : item.OutputPath,
                     options.FfmpegPath);
                 using var encodeSession = encoderBridge.CreateSession(
                     encodeSessionConfig,
@@ -553,7 +607,7 @@ public sealed class PipelineService
                 var antiFlicker = options.UseAntiFlicker && options.AntiFlickerStrength > 0
                     ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.AntiFlickerMode, options.ContentMode, options.AntiFlickerStrength)
                     : null;
-                var currentFrames = 0;
+                var currentFrames = resumeStartFrame;
                 var lastTick = Stopwatch.StartNew();
                 var previewUpdateWatch = Stopwatch.StartNew();
                 var draining = false;
@@ -741,7 +795,24 @@ public sealed class PipelineService
                     var processingFpsText = processingFps > 0
                         ? $"{processingFps:0.0} FPS"
                         : "--";
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, pct, $"{pct:0.0}%", Time(itemWatch.Elapsed), etaEstimator.Estimate(currentFrames, totalFrames, stageWatch.Elapsed, stageWatch.Elapsed, draining), phase, currentText, Summary(item.Index, total, overall.Elapsed), null, heartbeat, processingFpsText));
+                    WriteResumeState(
+                        resumeStatePath,
+                        new ResumeStateEntry(
+                            1,
+                            item.SourcePath,
+                            item.OutputPath,
+                            codec,
+                            height,
+                        options.UpscalerBackend.ToString(),
+                        options.RefinerBackend.ToString(),
+                        currentFrames,
+                        totalFrames,
+                        phase,
+                        Complete: false,
+                        CanResume: true,
+                        DateTime.UtcNow));
+                    resumeProcessedFrames = currentFrames;
+                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, pct, $"{pct:0.0}%", Time(itemWatch.Elapsed), etaEstimator.Estimate(currentFrames, totalFrames, stageWatch.Elapsed, stageWatch.Elapsed, draining), phase, currentText, Summary(item.Index, total, overall.Elapsed), null, heartbeat, processingFpsText, latestFrameTimestampSeconds is double ts ? FormatFrameTimestamp(ts) : null));
                     if (heartbeat)
                     {
                         WritePerfSnapshot(TimeSpan.Zero);
@@ -892,6 +963,7 @@ public sealed class PipelineService
                             frameBuffer = null;
 
                             currentFrames++;
+                            resumeProcessedFrames = currentFrames;
                             if (currentFrames > 0 && !firstFrameHeartbeatCts.IsCancellationRequested)
                             {
                                 firstFrameHeartbeatCts.Cancel();
@@ -930,6 +1002,22 @@ public sealed class PipelineService
 
                 if (skipRequested)
                 {
+                    WriteResumeState(
+                        resumeStatePath,
+                        new ResumeStateEntry(
+                            1,
+                            item.SourcePath,
+                            item.OutputPath,
+                            codec,
+                            height,
+                            options.UpscalerBackend.ToString(),
+                            options.RefinerBackend.ToString(),
+                            currentFrames,
+                            totalFrames,
+                            "Skipped",
+                            Complete: false,
+                            CanResume: true,
+                            DateTime.UtcNow));
                     item.IsInterrupted = true;
                     item.IsBusy = false;
                     item.Stage = LocalizedStrings.LogCancelled;
@@ -1006,12 +1094,63 @@ public sealed class PipelineService
                     options.OutputFolder,
                     $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.timing.debug.log");
                 WriteTimingDebugLog(timingDebugLog, metadata.Duration, frameTimestamps, durations);
+                if (isResumeRun)
+                {
+                    WriteStartupLog($"Finalizing resumed render from frame {resumeStartFrame}");
+                    await FinalizeResumedOutputAsync(
+                        options.FfmpegPath,
+                        item.SourcePath,
+                        subtitle,
+                        hasSub,
+                        item.OutputPath,
+                        resumePartialVideoPath,
+                        resumeContinuationOutputPath,
+                        resumeMergedVideoPath,
+                        resumeMuxedOutputPath,
+                        cancellationToken,
+                        line => encodeLastError = line).ConfigureAwait(false);
+                }
+                WriteResumeState(
+                    resumeStatePath,
+                    new ResumeStateEntry(
+                        1,
+                        item.SourcePath,
+                        item.OutputPath,
+                        codec,
+                        height,
+                        options.UpscalerBackend.ToString(),
+                        options.RefinerBackend.ToString(),
+                        currentFrames,
+                        totalFrames,
+                        "Completed",
+                        Complete: true,
+                        CanResume: false,
+                        DateTime.UtcNow));
 
                 report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogEncodeComplete, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogWroteFile(Path.GetFileName(item.OutputPath)), StageElapsedText: Time(stageWatch.Elapsed)));
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
+                if (!isResumeRun)
+                {
+                    HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
+                }
+                WriteResumeState(
+                    resumeStatePath,
+                    new ResumeStateEntry(
+                        1,
+                        item.SourcePath,
+                        item.OutputPath,
+                        resumeCodec,
+                        resumeTargetHeight,
+                        options.UpscalerBackend.ToString(),
+                        options.RefinerBackend.ToString(),
+                        resumeProcessedFrames,
+                        resumeTotalFrames,
+                        "Cancelled",
+                        Complete: false,
+                        CanResume: isResumeRun || options.PreserveIncompleteOutput || File.Exists(item.OutputPath),
+                        DateTime.UtcNow));
                 item.IsInterrupted = true;
                 item.IsBusy = false;
                 item.Stage = LocalizedStrings.LogCancelled;
@@ -1021,11 +1160,40 @@ public sealed class PipelineService
             }
             catch
             {
-                HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
+                if (!isResumeRun)
+                {
+                    HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
+                }
+                try
+                {
+                    WriteResumeState(
+                        resumeStatePath,
+                        new ResumeStateEntry(
+                            1,
+                            item.SourcePath,
+                            item.OutputPath,
+                            resumeCodec,
+                            resumeTargetHeight,
+                            options.UpscalerBackend.ToString(),
+                            options.RefinerBackend.ToString(),
+                            resumeProcessedFrames,
+                            resumeTotalFrames,
+                            "Failed",
+                            Complete: false,
+                            CanResume: isResumeRun || options.PreserveIncompleteOutput || File.Exists(item.OutputPath),
+                            DateTime.UtcNow));
+                }
+                catch
+                {
+                }
                 throw;
             }
             finally
             {
+                if (isResumeRun)
+                {
+                    TryDeleteDirectory(resumeWorkingDirectory);
+                }
             }
         }
 
@@ -1035,6 +1203,117 @@ public sealed class PipelineService
     private static string Q(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
 
     private static int ParseIntInvariant(string value) => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : 0;
+
+    private static async Task FinalizeResumedOutputAsync(
+        string ffmpegPath,
+        string sourcePath,
+        string subtitlePath,
+        bool hasSubtitles,
+        string finalOutputPath,
+        string partialVideoPath,
+        string continuationOutputPath,
+        string mergedVideoPath,
+        string muxedOutputPath,
+        CancellationToken cancellationToken,
+        Action<string>? onErrorLine)
+    {
+        if (!File.Exists(finalOutputPath))
+        {
+            throw new InvalidOperationException("Resume source segment is missing.");
+        }
+
+        if (!File.Exists(continuationOutputPath))
+        {
+            throw new InvalidOperationException("Resume continuation segment is missing.");
+        }
+
+        var workingDirectory = Path.GetDirectoryName(finalOutputPath) ?? Environment.CurrentDirectory;
+        await RunToolAsync(
+            ffmpegPath,
+            $"-hide_banner -y -nostats -loglevel error -i {Q(finalOutputPath)} -map 0:v:0 -c copy {Q(partialVideoPath)}",
+            workingDirectory,
+            cancellationToken,
+            onErrorLine).ConfigureAwait(false);
+
+        var concatListPath = Path.Combine(Path.GetDirectoryName(partialVideoPath) ?? workingDirectory, "concat.txt");
+        var concatLines = new[]
+        {
+            $"file '{partialVideoPath.Replace("\\", "/").Replace("'", "'\\''")}'",
+            $"file '{continuationOutputPath.Replace("\\", "/").Replace("'", "'\\''")}'"
+        };
+        await File.WriteAllLinesAsync(concatListPath, concatLines, new UTF8Encoding(false), cancellationToken).ConfigureAwait(false);
+
+        await RunToolAsync(
+            ffmpegPath,
+            $"-hide_banner -y -nostats -loglevel error -safe 0 -f concat -i {Q(concatListPath)} -map 0:v:0 -c copy {Q(mergedVideoPath)}",
+            workingDirectory,
+            cancellationToken,
+            onErrorLine).ConfigureAwait(false);
+
+        var muxArgs = new StringBuilder("-hide_banner -y -nostats -loglevel error ");
+        muxArgs.Append($"-i {Q(mergedVideoPath)} -i {Q(sourcePath)} ");
+        if (hasSubtitles)
+        {
+            muxArgs.Append($"-i {Q(subtitlePath)} ");
+        }
+
+        muxArgs.Append("-map 0:v:0 -map 1:a? -c:v copy -c:a copy ");
+        if (hasSubtitles)
+        {
+            muxArgs.Append("-map 2:s? -c:s copy ");
+        }
+        else
+        {
+            muxArgs.Append("-sn ");
+        }
+
+        muxArgs.Append(Q(muxedOutputPath));
+        await RunToolAsync(
+            ffmpegPath,
+            muxArgs.ToString(),
+            workingDirectory,
+            cancellationToken,
+            onErrorLine).ConfigureAwait(false);
+
+        File.Move(muxedOutputPath, finalOutputPath, true);
+    }
+
+    private static async Task RunToolAsync(
+        string fileName,
+        string arguments,
+        string workingDirectory,
+        CancellationToken cancellationToken,
+        Action<string>? onErrorLine)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            StandardErrorEncoding = Encoding.UTF8,
+            StandardOutputEncoding = Encoding.UTF8
+        };
+
+        using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+        if (!process.Start())
+        {
+            throw new InvalidOperationException($"Unable to start process: {fileName}");
+        }
+
+        using var registration = cancellationToken.Register(() => TryKillTree(process));
+        var stderrPump = PumpLinesAsync(process.StandardError, onErrorLine, cancellationToken);
+        var stdoutPump = PumpLinesAsync(process.StandardOutput, _ => { }, cancellationToken);
+        await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        await Task.WhenAll(stderrPump, stdoutPump).ConfigureAwait(false);
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"Process failed with exit code {process.ExitCode}: {fileName}");
+        }
+    }
 
     private static async Task<SourceMetadata> GetSourceMetadataAsync(string ffmpeg, string sourcePath, CancellationToken ct)
     {
@@ -1123,6 +1402,48 @@ public sealed class PipelineService
             "UltraFrameAI",
             "probe-cache",
             $"{hash}.json");
+    }
+
+    internal static string GetResumeStatePath(string outputPath)
+    {
+        var directory = Path.GetDirectoryName(outputPath) ?? Environment.CurrentDirectory;
+        var fileName = $"{Path.GetFileNameWithoutExtension(outputPath)}.resume.json";
+        return Path.Combine(directory, fileName);
+    }
+
+    internal static bool TryLoadResumeState(string outputPath, out string json)
+    {
+        json = string.Empty;
+        try
+        {
+            var path = GetResumeStatePath(outputPath);
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            json = File.ReadAllText(path);
+            return !string.IsNullOrWhiteSpace(json);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void WriteResumeState(string path, ResumeStateEntry entry)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? Environment.CurrentDirectory);
+            File.WriteAllText(path, JsonSerializer.Serialize(entry, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+        }
+        catch
+        {
+        }
     }
 
     private static bool TryLoadSourceMetadataCache(string sourcePath, out SourceMetadata metadata)
@@ -1616,6 +1937,20 @@ public sealed class PipelineService
         }
     }
 
+    private static void TryDeleteDirectory(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private static void HandleIncompleteOutput(string path, bool preserveIncompleteOutput)
     {
         if (preserveIncompleteOutput)
@@ -1634,5 +1969,16 @@ public sealed class PipelineService
     private static string Summary(int current, int total, TimeSpan elapsed) => LocalizedStrings.LogItemSummary(current, total, Time(elapsed));
 
     private static string Time(TimeSpan value) => value < TimeSpan.Zero ? "--:--:--" : value.ToString(@"hh\:mm\:ss");
+
+    private static string FormatFrameTimestamp(double seconds)
+    {
+        if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds < 0)
+        {
+            return string.Empty;
+        }
+
+        var time = TimeSpan.FromSeconds(seconds);
+        return $"{(int)time.TotalHours:00}-{time.Minutes:00}-{time.Seconds:00}.{time.Milliseconds:000}";
+    }
 
 }

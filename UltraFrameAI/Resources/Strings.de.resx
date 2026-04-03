@@ -90,6 +90,9 @@
   <data name="RenderPreviewResetZoom" xml:space="preserve">
     <value>Zoom zurücksetzen</value>
   </data>
+  <data name="RenderPreviewSaveFrame" xml:space="preserve">
+    <value>Frame speichern</value>
+  </data>
   <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
     <value>Aktuelles Bild vergleichen</value>
   </data>
@@ -108,14 +111,26 @@
   <data name="OutputConflictSkip" xml:space="preserve">
     <value>Überspringen</value>
   </data>
+  <data name="OutputConflictResume" xml:space="preserve">
+    <value>Fortsetzen</value>
+  </data>
   <data name="OutputConflictReplace" xml:space="preserve">
     <value>Ersetzen</value>
+  </data>
+  <data name="OutputConflictResumeAll" xml:space="preserve">
+    <value>Alle fortsetzen</value>
   </data>
   <data name="OutputConflictSkipAll" xml:space="preserve">
     <value>Alle überspringen</value>
   </data>
   <data name="OutputConflictReplaceAll" xml:space="preserve">
     <value>Alle ersetzen</value>
+  </data>
+  <data name="ResumeUnavailableTitle" xml:space="preserve">
+    <value>Datei kann nicht fortgesetzt werden</value>
+  </data>
+  <data name="ResumeUnavailableMessage" xml:space="preserve">
+    <value>Diese Datei kann aus dem gespeicherten Zustand nicht fortgesetzt werden.\nDu kannst sie ersetzen oder überspringen.</value>
   </data>
   <data name="FileList" xml:space="preserve">
     <value>Dateiliste</value>
