@@ -15,6 +15,7 @@ internal sealed class ProcessFrameEncoderSession : IFrameEncoderSession
     private CancellationTokenRegistration _registration;
     private string _lastError = string.Empty;
     private bool _opened;
+    private bool _isPaused;
 
     public ProcessFrameEncoderSession(
         string fileName,
@@ -35,6 +36,8 @@ internal sealed class ProcessFrameEncoderSession : IFrameEncoderSession
     public string? LastError => string.IsNullOrWhiteSpace(_lastError) ? null : _lastError;
 
     public bool SupportsPerFrameTimestamps => false;
+
+    public bool IsAlive => _process is not null && !_process.HasExited;
 
     internal Stream InputStream
     {
@@ -124,6 +127,48 @@ internal sealed class ProcessFrameEncoderSession : IFrameEncoderSession
             TryKillTree(_process);
             throw;
         }
+    }
+
+    public void SetPaused(bool paused)
+    {
+        EnsureOpened();
+        if (_process is null || _process.HasExited || _isPaused == paused)
+        {
+            return;
+        }
+
+        if (paused)
+        {
+            ProcessPauseHelper.Suspend(_process);
+            _isPaused = true;
+        }
+        else
+        {
+            ProcessPauseHelper.Resume(_process);
+            _isPaused = false;
+        }
+    }
+
+    public void Abort()
+    {
+        if (_process is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_isPaused && !_process.HasExited)
+            {
+                ProcessPauseHelper.Resume(_process);
+                _isPaused = false;
+            }
+        }
+        catch
+        {
+        }
+
+        TryKillTree(_process);
     }
 
     public void Dispose()

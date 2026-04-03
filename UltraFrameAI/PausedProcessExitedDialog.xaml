@@ -1,8 +1,8 @@
-<Window x:Class="UltraFrameAI.ResumeUnavailableDialog"
+<Window x:Class="UltraFrameAI.PausedProcessExitedDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:UltraFrameAI"
-        Title="{local:Loc ResumeUnavailableTitle}"
+        Title="{local:Loc PausedProcessExitedTitle}"
         Width="720"
         SizeToContent="Height"
         MinWidth="640"
@@ -36,7 +36,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="{local:Loc ResumeUnavailableTitle}"
+                        <TextBlock Text="{local:Loc PausedProcessExitedTitle}"
                                    FontSize="22"
                                    FontWeight="SemiBold" />
                         <TextBlock Text="{Binding MessageText}"
@@ -61,7 +61,7 @@
                     BorderBrush="#22344D"
                     BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="{local:Loc OutputConflictTitle}"
+                    <TextBlock Text="{local:Loc PausedProcessExitedFileLabel}"
                                Style="{StaticResource CaptionStyle}" />
                     <TextBlock Text="{Binding FileName}"
                                Margin="0,6,0,0"
@@ -73,51 +73,27 @@
             <Border Grid.Row="4"
                     Background="#0E1628"
                     CornerRadius="14"
-                    Padding="10"
+                    Padding="14"
                     BorderBrush="#22344D"
                     BorderThickness="1">
                 <StackPanel>
-                    <Button Click="ReasonToggle_Click"
-                            HorizontalAlignment="Left"
-                            Background="#16243D"
-                            BorderBrush="{StaticResource CardBorderBrush}"
-                            BorderThickness="1"
-                            Padding="10,4"
-                            MinHeight="32"
-                            Cursor="Hand">
-                        <TextBlock Text="{local:Loc ResumeUnavailableReasonHeader}"
-                                   Style="{StaticResource CaptionStyle}" />
-                    </Button>
-                    <TextBlock Text="{Binding ReasonText}"
-                               Margin="0,10,0,0"
-                               Foreground="{StaticResource TextSecondaryBrush}"
+                    <TextBlock Text="{local:Loc PausedProcessExitedProcessLabel}"
+                               Style="{StaticResource CaptionStyle}" />
+                    <TextBlock Text="{Binding ProcessName}"
+                               Margin="0,6,0,0"
                                TextWrapping="Wrap"
-                               Visibility="{Binding IsReasonVisible}" />
+                               FontWeight="SemiBold" />
                 </StackPanel>
             </Border>
 
-            <Grid Grid.Row="6">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Button Content="{local:Loc OutputConflictReplace}"
-                        Click="Replace_Click"
-                        Height="48"
-                        MinWidth="170"
-                        Background="#1F3A52"
-                        BorderBrush="{StaticResource AccentBrush}"
-                        Foreground="{StaticResource TextPrimaryBrush}" />
-                <Button Grid.Column="2"
-                        Content="{local:Loc OutputConflictSkip}"
-                        Click="Skip_Click"
-                        Height="48"
-                        MinWidth="170"
-                        Background="#16243D"
-                        BorderBrush="{StaticResource CardBorderBrush}"
-                        Foreground="{StaticResource TextPrimaryBrush}" />
-            </Grid>
+            <Button Grid.Row="6"
+                    Content="{local:Loc PausedProcessExitedOk}"
+                    Click="Ok_Click"
+                    Height="48"
+                    MinWidth="180"
+                    Background="#1F3A52"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    Foreground="{StaticResource TextPrimaryBrush}" />
         </Grid>
     </Border>
 </Window>

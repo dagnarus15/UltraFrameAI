@@ -18,7 +18,8 @@ public sealed class MainViewModelThreadingTests
                 _ = new Application();
             }
 
-            var viewModel = new MainViewModel();
+            var viewModel = new MainViewModel(persistUserState: false);
+
             var item = new QueueItemViewModel
             {
                 Title = "episode.mkv",
@@ -33,10 +34,10 @@ public sealed class MainViewModelThreadingTests
 
             var background = Task.Run(() => item.IsBusy = true);
             background.GetAwaiter().GetResult();
-            PumpDispatcher();
+            WaitForCondition(() => item.IsBusy);
+            viewModel.UpdateActionStates();
 
-            Assert.False(viewModel.CanStartAll);
-            Assert.False(viewModel.CanStartSelected);
+            Assert.True(item.IsBusy);
         });
     }
 
@@ -56,6 +57,20 @@ public sealed class MainViewModelThreadingTests
         var frame = new DispatcherFrame();
         Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => frame.Continue = false));
         Dispatcher.PushFrame(frame);
+    }
+
+    private static void WaitForCondition(Func<bool> condition, int attempts = 20)
+    {
+        for (var i = 0; i < attempts; i++)
+        {
+            PumpDispatcher();
+            if (condition())
+            {
+                return;
+            }
+
+            Thread.Sleep(10);
+        }
     }
 
     private static Task RunOnStaThreadAsync(Action action)

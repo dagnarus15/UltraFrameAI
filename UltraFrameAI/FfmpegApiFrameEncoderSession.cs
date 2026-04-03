@@ -56,6 +56,8 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
 
     public bool SupportsPerFrameTimestamps => true;
 
+    public bool IsAlive => true;
+
     public Task OpenAsync(CancellationToken cancellationToken)
     {
         if (_opened)
@@ -271,6 +273,14 @@ internal sealed unsafe class FfmpegApiFrameEncoderSession : IFrameEncoderSession
         _pendingTimestampSeconds = timestampSeconds;
         _hasPendingTimestamp = true;
         return ValueTask.CompletedTask;
+    }
+
+    public void SetPaused(bool paused)
+    {
+    }
+
+    public void Abort()
+    {
     }
 
     public Task FlushAsync(CancellationToken cancellationToken)

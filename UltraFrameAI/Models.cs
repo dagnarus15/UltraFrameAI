@@ -20,6 +20,7 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     private bool _forceOverwrite;
     private bool _resumeRequested;
     private int _resumeProcessedFrames;
+    private string _resumeSourceOutputPath = string.Empty;
     private bool _skipRequested;
     private bool _isSkipped;
     private bool _isInterrupted;
@@ -121,6 +122,12 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         set => SetField(ref _resumeProcessedFrames, value);
     }
 
+    public string ResumeSourceOutputPath
+    {
+        get => _resumeSourceOutputPath;
+        set => SetField(ref _resumeSourceOutputPath, value);
+    }
+
     public bool SkipRequested
     {
         get => _skipRequested;
@@ -171,6 +178,7 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         ForceOverwrite = false;
         ResumeRequested = false;
         ResumeProcessedFrames = 0;
+        ResumeSourceOutputPath = string.Empty;
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -348,7 +356,8 @@ public sealed record PipelineProgress(
     string? LogLine = null,
     bool IsHeartbeat = false,
     string StageElapsedText = "--:--:--",
-    string? CurrentFrameTimestampText = null);
+    string? CurrentFrameTimestampText = null,
+    string ProcessingFpsText = "--");
 
 public static class UiCollections
 {

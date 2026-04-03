@@ -29,6 +29,8 @@ internal sealed class StreamMuxedProcessFrameEncoderSession : IFrameEncoderSessi
 
     public bool SupportsPerFrameTimestamps => true;
 
+    public bool IsAlive => _finalEncodeSession?.IsAlive ?? true;
+
     public async Task OpenAsync(CancellationToken cancellationToken)
     {
         if (_opened)
@@ -108,6 +110,22 @@ internal sealed class StreamMuxedProcessFrameEncoderSession : IFrameEncoderSessi
         if (_finalEncodeSession is not null)
         {
             await _finalEncodeSession.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public void SetPaused(bool paused)
+    {
+        _finalEncodeSession?.SetPaused(paused);
+    }
+
+    public void Abort()
+    {
+        try
+        {
+            _finalEncodeSession?.Abort();
+        }
+        catch
+        {
         }
     }
 

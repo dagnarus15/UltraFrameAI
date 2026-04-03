@@ -17,6 +17,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private sealed record RecentRootFoldersCacheEntry(List<string> Folders, bool Complete);
     private sealed record AntiFlickerProfilesCacheEntry(Dictionary<string, AntiFlickerPresetState> Presets, bool Complete);
     private sealed record NativeEncoderBackendCacheEntry(bool Enabled, bool Complete);
+    private sealed record PersistedQueueItemCacheEntry(string SourcePath, string Title, string OutputPath, bool IsChecked);
+    private sealed record ResumePreflightTelemetry(string? PhaseText = null, string? DetailText = null, string? EtaText = null, string? FpsText = null);
+    private sealed class ResumePreflightUiState
+    {
+        public string PhaseText { get; set; } = string.Empty;
+        public string DetailText { get; set; } = string.Empty;
+        public string? EtaTextOverride { get; set; }
+        public string FpsText { get; set; } = "--";
+    }
     private sealed record AppSettingsCacheEntry(
         string RootFolder,
         string OutputFolder,
@@ -47,9 +56,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool PreserveIncompleteOutput,
         bool UseNativeEncoderBackend,
         bool? RepairBrokenTimestamps,
+        List<PersistedQueueItemCacheEntry>? QueueItems,
+        string? SelectedItemSourcePath,
         bool Complete);
 
     private readonly PipelineService _pipeline;
+    private readonly bool _persistUserState;
     private readonly RelayCommand _browseRootFolderCommand;
     private readonly RelayCommand _browseRootFileCommand;
     private readonly RelayCommand _browseOutputCommand;
@@ -60,6 +72,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly RelayCommand _removeItemCommand;
     private readonly RelayCommand _cancelCommand;
     private readonly RelayCommand _skipCurrentCommand;
+    private readonly RelayCommand _togglePauseCommand;
     private readonly AsyncRelayCommand _scanCommand;
     private readonly AsyncRelayCommand _startCommand;
     private readonly AsyncRelayCommand _startSelectedCommand;
@@ -68,26 +81,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
     private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
     private readonly string _repoRoot = FindRepoRoot();
-    private readonly string _lastRootFolderPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "UltraFrameAI",
-        "last-root-folder.txt");
-    private readonly string _recentRootFoldersPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "UltraFrameAI",
-        "recent-root-folders.txt");
-    private readonly string _antiFlickerProfilesPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "UltraFrameAI",
-        "anti-flicker-presets.json");
-    private readonly string _nativeEncoderBackendPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "UltraFrameAI",
-        "native-encoder-backend.json");
-    private readonly string _appSettingsPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "UltraFrameAI",
-        "app-settings.json");
+    private readonly string _lastRootFolderPath;
+    private readonly string _recentRootFoldersPath;
+    private readonly string _antiFlickerProfilesPath;
+    private readonly string _nativeEncoderBackendPath;
+    private readonly string _appSettingsPath;
 
     private CancellationTokenSource? _runCts;
     private CancellationTokenSource? _scanCts;
@@ -136,6 +134,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _elapsedText = "--:--:--";
     private string _etaText = "--:--:--";
     private string _stageDurationText = "--:--:--";
+    private string _processingFpsText = "--";
     private string _queueSummary = string.Empty;
     private string _currentFileName = string.Empty;
     private ImageSource? _renderPreviewOriginalImage;
@@ -168,13 +167,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly Dictionary<int, (int current, int total)> _sessionFrameProgress = new();
     private OutputConflictDecision? _sessionOutputDecision;
     private bool _isRenderMode;
+    private bool _isRenderPaused;
     private bool _closeRenderModeAfterCurrentSkip;
+    private bool _keepRenderModeForAutoResume;
+    private readonly List<QueueItemViewModel> _pendingAutoResumeItems = new();
     private string _lastRunProcessedFiles = "--";
     private string _lastRunElapsed = "--:--:--";
     private string _lastRunFps = "--";
 
-    public MainViewModel()
+    public MainViewModel() : this(true)
     {
+    }
+
+    public MainViewModel(bool persistUserState)
+    {
+        _persistUserState = persistUserState;
+        var settingsRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "UltraFrameAI");
+        _lastRootFolderPath = Path.Combine(settingsRoot, "last-root-folder.txt");
+        _recentRootFoldersPath = Path.Combine(settingsRoot, "recent-root-folders.txt");
+        _antiFlickerProfilesPath = Path.Combine(settingsRoot, "anti-flicker-presets.json");
+        _nativeEncoderBackendPath = Path.Combine(settingsRoot, "native-encoder-backend.json");
+        _appSettingsPath = Path.Combine(settingsRoot, "app-settings.json");
         _pipeline = new PipelineService();
         Items = new ObservableCollection<QueueItemViewModel>();
         CurrentRenderItems = new ObservableCollection<QueueItemViewModel>();
@@ -195,6 +210,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _removeItemCommand = new RelayCommand(RemoveItem, CanRemoveItem);
         _cancelCommand = new RelayCommand(CancelRun, () => IsBusy);
         _skipCurrentCommand = new RelayCommand(SkipCurrentItem, () => IsBusy);
+        _togglePauseCommand = new RelayCommand(TogglePause, () => CanPauseRender);
         _scanCommand = new AsyncRelayCommand(() => ScanAsync(showOverlay: true), () => !IsBusy);
         _startCommand = new AsyncRelayCommand(StartAsync, () => !IsBusy);
         _startSelectedCommand = new AsyncRelayCommand(StartSelectedAsync, () => !IsBusy);
@@ -270,6 +286,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public ICommand SkipCurrentCommand => _skipCurrentCommand;
 
+    public ICommand TogglePauseCommand => _togglePauseCommand;
+
     public ICommand ScanCommand => _scanCommand;
 
     public ICommand StartCommand => _startCommand;
@@ -297,6 +315,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _selectedItem, value))
             {
                 UpdateSelectionDetails();
+                PersistAppSettings();
             }
         }
     }
@@ -312,9 +331,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _startCommand.RaiseCanExecuteChanged();
                 _cancelCommand.RaiseCanExecuteChanged();
                 _skipCurrentCommand.RaiseCanExecuteChanged();
+                _togglePauseCommand.RaiseCanExecuteChanged();
                 _resetRootCommand.RaiseCanExecuteChanged();
                 _removeItemCommand.RaiseCanExecuteChanged();
                 UpdateActionStates();
+                UpdatePauseStateUi();
                 OnQueueStateChanged();
             }
         }
@@ -323,7 +344,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public bool IsRenderMode
     {
         get => _isRenderMode;
-        private set => SetField(ref _isRenderMode, value);
+        private set
+        {
+            if (SetField(ref _isRenderMode, value))
+            {
+                UpdatePauseStateUi();
+            }
+        }
+    }
+
+    public bool IsRenderPaused
+    {
+        get => _isRenderPaused;
+        private set
+        {
+            if (SetField(ref _isRenderPaused, value))
+            {
+                UpdatePauseStateUi();
+            }
+        }
     }
 
     public string RootFolder
@@ -851,6 +890,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetField(ref _stageDurationText, value);
     }
 
+    public string ProcessingFpsText
+    {
+        get => _processingFpsText;
+        private set => SetField(ref _processingFpsText, value);
+    }
+
+    public bool IsRenderPreviewLoading => string.Equals(CurrentItemDetail, LocalizedStrings.Get("ResumePreflightLoadingFile"), StringComparison.Ordinal);
+
+    public string RenderPreviewLoadingText => LocalizedStrings.Get("ResumePreflightLoadingFile");
+
+    public bool CanPauseRender =>
+        IsBusy
+        && IsRenderMode
+        && CurrentRenderItems.Count > 0
+        && !string.IsNullOrWhiteSpace(CurrentItemTitle)
+        && !string.Equals(CurrentStage, LocalizedStrings.LogPreparing, StringComparison.Ordinal);
+
+    public string RenderPauseGlyph => IsRenderPaused ? "\uE768" : "\uE769";
+
+    public string RenderPauseToolTip => IsRenderPaused
+        ? LocalizedStrings.Get("RenderResume")
+        : LocalizedStrings.Get("RenderPause");
+
     public string QueueSummary
     {
         get => _queueSummary;
@@ -1210,6 +1272,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 SelectedItem ??= Items[0];
                 UpdateSelectionDetails();
             }
+
+            PersistAppSettings();
         }
         catch (OperationCanceledException)
         {
@@ -1312,28 +1376,54 @@ public sealed class MainViewModel : INotifyPropertyChanged
         try
         {
             IsBusy = true;
-            IsRenderMode = true;
-            await Task.Yield();
+            _pipeline.SetPaused(false);
+            IsRenderPaused = false;
             RememberRecentFolder(RootFolder, persist: true);
             _runCts = new CancellationTokenSource();
             _closeRenderModeAfterCurrentSkip = false;
+            _keepRenderModeForAutoResume = false;
+            _pendingAutoResumeItems.Clear();
             ResetItemUi(runItems);
-            CurrentRenderItems.Clear();
-            foreach (var item in runItems)
-            {
-                CurrentRenderItems.Add(item);
-            }
-            ClearRenderPreviewPaths();
             Log(startMessage);
             _sessionOutputDecision = null;
             _sessionFrameProgress.Clear();
             var sessionWatch = Stopwatch.StartNew();
 
+            CurrentRenderItems.Clear();
+            foreach (var item in runItems)
+            {
+                CurrentRenderItems.Add(item);
+            }
+
+            ClearRenderPreviewPaths();
+            CurrentStage = LocalizedStrings.LogPreparing;
+            CurrentItemTitle = runItems[0].Title;
+            CurrentItemDetail = string.Empty;
+            CurrentStatusLine = LocalizedStrings.LogPreparing;
+            UpdateCurrentStageDisplayText();
+            UpdateRenderPreviewLoadingState();
+            UpdatePauseStateUi();
+            IsRenderMode = true;
+            await Task.Yield();
+
             var options = BuildOptions();
             var effectiveItems = await PrepareRunListAsync(runItems, options, _runCts.Token).ConfigureAwait(true);
-            if (effectiveItems.Count > 0)
+            while (effectiveItems.Count > 0)
             {
+                CurrentRenderItems.Clear();
+                foreach (var item in effectiveItems)
+                {
+                    CurrentRenderItems.Add(item);
+                }
+
+                ClearRenderPreviewPaths();
                 await _pipeline.RunAsync(effectiveItems, options, HandleProgress, HandleRenderPreviewFrame, _runCts.Token).ConfigureAwait(true);
+                if (_runCts.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                effectiveItems = await PrepareNextRunListAsync(effectiveItems, options, _runCts.Token).ConfigureAwait(true);
             }
             Log(LocalizedStrings.LogBatchFinished);
             sessionWatch.Stop();
@@ -1352,6 +1442,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             _runCts?.Dispose();
             _runCts = null;
+            _pipeline.SetPaused(false);
+            IsRenderPaused = false;
             IsBusy = false;
             IsRenderMode = false;
             ClearRenderPreviewPaths();
@@ -1458,9 +1550,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             CurrentStatusLine = progress.CurrentStatus;
             _currentItemIndex = progress.ItemIndex;
             UpdateCurrentStageDisplayText();
+            UpdateRenderPreviewLoadingState();
+            UpdatePauseStateUi();
             CurrentFileName = progress.ItemTitle;
             StatusSummary = progress.Summary;
             StageDurationText = progress.StageElapsedText;
+            ProcessingFpsText = progress.ProcessingFpsText;
             LastHeartbeat = progress.IsHeartbeat ? $"{DateTime.Now:HH:mm:ss} {progress.CurrentStatus}" : StatusSummary;
             UpdateRenderPreviewIndicators(progress.EtaText, progress.CurrentStatus);
 
@@ -1496,7 +1591,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        _closeRenderModeAfterCurrentSkip = IsLastPendingRenderItem(current);
+        if (IsRenderPaused)
+        {
+            _pipeline.SetPaused(false);
+            IsRenderPaused = false;
+        }
+
+        _closeRenderModeAfterCurrentSkip = !_keepRenderModeForAutoResume && IsLastPendingRenderItem(current);
+        _keepRenderModeForAutoResume = false;
         current.SkipRequested = true;
         current.IsInterrupted = true;
         if (_closeRenderModeAfterCurrentSkip)
@@ -1504,6 +1606,150 @@ public sealed class MainViewModel : INotifyPropertyChanged
             IsRenderMode = false;
         }
         Log(LocalizedStrings.LogSkippingEncode);
+    }
+
+    private void TogglePause()
+    {
+        if (!CanPauseRender)
+        {
+            return;
+        }
+
+        var paused = !IsRenderPaused;
+        var pauseFailureReason = _pipeline.TrySetPaused(paused);
+        if (!paused && !string.IsNullOrWhiteSpace(pauseFailureReason))
+        {
+            IsRenderPaused = false;
+            var current = GetCurrentItem();
+            if (current is not null)
+            {
+                if (!_pendingAutoResumeItems.Contains(current))
+                {
+                    _pendingAutoResumeItems.Add(current);
+                }
+
+                _keepRenderModeForAutoResume = true;
+                current.SkipRequested = true;
+                current.IsInterrupted = true;
+            }
+
+            Log(LocalizedStrings.LogBatchFailed(LocalizedStrings.Get("PausedProcessExitedLog").Replace("{0}", pauseFailureReason)));
+            _pipeline.RequestStopAfterCurrentItem();
+            _pipeline.AbortCurrentItem();
+            ShowPausedProcessExitedDialog(current?.Title ?? CurrentItemTitle, pauseFailureReason);
+            return;
+        }
+
+        IsRenderPaused = paused;
+    }
+
+    private async Task<List<QueueItemViewModel>> PrepareAutoResumeRunListAsync(PipelineOptions options, CancellationToken ct)
+    {
+        if (_pendingAutoResumeItems.Count == 0)
+        {
+            return new List<QueueItemViewModel>();
+        }
+
+        var candidates = _pendingAutoResumeItems
+            .Distinct()
+            .ToArray();
+        _pendingAutoResumeItems.Clear();
+
+        var result = new List<QueueItemViewModel>(candidates.Length);
+        foreach (var item in candidates)
+        {
+            ct.ThrowIfCancellationRequested();
+            item.SkipRequested = false;
+            item.ForceOverwrite = false;
+            item.ResumeRequested = false;
+            item.ResumeProcessedFrames = 0;
+            item.IsSkipped = false;
+            item.IsInterrupted = false;
+
+            var resumeResult = await TryGetAutoResumeInfoAsync(item, options, ct).ConfigureAwait(true);
+            if (!resumeResult.Success)
+            {
+                Log(LocalizedStrings.Get("PausedProcessExitedAutoResumeFailed").Replace("{0}", item.Title));
+                continue;
+            }
+
+            item.ResumeRequested = true;
+            item.ResumeProcessedFrames = resumeResult.ProcessedFrames;
+            result.Add(item);
+        }
+
+        if (result.Count > 0)
+        {
+            Log(LocalizedStrings.Get("PausedProcessExitedAutoResumeStarting"));
+        }
+
+        return result;
+    }
+
+    private async Task<(bool Success, int ProcessedFrames)> TryGetAutoResumeInfoAsync(
+        QueueItemViewModel item,
+        PipelineOptions options,
+        CancellationToken ct)
+    {
+        const int maxAttempts = 5;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            ct.ThrowIfCancellationRequested();
+            item.ResumeSourceOutputPath = string.Empty;
+            var result = await TryGetResumeInfoAsync(item, options, ct).ConfigureAwait(true);
+            if (result.Success)
+            {
+                return result;
+            }
+
+            if (attempt >= maxAttempts)
+            {
+                break;
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1), ct).ConfigureAwait(true);
+        }
+
+        return (false, 0);
+    }
+
+    private async Task<List<QueueItemViewModel>> PrepareNextRunListAsync(
+        IReadOnlyList<QueueItemViewModel> previousRunItems,
+        PipelineOptions options,
+        CancellationToken ct)
+    {
+        var autoResumeItems = await PrepareAutoResumeRunListAsync(options, ct).ConfigureAwait(true);
+        if (previousRunItems.Count == 0)
+        {
+            return autoResumeItems;
+        }
+
+        var result = new List<QueueItemViewModel>(previousRunItems.Count);
+        var autoResumeSet = new HashSet<QueueItemViewModel>(autoResumeItems);
+
+        foreach (var item in previousRunItems)
+        {
+            if (autoResumeSet.Contains(item))
+            {
+                result.Add(item);
+                continue;
+            }
+
+            if (!item.IsCompleted && !item.IsInterruptedOrSkipped)
+            {
+                result.Add(item);
+            }
+        }
+
+        foreach (var item in autoResumeItems)
+        {
+            if (!result.Contains(item))
+            {
+                result.Add(item);
+            }
+        }
+
+        return result;
     }
 
     private bool IsLastPendingRenderItem(QueueItemViewModel current)
@@ -1602,21 +1848,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
             item.ForceOverwrite = false;
             item.ResumeRequested = false;
             item.ResumeProcessedFrames = 0;
+            item.ResumeSourceOutputPath = string.Empty;
             item.IsSkipped = false;
             item.IsInterrupted = false;
 
             var overwriteAllowed = options.Overwrite;
             if (File.Exists(item.OutputPath) && !overwriteAllowed)
             {
+                if (PipelineService.IsCompletedOutputMatch(item.OutputPath, options))
+                {
+                    MarkItemSkipped(item);
+                    continue;
+                }
+
                 var decision = await ResolveOutputConflictAsync(item).ConfigureAwait(true);
                 switch (decision)
                 {
                     case OutputConflictDecision.ResumeAll:
                         _sessionOutputDecision = OutputConflictDecision.ResumeAll;
-                        if (TryGetResumeInfo(item, options, out var resumeProcessedFrames))
+                        if (await TryGetResumeInfoAsync(item, options, ct).ConfigureAwait(true) is var resumeAllResult && resumeAllResult.Success)
                         {
                             item.ResumeRequested = true;
-                            item.ResumeProcessedFrames = resumeProcessedFrames;
+                            item.ResumeProcessedFrames = resumeAllResult.ProcessedFrames;
                             list.Add(item);
                             continue;
                         }
@@ -1633,10 +1886,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                         MarkItemSkipped(item);
                         continue;
                     case OutputConflictDecision.Resume:
-                        if (TryGetResumeInfo(item, options, out resumeProcessedFrames))
+                        if (await TryGetResumeInfoAsync(item, options, ct).ConfigureAwait(true) is var resumeResult && resumeResult.Success)
                         {
                             item.ResumeRequested = true;
-                            item.ResumeProcessedFrames = resumeProcessedFrames;
+                            item.ResumeProcessedFrames = resumeResult.ProcessedFrames;
                             list.Add(item);
                             continue;
                         }
@@ -1652,10 +1905,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
                         continue;
                     case OutputConflictDecision.ReplaceAll:
                         _sessionOutputDecision = OutputConflictDecision.ReplaceAll;
+                        ResetExistingOutputState(item);
                         item.ForceOverwrite = true;
                         list.Add(item);
                         continue;
                     case OutputConflictDecision.Replace:
+                        ResetExistingOutputState(item);
                         item.ForceOverwrite = true;
                         list.Add(item);
                         continue;
@@ -1671,10 +1926,115 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 }
             }
 
+            if (overwriteAllowed && File.Exists(item.OutputPath) && !item.ResumeRequested)
+            {
+                ResetExistingOutputState(item);
+            }
+
             list.Add(item);
         }
 
         return list;
+    }
+
+    private async Task<(bool Success, int ProcessedFrames)> TryGetResumeInfoAsync(QueueItemViewModel item, PipelineOptions options, CancellationToken ct)
+    {
+        var statusState = new ResumePreflightUiState
+        {
+            PhaseText = LocalizedStrings.Get("ResumePreflightChecking"),
+            DetailText = LocalizedStrings.Get("ResumePreflightLoadingFile"),
+            FpsText = "--"
+        };
+        var statusSync = new object();
+        using var statusCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var stopwatch = Stopwatch.StartNew();
+
+        void PublishStatus()
+        {
+            string phaseText;
+            string detailText;
+            string? etaTextOverride;
+            string fpsText;
+            lock (statusSync)
+            {
+                phaseText = statusState.PhaseText;
+                detailText = statusState.DetailText;
+                etaTextOverride = statusState.EtaTextOverride;
+                fpsText = statusState.FpsText;
+            }
+
+            PostToUi(() => ApplyResumePreflightStatus(item, phaseText, detailText, stopwatch.Elapsed, etaTextOverride, fpsText));
+        }
+
+        PublishStatus();
+        var statusLoop = Task.Run(async () =>
+        {
+            try
+            {
+                while (!statusCts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, statusCts.Token).ConfigureAwait(false);
+                    PublishStatus();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }, statusCts.Token);
+
+        try
+        {
+            var result = await Task.Run(() =>
+            {
+                var success = TryGetResumeInfo(
+                    item,
+                    options,
+                    out var processedFrames,
+                    phase =>
+                    {
+                        lock (statusSync)
+                        {
+                            statusState.PhaseText = phase;
+                            statusState.DetailText = LocalizedStrings.Get("ResumePreflightLoadingFile");
+                            statusState.EtaTextOverride = null;
+                            statusState.FpsText = "--";
+                        }
+                    },
+                    telemetry =>
+                    {
+                        lock (statusSync)
+                        {
+                            if (!string.IsNullOrWhiteSpace(telemetry.PhaseText))
+                            {
+                                statusState.PhaseText = telemetry.PhaseText;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(telemetry.DetailText))
+                            {
+                                statusState.DetailText = telemetry.DetailText;
+                            }
+
+                            statusState.EtaTextOverride = telemetry.EtaText;
+                            statusState.FpsText = string.IsNullOrWhiteSpace(telemetry.FpsText) ? "--" : telemetry.FpsText;
+                        }
+                    });
+                return (success, processedFrames);
+            }, ct).ConfigureAwait(true);
+
+            PublishStatus();
+            return result;
+        }
+        finally
+        {
+            statusCts.Cancel();
+            try
+            {
+                await statusLoop.ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
     }
 
     private async Task<OutputConflictDecision> ResolveOutputConflictAsync(QueueItemViewModel item)
@@ -1711,15 +2071,40 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private async Task<OutputConflictDecision> ResolveResumeFallbackAsync(QueueItemViewModel item, PipelineOptions options)
     {
         await Task.Yield();
-        return ShowResumeUnavailableDialog(item);
+        return ShowResumeUnavailableDialog(item, GetResumeUnavailableReason(item, options));
     }
 
-    private bool TryGetResumeInfo(QueueItemViewModel item, PipelineOptions options, out int processedFrames)
+    private bool TryGetResumeInfo(
+        QueueItemViewModel item,
+        PipelineOptions options,
+        out int processedFrames,
+        Action<string>? reportPhase = null,
+        Action<ResumePreflightTelemetry>? reportTelemetry = null)
     {
         processedFrames = 0;
+        item.ResumeSourceOutputPath = item.OutputPath;
+        if (!IsResumeOutputUsable(item.OutputPath))
+        {
+            reportPhase?.Invoke(LocalizedStrings.Get("ResumePreflightRecovering"));
+            reportTelemetry?.Invoke(new ResumePreflightTelemetry(
+                PhaseText: LocalizedStrings.Get("ResumePreflightRecovering"),
+                DetailText: LocalizedStrings.Get("ResumePreflightLoadingFile"),
+                FpsText: "--"));
+            if (!TryRecoverResumeOutput(
+                    item,
+                    options,
+                    out var recoveredOutputPath,
+                    telemetry => reportTelemetry?.Invoke(telemetry)))
+            {
+                return false;
+            }
+
+            item.ResumeSourceOutputPath = recoveredOutputPath;
+        }
+
         if (!PipelineService.TryLoadResumeState(item.OutputPath, out var json) || string.IsNullOrWhiteSpace(json))
         {
-            return false;
+            return TryEstimateResumeInfoFromOutput(item, options, out processedFrames);
         }
 
         try
@@ -1740,7 +2125,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var expectedTargetHeight = options.UseX265 ? 2160 : 1080;
             var isValid = canResume
                 && !complete
-                && parsedProcessedFrames > 0
                 && totalFrames > parsedProcessedFrames
                 && string.Equals(sourcePath, item.SourcePath, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(outputPath, item.OutputPath, StringComparison.OrdinalIgnoreCase)
@@ -1748,9 +2132,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 && targetHeight == expectedTargetHeight
                 && string.Equals(upscalerBackend, options.UpscalerBackend.ToString(), StringComparison.Ordinal)
                 && string.Equals(refinerBackend, options.RefinerBackend.ToString(), StringComparison.Ordinal);
+            if (isValid && parsedProcessedFrames <= 0)
+            {
+                return TryEstimateResumeInfoFromOutput(item, options, out processedFrames);
+            }
+
             if (!isValid)
             {
-                processedFrames = 0;
+                return TryEstimateResumeInfoFromOutput(item, options, out processedFrames);
             }
             else
             {
@@ -1761,21 +2150,545 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         catch
         {
+            return TryEstimateResumeInfoFromOutput(item, options, out processedFrames);
+        }
+    }
+
+    private void ApplyResumePreflightStatus(
+        QueueItemViewModel item,
+        string phaseText,
+        string detailText,
+        TimeSpan elapsed,
+        string? etaTextOverride,
+        string fpsText)
+    {
+        CurrentStage = LocalizedStrings.LogPreparing;
+        CurrentStatusLine = phaseText;
+        UpdateCurrentStageDisplayText();
+        CurrentItemTitle = item.Title;
+        CurrentItemDetail = detailText;
+        CurrentFrameTimestampText = string.Empty;
+        OverallProgress = 0;
+        ElapsedText = FormatDuration(elapsed);
+        StageDurationText = FormatDuration(elapsed);
+        EtaText = string.IsNullOrWhiteSpace(etaTextOverride)
+            ? EstimateResumePreflightEta(item, phaseText, elapsed)
+            : etaTextOverride;
+        ProcessingFpsText = string.IsNullOrWhiteSpace(fpsText) ? "--" : fpsText;
+        StatusSummary = phaseText;
+        CurrentFileName = item.Title;
+
+        item.Stage = LocalizedStrings.LogPreparing;
+        item.Progress = 0;
+        item.ProgressText = "0%";
+        item.OutputState = phaseText;
+        item.Detail = detailText;
+        item.ElapsedText = FormatDuration(elapsed);
+        item.EtaText = EtaText;
+        item.IsBusy = true;
+
+        UpdateRenderPreviewLoadingState();
+        UpdatePauseStateUi();
+        OnQueueStateChanged();
+    }
+
+    private string EstimateResumePreflightEta(QueueItemViewModel item, string phaseText, TimeSpan elapsed)
+    {
+        try
+        {
+            var sizeMb = File.Exists(item.OutputPath)
+                ? new FileInfo(item.OutputPath).Length / (1024d * 1024d)
+                : 0d;
+            var recovering = string.Equals(phaseText, LocalizedStrings.Get("ResumePreflightRecovering"), StringComparison.Ordinal);
+            var totalSeconds = (recovering
+                ? Math.Clamp(10 + sizeMb / 35d, 10, 180)
+                : Math.Clamp(4 + sizeMb / 180d, 5, 30)) * 10;
+            var remaining = GetExtendedCountdown(TimeSpan.FromSeconds(totalSeconds), elapsed, TimeSpan.FromSeconds(15));
+            return $"~{FormatDuration(remaining)}";
+        }
+        catch
+        {
+            return "~00:01:00";
+        }
+    }
+
+    private static TimeSpan GetExtendedCountdown(TimeSpan estimatedTotal, TimeSpan elapsed, TimeSpan extensionStep)
+    {
+        var remaining = estimatedTotal - elapsed;
+        if (remaining > TimeSpan.Zero)
+        {
+            return remaining;
+        }
+
+        var step = extensionStep <= TimeSpan.Zero ? TimeSpan.FromSeconds(15) : extensionStep;
+        var overtime = -remaining;
+        var chunks = (int)Math.Floor(overtime.TotalSeconds / step.TotalSeconds) + 1;
+        return step * chunks - overtime;
+    }
+
+    private bool TryEstimateResumeInfoFromOutput(QueueItemViewModel item, PipelineOptions options, out int processedFrames)
+    {
+        processedFrames = 0;
+        try
+        {
+            var resumeOutputPath = string.IsNullOrWhiteSpace(item.ResumeSourceOutputPath) ? item.OutputPath : item.ResumeSourceOutputPath;
+            if (!File.Exists(resumeOutputPath))
+            {
+                return false;
+            }
+
+            var ffprobePath = ResolveFfprobePath();
+            if (string.IsNullOrWhiteSpace(ffprobePath) || !File.Exists(ffprobePath))
+            {
+                return false;
+            }
+
+            if (!IsResumeOutputUsable(resumeOutputPath, ffprobePath))
+            {
+                return false;
+            }
+
+            var sourceDuration = ProbeMediaDurationSeconds(ffprobePath, item.SourcePath);
+            var outputDuration = ProbeMediaDurationSeconds(ffprobePath, resumeOutputPath);
+            var sourceFps = ProbeMediaFps(ffprobePath, item.SourcePath);
+            if (sourceDuration <= 0 || outputDuration <= 0 || sourceFps <= 0)
+            {
+                return false;
+            }
+
+            if (outputDuration >= sourceDuration * 0.995)
+            {
+                return false;
+            }
+
+            processedFrames = Math.Max(1, (int)Math.Round(outputDuration * sourceFps, MidpointRounding.AwayFromZero));
+            var estimatedTotalFrames = Math.Max(processedFrames + 1, (int)Math.Round(sourceDuration * sourceFps, MidpointRounding.AwayFromZero));
+            return processedFrames > 0 && processedFrames < estimatedTotalFrames;
+        }
+        catch
+        {
             processedFrames = 0;
             return false;
         }
     }
 
-    private OutputConflictDecision ShowResumeUnavailableDialog(QueueItemViewModel item)
+    private bool TryRecoverResumeOutput(
+        QueueItemViewModel item,
+        PipelineOptions options,
+        out string recoveredOutputPath,
+        Action<ResumePreflightTelemetry>? progressCallback = null)
+    {
+        recoveredOutputPath = string.Empty;
+        try
+        {
+            var ffmpegPath = ResolveExistingFfmpegPath(options.FfmpegPath);
+            var ffprobePath = ResolveFfprobePath();
+            if (string.IsNullOrWhiteSpace(ffmpegPath) || !File.Exists(ffmpegPath) || string.IsNullOrWhiteSpace(ffprobePath) || !File.Exists(ffprobePath))
+            {
+                return false;
+            }
+
+            var workingDirectory = Path.GetDirectoryName(item.OutputPath) ?? Environment.CurrentDirectory;
+            var tempDirectory = Path.Combine(Path.GetTempPath(), "UltraFrameAI", "resume-recovered");
+            Directory.CreateDirectory(tempDirectory);
+            recoveredOutputPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}.mkv");
+            var codec = options.UseX265 ? "libx265" : "libx264";
+            var preset = string.IsNullOrWhiteSpace(options.EncoderPreset) ? "slower" : options.EncoderPreset;
+            var crf = options.UseX265 ? 18 : 16;
+            var targetDurationSeconds = EstimateRecoverableDurationSeconds(item, ffprobePath);
+            var sourceFps = ProbeMediaFps(ffprobePath, item.SourcePath);
+
+            var args =
+                $"-hide_banner -y -nostats -loglevel error -progress pipe:1 -fflags +genpts+discardcorrupt -err_detect ignore_err " +
+                $"-i {Quote(item.OutputPath)} -map 0:v:0 -an -c:v {codec} -preset {preset} -crf {crf} -pix_fmt yuv420p {Quote(recoveredOutputPath)}";
+
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = ffmpegPath,
+                    Arguments = args,
+                    WorkingDirectory = workingDirectory,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8,
+                    StandardErrorEncoding = System.Text.Encoding.UTF8
+                }
+            };
+
+            if (!process.Start())
+            {
+                TryDeleteFile(recoveredOutputPath);
+                recoveredOutputPath = string.Empty;
+                return false;
+            }
+
+            var recoveryWatch = Stopwatch.StartNew();
+            var stdoutTask = Task.Run(async () =>
+            {
+                double outTimeSeconds = 0;
+                string fpsText = "--";
+                string speedText = string.Empty;
+                var frameCount = 0;
+
+                while (true)
+                {
+                    var line = await process.StandardOutput.ReadLineAsync().ConfigureAwait(false);
+                    if (line is null)
+                    {
+                        break;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    var separatorIndex = line.IndexOf('=');
+                    if (separatorIndex <= 0)
+                    {
+                        continue;
+                    }
+
+                    var key = line[..separatorIndex];
+                    var value = line[(separatorIndex + 1)..];
+                    switch (key)
+                    {
+                        case "frame":
+                            frameCount = int.TryParse(value, out var parsedFrameCount)
+                                ? parsedFrameCount
+                                : frameCount;
+                            break;
+                        case "out_time_ms":
+                            if (double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var outTimeMs))
+                            {
+                                outTimeSeconds = outTimeMs / 1_000_000d;
+                            }
+                            break;
+                        case "fps":
+                            if (double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var fps)
+                                && fps > 0)
+                            {
+                                fpsText = $"{fps:0.0} FPS";
+                            }
+                            break;
+                        case "speed":
+                            speedText = value;
+                            if (string.Equals(fpsText, "--", StringComparison.Ordinal))
+                            {
+                                var parsedSpeed = ParseSpeedMultiplier(speedText);
+                                if (parsedSpeed > 0 && sourceFps > 0)
+                                {
+                                    fpsText = $"~{sourceFps * parsedSpeed:0.0} FPS";
+                                }
+                            }
+                            break;
+                        case "progress":
+                            if (string.Equals(fpsText, "--", StringComparison.Ordinal) && frameCount > 0 && recoveryWatch.Elapsed.TotalSeconds > 0.1)
+                            {
+                                fpsText = $"~{frameCount / recoveryWatch.Elapsed.TotalSeconds:0.0} FPS";
+                            }
+                            progressCallback?.Invoke(new ResumePreflightTelemetry(
+                                PhaseText: LocalizedStrings.Get("ResumePreflightRecovering"),
+                                DetailText: LocalizedStrings.Get("ResumePreflightLoadingFile"),
+                                EtaText: BuildRecoveryEtaText(targetDurationSeconds, outTimeSeconds, speedText, recoveryWatch.Elapsed),
+                                FpsText: fpsText));
+                            break;
+                    }
+                }
+            });
+            var stderrTask = process.StandardError.ReadToEndAsync();
+            process.WaitForExit();
+            stdoutTask.GetAwaiter().GetResult();
+            _ = stderrTask.GetAwaiter().GetResult();
+
+            if (process.ExitCode != 0 || !IsResumeOutputUsable(recoveredOutputPath, ffprobePath))
+            {
+                TryDeleteFile(recoveredOutputPath);
+                recoveredOutputPath = string.Empty;
+                return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            TryDeleteFile(recoveredOutputPath);
+            recoveredOutputPath = string.Empty;
+            return false;
+        }
+    }
+
+    private double EstimateRecoverableDurationSeconds(QueueItemViewModel item, string ffprobePath)
+    {
+        try
+        {
+            var sourceDuration = ProbeMediaDurationSeconds(ffprobePath, item.SourcePath);
+            if (PipelineService.TryLoadResumeState(item.OutputPath, out var json) && !string.IsNullOrWhiteSpace(json))
+            {
+                using var document = JsonDocument.Parse(json);
+                var root = document.RootElement;
+                var processedFrames = root.TryGetProperty("ProcessedFrames", out var processedFramesNode) ? processedFramesNode.GetInt32() : 0;
+                var totalFrames = root.TryGetProperty("TotalFrames", out var totalFramesNode) ? totalFramesNode.GetInt32() : 0;
+                if (sourceDuration > 0 && processedFrames > 0 && totalFrames > processedFrames)
+                {
+                    var estimatedDuration = sourceDuration * processedFrames / totalFrames;
+                    if (estimatedDuration > 0)
+                    {
+                        return estimatedDuration;
+                    }
+                }
+            }
+
+            var probedOutputDuration = ProbeMediaDurationSeconds(ffprobePath, item.OutputPath);
+            if (probedOutputDuration > 0)
+            {
+                return probedOutputDuration;
+            }
+
+            return sourceDuration > 0 ? sourceDuration * 0.5 : 0;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static string BuildRecoveryEtaText(double targetDurationSeconds, double outTimeSeconds, string speedText, TimeSpan elapsed)
+    {
+        if (targetDurationSeconds > 0 && outTimeSeconds > 0)
+        {
+            var clampedProcessedSeconds = Math.Min(targetDurationSeconds, outTimeSeconds);
+            var remainingProcessedSeconds = Math.Max(0, targetDurationSeconds - clampedProcessedSeconds);
+            var speed = ParseSpeedMultiplier(speedText);
+            if (speed > 0)
+            {
+                return $"~{FormatDuration(TimeSpan.FromSeconds(Math.Max(1, remainingProcessedSeconds / speed)))}";
+            }
+
+            var progress = clampedProcessedSeconds / targetDurationSeconds;
+            if (progress > 0.001)
+            {
+                var totalEstimatedSeconds = elapsed.TotalSeconds / progress;
+                var remaining = Math.Max(1, totalEstimatedSeconds - elapsed.TotalSeconds);
+                return $"~{FormatDuration(TimeSpan.FromSeconds(remaining))}";
+            }
+        }
+
+        return $"~{FormatDuration(GetExtendedCountdown(TimeSpan.FromSeconds(60), elapsed, TimeSpan.FromSeconds(15)))}";
+    }
+
+    private static double ParseSpeedMultiplier(string speedText)
+    {
+        if (string.IsNullOrWhiteSpace(speedText))
+        {
+            return 0;
+        }
+
+        var normalized = speedText.Trim().TrimEnd('x', 'X');
+        return double.TryParse(normalized, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var speed)
+            ? speed
+            : 0;
+    }
+
+    private static bool IsResumeOutputUsable(string outputPath)
+    {
+        var ffprobePath = ResolveFfprobePath();
+        return !string.IsNullOrWhiteSpace(ffprobePath)
+            && File.Exists(ffprobePath)
+            && IsResumeOutputUsable(outputPath, ffprobePath);
+    }
+
+    private static bool IsResumeOutputUsable(string outputPath, string ffprobePath)
+    {
+        try
+        {
+            if (!File.Exists(outputPath))
+            {
+                return false;
+            }
+
+            var output = RunFfprobe(
+                ffprobePath,
+                $"-v error -select_streams v:0 -show_entries stream=codec_type -of default=noprint_wrappers=1:nokey=1 {Quote(outputPath)}",
+                Path.GetDirectoryName(outputPath) ?? Environment.CurrentDirectory);
+
+            return string.Equals(output.Trim(), "video", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string ResolveFfprobePath()
+    {
+        var candidate = Path.Combine(@"C:\ffmpeg\bin", "ffprobe.exe");
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        return "ffprobe";
+    }
+
+    private static string ResolveExistingFfmpegPath(string configuredPath)
+    {
+        if (!string.IsNullOrWhiteSpace(configuredPath) && File.Exists(configuredPath))
+        {
+            return configuredPath;
+        }
+
+        var candidate = Path.Combine(@"C:\ffmpeg\bin", "ffmpeg.exe");
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        return configuredPath;
+    }
+
+    private static double ProbeMediaDurationSeconds(string ffprobePath, string mediaPath)
+    {
+        var output = RunFfprobe(
+            ffprobePath,
+            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {Quote(mediaPath)}",
+            Path.GetDirectoryName(mediaPath) ?? Environment.CurrentDirectory);
+        return double.TryParse(output.Trim(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var seconds)
+            ? seconds
+            : 0.0;
+    }
+
+    private static double ProbeMediaFps(string ffprobePath, string mediaPath)
+    {
+        var output = RunFfprobe(
+            ffprobePath,
+            $"-v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=noprint_wrappers=1:nokey=1 {Quote(mediaPath)}",
+            Path.GetDirectoryName(mediaPath) ?? Environment.CurrentDirectory);
+        return PipelineService.ParseFraction(output.Trim());
+    }
+
+    private static string RunFfprobe(string ffprobePath, string arguments, string workingDirectory)
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = ffprobePath,
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+                StandardErrorEncoding = System.Text.Encoding.UTF8
+            }
+        };
+
+        if (!process.Start())
+        {
+            return string.Empty;
+        }
+
+        var output = process.StandardOutput.ReadToEnd();
+        _ = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return process.ExitCode == 0 ? output : string.Empty;
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private string GetResumeUnavailableReason(QueueItemViewModel item, PipelineOptions options)
+    {
+        try
+        {
+            if (!File.Exists(item.OutputPath))
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonMissingOutput");
+            }
+
+            var ffprobePath = ResolveFfprobePath();
+            if (string.IsNullOrWhiteSpace(ffprobePath) || !File.Exists(ffprobePath))
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonProbeUnavailable");
+            }
+
+            if (!IsResumeOutputUsable(item.OutputPath, ffprobePath))
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonInvalidOutput");
+            }
+
+            if (!PipelineService.TryLoadResumeState(item.OutputPath, out var json) || string.IsNullOrWhiteSpace(json))
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonMissingState");
+            }
+
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var complete = root.TryGetProperty("Complete", out var completeNode) && completeNode.GetBoolean();
+            if (complete)
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonAlreadyComplete");
+            }
+
+            var sourcePath = root.TryGetProperty("SourcePath", out var sourcePathNode) ? sourcePathNode.GetString() ?? string.Empty : string.Empty;
+            if (!string.Equals(sourcePath, item.SourcePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonSourceMismatch");
+            }
+
+            var codec = root.TryGetProperty("Codec", out var codecNode) ? codecNode.GetString() ?? string.Empty : string.Empty;
+            var expectedCodec = options.UseX265 ? "libx265" : "libx264";
+            if (!string.Equals(codec, expectedCodec, StringComparison.OrdinalIgnoreCase))
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonSettingsChanged");
+            }
+
+            return LocalizedStrings.Get("ResumeUnavailableReasonGeneric");
+        }
+        catch
+        {
+            return LocalizedStrings.Get("ResumeUnavailableReasonGeneric");
+        }
+    }
+
+    private OutputConflictDecision ShowResumeUnavailableDialog(QueueItemViewModel item, string reasonText)
     {
         var owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
-        var dialog = new ResumeUnavailableDialog(item.OutputPath);
+        var dialog = new ResumeUnavailableDialog(item.OutputPath, reasonText);
         if (owner is not null)
         {
             dialog.Owner = owner;
         }
 
         return dialog.ShowDialog() == true ? dialog.Decision : OutputConflictDecision.Skip;
+    }
+
+    private void ShowPausedProcessExitedDialog(string fileName, string processName)
+    {
+        var owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
+        var dialog = new PausedProcessExitedDialog(fileName, processName);
+        if (owner is not null)
+        {
+            dialog.Owner = owner;
+        }
+
+        _ = dialog.ShowDialog();
     }
 
     private void MarkItemSkipped(QueueItemViewModel item)
@@ -1787,6 +2700,33 @@ public sealed class MainViewModel : INotifyPropertyChanged
         item.ProgressText = "100%";
         item.OutputState = LocalizedStrings.LogOutputExists;
         item.Detail = Path.GetFileName(item.OutputPath);
+    }
+
+    private static void ResetExistingOutputState(QueueItemViewModel item)
+    {
+        PipelineService.RemoveCompletedOutput(item.OutputPath);
+        try
+        {
+            if (File.Exists(item.OutputPath))
+            {
+                File.Delete(item.OutputPath);
+            }
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            var resumeStatePath = PipelineService.GetResumeStatePath(item.OutputPath);
+            if (File.Exists(resumeStatePath))
+            {
+                File.Delete(resumeStatePath);
+            }
+        }
+        catch
+        {
+        }
     }
 
     private void BrowseRootFolder()
@@ -1849,6 +2789,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void CancelRun()
     {
+        _pipeline.SetPaused(false);
+        IsRenderPaused = false;
         _runCts?.Cancel();
         _scanCts?.Cancel();
     }
@@ -1867,6 +2809,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             CurrentFrameTimestampText = string.Empty;
             CurrentFileName = string.Empty;
             ClearRenderPreviewPaths();
+            UpdateRenderPreviewLoadingState();
             return;
         }
 
@@ -1875,6 +2818,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CurrentFrameTimestampText = string.Empty;
         CurrentFileName = Path.GetFileName(SelectedItem.SourcePath);
         ClearRenderPreviewPaths();
+        UpdateRenderPreviewLoadingState();
     }
 
     public void HandleRenderPreviewFrame(RenderPreviewFrameUpdate frame)
@@ -2014,6 +2958,20 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
     }
 
+    private void UpdateRenderPreviewLoadingState()
+    {
+        OnPropertyChanged(nameof(IsRenderPreviewLoading));
+        OnPropertyChanged(nameof(RenderPreviewLoadingText));
+    }
+
+    private void UpdatePauseStateUi()
+    {
+        OnPropertyChanged(nameof(CanPauseRender));
+        OnPropertyChanged(nameof(RenderPauseGlyph));
+        OnPropertyChanged(nameof(RenderPauseToolTip));
+        _togglePauseCommand.RaiseCanExecuteChanged();
+    }
+
     private void BeginScanOverlay(string folder)
     {
         IsScanOverlayVisible = true;
@@ -2101,6 +3059,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         UpdateSelectionDetails();
         OnQueueStateChanged();
+        PersistAppSettings();
     }
 
     private static void TryDelete(string path)
@@ -2150,7 +3109,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UpdateCurrentStageDisplayText();
             QueueSummary = LocalizedStrings.LogItemCount(0);
             StageDurationText = "--:--:--";
+            ProcessingFpsText = "--";
             UpdateActionStates();
+            UpdatePauseStateUi();
             CurrentFileName = string.Empty;
         }
         else
@@ -2158,6 +3119,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UpdateQueueSummary();
             UpdateSelectionDetails();
             UpdateActionStates();
+            UpdatePauseStateUi();
         }
 
         if (IsScanOverlayVisible)
@@ -2261,6 +3223,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void CurrentRenderItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(CurrentRenderItemsCountText));
+        UpdatePauseStateUi();
     }
 
     private void AttachQueueItem(QueueItemViewModel item)
@@ -2335,6 +3298,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     private static int ParseInt(string? text, int fallback) => int.TryParse(text, out var value) ? value : fallback;
+
+    private static string FormatDuration(TimeSpan value) => value < TimeSpan.Zero ? "--:--:--" : value.ToString(@"hh\:mm\:ss");
 
     private string ResolveExternalUpscalerPath()
     {
@@ -2660,6 +3625,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private string LoadPersistedRootFolder(string fallback)
     {
+        if (!_persistUserState)
+        {
+            return fallback;
+        }
+
         try
         {
             if (File.Exists(_lastRootFolderPath))
@@ -2680,6 +3650,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void LoadAppSettings()
     {
+        if (!_persistUserState)
+        {
+            return;
+        }
+
         var restoreSuppression = !_suppressAppSettingsPersistence;
         if (restoreSuppression)
         {
@@ -2818,6 +3793,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 OutputFolder = loaded.OutputFolder;
             }
+
+            RestorePersistedQueueItems(loaded.QueueItems, loaded.SelectedItemSourcePath);
         }
         catch
         {
@@ -2879,6 +3856,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ClearRenderPreviewPaths();
             UpdateSelectionDetails();
             OnQueueStateChanged();
+            PersistAppSettings();
         }
         catch (OperationCanceledException)
         {
@@ -2898,6 +3876,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void LoadRecentRootFolders()
     {
+        if (!_persistUserState)
+        {
+            return;
+        }
+
         try
         {
             if (!File.Exists(_recentRootFoldersPath))
@@ -2993,6 +3976,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void SavePersistedRootFolder(string folder)
     {
+        if (!_persistUserState)
+        {
+            return;
+        }
+
         try
         {
             var directory = Path.GetDirectoryName(_lastRootFolderPath);
@@ -3010,7 +3998,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void PersistAppSettings()
     {
-        if (_suppressAppSettingsPersistence)
+        if (_suppressAppSettingsPersistence || !_persistUserState)
         {
             return;
         }
@@ -3053,6 +4041,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 PreserveIncompleteOutput,
                 UseNativeEncoderBackend,
                 RepairBrokenTimestamps,
+                BuildPersistedQueueItems(),
+                SelectedItem?.SourcePath,
                 true);
 
             var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
@@ -3063,8 +4053,77 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    private List<PersistedQueueItemCacheEntry> BuildPersistedQueueItems() =>
+        Items
+            .Where(item => !string.IsNullOrWhiteSpace(item.SourcePath))
+            .Select(item => new PersistedQueueItemCacheEntry(
+                item.SourcePath,
+                item.Title,
+                item.OutputPath,
+                item.IsChecked))
+            .ToList();
+
+    private void RestorePersistedQueueItems(IReadOnlyList<PersistedQueueItemCacheEntry>? queueItems, string? selectedItemSourcePath)
+    {
+        if (queueItems is null || queueItems.Count == 0)
+        {
+            return;
+        }
+
+        var restoredItems = new List<QueueItemViewModel>(queueItems.Count);
+        foreach (var entry in queueItems)
+        {
+            var sourcePath = NormalizeInputPath(entry.SourcePath);
+            if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+            {
+                continue;
+            }
+
+            var title = string.IsNullOrWhiteSpace(entry.Title)
+                ? Path.GetFileName(sourcePath)
+                : entry.Title;
+            var outputPath = string.IsNullOrWhiteSpace(entry.OutputPath)
+                ? Path.Combine(OutputFolder, Path.GetFileNameWithoutExtension(sourcePath) + GetOutputSuffix())
+                : entry.OutputPath;
+
+            var item = new QueueItemViewModel
+            {
+                Index = restoredItems.Count + 1,
+                Title = title,
+                SourcePath = sourcePath,
+                OutputPath = outputPath
+            };
+            item.IsChecked = entry.IsChecked;
+            AttachQueueItem(item);
+            restoredItems.Add(item);
+        }
+
+        if (restoredItems.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var item in restoredItems)
+        {
+            Items.Add(item);
+        }
+
+        ReindexItems();
+        UpdateQueueSummary();
+        UpdateActionStates();
+        SelectedItem = restoredItems.FirstOrDefault(item =>
+            string.Equals(item.SourcePath, selectedItemSourcePath, StringComparison.OrdinalIgnoreCase)) ?? restoredItems[0];
+        UpdateSelectionDetails();
+        OnQueueStateChanged();
+    }
+
     private void SaveRecentRootFolders()
     {
+        if (!_persistUserState)
+        {
+            return;
+        }
+
         try
         {
             var directory = Path.GetDirectoryName(_recentRootFoldersPath);

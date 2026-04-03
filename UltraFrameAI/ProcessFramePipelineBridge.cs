@@ -10,7 +10,7 @@ internal sealed class ProcessFramePipelineBridge : IFramePipelineBridge
 
     public string BuildDecodeArguments(string sourcePath, bool captureShowInfo, int startFrame = 0)
     {
-        var args = new StringBuilder("-hide_banner -y -nostats -loglevel info ");
+        var args = new StringBuilder("-hide_banner -y -nostats -loglevel info -progress pipe:2 ");
         args.Append($"-i {Q(sourcePath)} -an -sn -dn ");
         if (startFrame > 0)
         {

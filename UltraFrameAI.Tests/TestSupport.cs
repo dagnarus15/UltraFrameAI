@@ -57,11 +57,20 @@ internal static class TestSupport
     public static string PowerShellExe => Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe");
 
     public static async Task CreateSyntheticVideoAsync(string ffmpeg, string outputPath)
+        => await CreateSyntheticVideoAsync(ffmpeg, outputPath, 64, 64, 8, 1.25).ConfigureAwait(false);
+
+    public static async Task CreateSyntheticVideoAsync(
+        string ffmpeg,
+        string outputPath,
+        int width,
+        int height,
+        double fps,
+        double durationSeconds)
     {
         var args =
             $"-hide_banner -y -nostats -loglevel error " +
-            $"-f lavfi -i testsrc2=size=64x64:rate=8:duration=1.25 " +
-            $"-f lavfi -i sine=frequency=880:sample_rate=48000:duration=1.25 " +
+            $"-f lavfi -i testsrc2=size={width}x{height}:rate={fps.ToString(CultureInfo.InvariantCulture)}:duration={durationSeconds.ToString(CultureInfo.InvariantCulture)} " +
+            $"-f lavfi -i sine=frequency=880:sample_rate=48000:duration={durationSeconds.ToString(CultureInfo.InvariantCulture)} " +
             $"-shortest -c:v libx264 -preset ultrafast -crf 35 -pix_fmt yuv420p -c:a aac -b:a 64k {Quote(outputPath)}";
 
         var exitCode = await ProcessRunner.RunAsync(

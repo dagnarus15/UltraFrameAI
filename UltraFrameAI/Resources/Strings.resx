@@ -99,6 +99,36 @@
   <data name="RenderSkipFile" xml:space="preserve">
     <value>Skip file</value>
   </data>
+  <data name="RenderPause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="RenderResume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="PausedProcessExitedTitle" xml:space="preserve">
+    <value>Paused process exited</value>
+  </data>
+  <data name="PausedProcessExitedMessage" xml:space="preserve">
+    <value>One of the background processes exited while rendering was paused.\nThe current file will be stopped, and the app will now try to continue it through recovery.</value>
+  </data>
+  <data name="PausedProcessExitedFileLabel" xml:space="preserve">
+    <value>Current file</value>
+  </data>
+  <data name="PausedProcessExitedProcessLabel" xml:space="preserve">
+    <value>Exited process</value>
+  </data>
+  <data name="PausedProcessExitedOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="PausedProcessExitedLog" xml:space="preserve">
+    <value>Paused process exited: {0}</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeStarting" xml:space="preserve">
+    <value>Trying to continue the interrupted file through recovery.</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeFailed" xml:space="preserve">
+    <value>Could not continue the interrupted file automatically: {0}</value>
+  </data>
   <data name="RenderStopAll" xml:space="preserve">
     <value>Stop all</value>
   </data>
@@ -131,6 +161,42 @@
   </data>
   <data name="ResumeUnavailableMessage" xml:space="preserve">
     <value>This file cannot be resumed from the saved state.\nYou can replace it or skip it.</value>
+  </data>
+  <data name="ResumeUnavailableReasonHeader" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingOutput" xml:space="preserve">
+    <value>The unfinished output file was not found next to the expected result.</value>
+  </data>
+  <data name="ResumeUnavailableReasonProbeUnavailable" xml:space="preserve">
+    <value>The unfinished file could not be checked with ffprobe, so it is not safe to resume it.</value>
+  </data>
+  <data name="ResumeUnavailableReasonInvalidOutput" xml:space="preserve">
+    <value>The unfinished output file is damaged or no longer readable as video, so it cannot be resumed safely.</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingState" xml:space="preserve">
+    <value>No valid unfinished render state was found, so the app does not know where to continue from.</value>
+  </data>
+  <data name="ResumeUnavailableReasonAlreadyComplete" xml:space="preserve">
+    <value>This file is already marked as completed, so resuming is no longer needed.</value>
+  </data>
+  <data name="ResumeUnavailableReasonSourceMismatch" xml:space="preserve">
+    <value>The saved state belongs to a different source file and cannot be used for this render.</value>
+  </data>
+  <data name="ResumeUnavailableReasonSettingsChanged" xml:space="preserve">
+    <value>The render settings changed after the interruption, so resuming the old file would not be safe.</value>
+  </data>
+  <data name="ResumeUnavailableReasonGeneric" xml:space="preserve">
+    <value>The saved state or unfinished file is not suitable for a safe resume.</value>
+  </data>
+  <data name="ResumePreflightChecking" xml:space="preserve">
+    <value>Checking whether resume is possible</value>
+  </data>
+  <data name="ResumePreflightRecovering" xml:space="preserve">
+    <value>Recovering the readable part of the file</value>
+  </data>
+  <data name="ResumePreflightLoadingFile" xml:space="preserve">
+    <value>Loading file</value>
   </data>
   <data name="FileList" xml:space="preserve">
     <value>File list</value>

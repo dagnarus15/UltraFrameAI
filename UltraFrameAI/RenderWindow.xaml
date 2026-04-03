@@ -288,6 +288,13 @@
                                     </TransformGroup>
                                 </Image.RenderTransform>
                             </Image>
+                            <TextBlock Text="{Binding RenderPreviewLoadingText}"
+                                       Visibility="{Binding IsRenderPreviewLoading, Converter={StaticResource BoolToVisibility}}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="22"
+                                       FontWeight="SemiBold"
+                                       Foreground="#DDE8F8" />
                             <Border VerticalAlignment="Top"
                                     Height="1"
                                     Background="#22FFFFFF"
@@ -447,6 +454,13 @@
                                     </TransformGroup>
                                 </Image.RenderTransform>
                             </Image>
+                            <TextBlock Text="{Binding RenderPreviewLoadingText}"
+                                       Visibility="{Binding IsRenderPreviewLoading, Converter={StaticResource BoolToVisibility}}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="22"
+                                       FontWeight="SemiBold"
+                                       Foreground="#DDE8F8" />
                             <Border VerticalAlignment="Top"
                                     Height="1"
                                     Background="#30B8D8FF"
@@ -472,7 +486,7 @@
                     <StackPanel>
                         <TextBlock Text="{local:Loc CurrentStage}" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding CurrentStageDisplayText}"
-                                   Margin="0,2,0,0"
+                                   Margin="0,10,0,0"
                                    FontSize="15"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -518,7 +532,7 @@
                     </StackPanel>
                     <StackPanel Grid.Column="4">
                         <TextBlock Text="{local:Loc ProcessingFps}" Style="{StaticResource CaptionStyle}" />
-                        <TextBlock Text="{Binding StageDurationText}" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ProcessingFpsText}" FontSize="18" FontWeight="SemiBold" />
                     </StackPanel>
                 </Grid>
             </StackPanel>
@@ -526,6 +540,8 @@
 
         <Grid Grid.Row="6">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="18" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="18" />
                 <ColumnDefinition Width="*" />
@@ -567,7 +583,56 @@
                 </Button>
             </StackPanel>
 
-            <Grid Grid.Column="2">
+            <Button Grid.Column="2"
+                    Width="54"
+                    Height="54"
+                    Padding="0"
+                    Cursor="Hand"
+                    Command="{Binding TogglePauseCommand}"
+                    ToolTip="{Binding RenderPauseToolTip}"
+                    Background="#182742"
+                    BorderBrush="#243754"
+                    BorderThickness="1"
+                    Foreground="{StaticResource TextPrimaryBrush}"
+                    RenderTransformOrigin="0.5,0.5">
+                <Button.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Button.RenderTransform>
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="PauseRoot"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="27"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="PauseRoot" Property="Background" Value="#22375B" />
+                                <Setter TargetName="PauseRoot" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="PauseRoot" Property="Background" Value="#16243D" />
+                                <Setter TargetName="PauseRoot" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="PauseRoot" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <TextBlock Text="{Binding RenderPauseGlyph}"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="18"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+            </Button>
+
+            <Grid Grid.Column="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="16" />

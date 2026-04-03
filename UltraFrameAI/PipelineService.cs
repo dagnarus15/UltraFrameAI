@@ -15,6 +15,11 @@ namespace UltraFrameAI;
 public sealed class PipelineService
 {
     private static readonly IFramePipelineBridge FrameBridge = new ProcessFramePipelineBridge();
+    private readonly object _pauseSync = new();
+    private PauseController? _activePauseController;
+    private string? _lastPauseFailureReason;
+    private Action? _abortCurrentItemAction;
+    private bool _stopAfterCurrentItemRequested;
 
     private sealed record SourceMetadata(double Duration, int Width, int Height, double Fps);
     private sealed record SourceMetadataCacheEntry(double Duration, int Width, int Height, double Fps, bool Complete);
@@ -33,9 +38,19 @@ public sealed class PipelineService
         bool Complete,
         bool CanResume,
         DateTime UpdatedUtc);
+    private sealed record CompletedRenderIndexEntry(
+        string OutputPath,
+        long Length,
+        long LastWriteTimeUtcTicks,
+        string SettingsSignature,
+        DateTime CompletedUtc);
     private sealed record FrameWriteItem(byte[] Buffer, int Length, double? TimestampSeconds);
     private const int RawFrameQueueCapacity = 8;
     private const int EncodeFrameQueueCapacity = 4;
+    private static readonly string CompletedRenderIndexPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "UltraFrameAI",
+        "completed-renders.json");
 
     private static readonly Regex DurationRegex = new(
         @"Duration:\s*(?<hh>\d+):(?<mm>\d+):(?<ss>\d+(?:\.\d+)?)",
@@ -219,6 +234,7 @@ public sealed class PipelineService
     private sealed class ProcessLease : IDisposable
     {
         private readonly CancellationTokenRegistration _registration;
+        private bool _isPaused;
 
         public ProcessLease(Process process, Task stderrPump, CancellationTokenRegistration registration)
         {
@@ -230,6 +246,33 @@ public sealed class PipelineService
         public Process Process { get; }
 
         public Task StderrPump { get; }
+
+        public bool IsAlive => !Process.HasExited;
+
+        public void SetPaused(bool paused)
+        {
+            try
+            {
+                if (Process.HasExited || _isPaused == paused)
+                {
+                    return;
+                }
+
+                if (paused)
+                {
+                    ProcessPauseHelper.Suspend(Process);
+                }
+                else
+                {
+                    ProcessPauseHelper.Resume(Process);
+                }
+
+                _isPaused = paused;
+            }
+            catch
+            {
+            }
+        }
 
         public void Dispose()
         {
@@ -249,8 +292,156 @@ public sealed class PipelineService
         }
     }
 
+    private sealed class PauseController : IDisposable
+    {
+        private sealed record PauseTarget(string Name, Action<bool> Setter, Func<bool> IsAlive);
+        private readonly object _sync = new();
+        private readonly List<PauseTarget> _targets = new();
+        private readonly ManualResetEventSlim _resumeEvent = new(initialState: true);
+
+        public bool IsPaused
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return !_resumeEvent.IsSet;
+                }
+            }
+        }
+
+        public void Register(string name, Action<bool> setter, Func<bool> isAlive)
+        {
+            var applyPaused = false;
+            lock (_sync)
+            {
+                _targets.Add(new PauseTarget(name, setter, isAlive));
+                applyPaused = !_resumeEvent.IsSet;
+            }
+
+            if (applyPaused)
+            {
+                setter(true);
+            }
+        }
+
+        public string? SetPaused(bool paused)
+        {
+            PauseTarget[] targets;
+            lock (_sync)
+            {
+                if (paused == !_resumeEvent.IsSet)
+                {
+                    return null;
+                }
+
+                if (!paused)
+                {
+                    var deadTarget = _targets.FirstOrDefault(target => !target.IsAlive());
+                    if (deadTarget is not null)
+                    {
+                        _resumeEvent.Set();
+                        return deadTarget.Name;
+                    }
+                }
+
+                if (paused)
+                {
+                    _resumeEvent.Reset();
+                }
+                else
+                {
+                    _resumeEvent.Set();
+                }
+
+                targets = _targets.ToArray();
+            }
+
+            foreach (var target in targets)
+            {
+                try
+                {
+                    target.Setter(paused);
+                }
+                catch
+                {
+                }
+            }
+
+            return null;
+        }
+
+        public void WaitIfPaused(CancellationToken cancellationToken)
+        {
+            _resumeEvent.Wait(cancellationToken);
+        }
+
+        public void Dispose()
+        {
+            SetPaused(false);
+            _resumeEvent.Dispose();
+        }
+    }
+
     public PipelineService()
     {
+    }
+
+    public bool IsPaused
+    {
+        get
+        {
+            lock (_pauseSync)
+            {
+                return _activePauseController?.IsPaused == true;
+            }
+        }
+    }
+
+    public void SetPaused(bool paused)
+    {
+        lock (_pauseSync)
+        {
+            _lastPauseFailureReason = _activePauseController?.SetPaused(paused);
+        }
+    }
+
+    public string? TrySetPaused(bool paused)
+    {
+        lock (_pauseSync)
+        {
+            _lastPauseFailureReason = _activePauseController?.SetPaused(paused);
+            return _lastPauseFailureReason;
+        }
+    }
+
+    public void AbortCurrentItem()
+    {
+        Action? abortAction;
+        lock (_pauseSync)
+        {
+            abortAction = _abortCurrentItemAction;
+        }
+
+        abortAction?.Invoke();
+    }
+
+    public void RequestStopAfterCurrentItem()
+    {
+        lock (_pauseSync)
+        {
+            _stopAfterCurrentItemRequested = true;
+        }
+    }
+
+    private bool ConsumeStopAfterCurrentItemRequested()
+    {
+        lock (_pauseSync)
+        {
+            var requested = _stopAfterCurrentItemRequested;
+            _stopAfterCurrentItemRequested = false;
+            return requested;
+        }
     }
 
     public async Task RunAsync(
@@ -277,9 +468,10 @@ public sealed class PipelineService
         Action<RenderPreviewFrameUpdate>? previewReport,
         CancellationToken cancellationToken)
     {
+        ConsumeStopAfterCurrentItemRequested();
         if (items.Count == 0)
         {
-            report(new PipelineProgress(0, 0, string.Empty, LocalizedStrings.LogIdle, 0, "0%", "--:--:--", "--:--:--", LocalizedStrings.LogNoItemsFound, string.Empty, LocalizedStrings.LogReady, StageElapsedText: "--:--:--"));
+            report(new PipelineProgress(0, 0, string.Empty, LocalizedStrings.LogIdle, 0, "0%", "--:--:--", "--:--:--", LocalizedStrings.LogNoItemsFound, string.Empty, LocalizedStrings.LogReady, StageElapsedText: "--:--:--", ProcessingFpsText: "--"));
             return;
         }
 
@@ -297,7 +489,8 @@ public sealed class PipelineService
             var resumeTargetHeight = options.UseX265 ? 2160 : 1080;
             var resumeTotalFrames = 0;
             var resumeProcessedFrames = 0;
-            var isResumeRun = item.ResumeRequested && item.ResumeProcessedFrames > 0 && File.Exists(item.OutputPath);
+            var resumeSourceSegmentPath = string.IsNullOrWhiteSpace(item.ResumeSourceOutputPath) ? item.OutputPath : item.ResumeSourceOutputPath;
+            var isResumeRun = item.ResumeRequested && item.ResumeProcessedFrames > 0 && File.Exists(resumeSourceSegmentPath);
             var resumeStartFrame = isResumeRun ? item.ResumeProcessedFrames : 0;
             var resumeWorkingDirectory = isResumeRun
                 ? Path.Combine(Path.GetTempPath(), "UltraFrameAI", "resume-stage", Guid.NewGuid().ToString("N"))
@@ -306,8 +499,15 @@ public sealed class PipelineService
             var resumePartialVideoPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "partial-video.mkv") : string.Empty;
             var resumeMergedVideoPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "merged-video.mkv") : string.Empty;
             var resumeMuxedOutputPath = isResumeRun ? Path.Combine(resumeWorkingDirectory, "final-output.mkv") : string.Empty;
+            using var pauseController = new PauseController();
+            Action? abortCurrentItemAction = null;
             try
             {
+                lock (_pauseSync)
+                {
+                    _activePauseController = pauseController;
+                }
+
                 if (isResumeRun)
                 {
                     Directory.CreateDirectory(resumeWorkingDirectory);
@@ -315,7 +515,7 @@ public sealed class PipelineService
 
                 if (item.SkipRequested)
                 {
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogSkippingEncode, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed)));
+                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogSkippingEncode, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
                     continue;
                 }
 
@@ -326,14 +526,8 @@ public sealed class PipelineService
                 var startupLog = Path.Combine(
                     perfRoot,
                     $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.startup.log");
-                var perfLogExe = Path.Combine(
-                    AppContext.BaseDirectory,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
-                var perfLogFinal = Path.Combine(
-                    options.OutputFolder,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.perf.log");
 
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", "00:00:00", "--:--:--", LocalizedStrings.LogPreparing, item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogStartingItem(item.Title), StageElapsedText: Time(itemWatch.Elapsed)));
+                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", "00:00:00", "--:--:--", LocalizedStrings.LogPreparing, item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogStartingItem(item.Title), StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
                 WriteStartupLog($"Preparing {Path.GetFileName(item.SourcePath)}");
 
                 var metadataCacheHit = TryLoadSourceMetadataCache(item.SourcePath, out var cachedMetadata);
@@ -345,7 +539,7 @@ public sealed class PipelineService
                     SaveSourceMetadataCache(item.SourcePath, metadata);
                 }
 
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogCheckingCache"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogCheckingCache"), StageElapsedText: Time(itemWatch.Elapsed)));
+                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogCheckingCache"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogCheckingCache"), StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
                 var estimatedFrames = EstimateFrameCount(metadata.Duration, metadata.Fps);
                 var codec = resumeCodec;
                 var crf = options.UseX265 ? 18 : 16;
@@ -360,7 +554,7 @@ public sealed class PipelineService
                 var timestampCacheHit = TryLoadTimestampCache(item.SourcePath, out var cachedTimestamps);
                 if (timestampCacheHit)
                 {
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogTimestampCacheLoaded"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogTimestampCacheLoaded"), StageElapsedText: Time(itemWatch.Elapsed)));
+                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogPreparing, 0, "0%", Time(itemWatch.Elapsed), "--:--:--", LocalizedStrings.Get("LogTimestampCacheLoaded"), item.SourcePath, Summary(item.Index, total, overall.Elapsed), LocalizedStrings.Get("LogTimestampCacheLoaded"), StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
                 }
                 var upscaleScale = 2;
                 var rawWidth = Math.Max(1, metadata.Width);
@@ -382,9 +576,9 @@ public sealed class PipelineService
                         height,
                         options.UpscalerBackend.ToString(),
                         options.RefinerBackend.ToString(),
-                        0,
+                        resumeStartFrame,
                         totalFrames,
-                        "Preparing",
+                        isResumeRun ? "Resuming" : "Preparing",
                         Complete: false,
                         CanResume: true,
                         DateTime.UtcNow));
@@ -393,9 +587,9 @@ public sealed class PipelineService
                 WriteStartupLog($"Video size ready: {rawWidth}x{rawHeight}");
 
                 var overwriteAllowed = options.Overwrite || item.ForceOverwrite;
-                if (File.Exists(item.OutputPath) && !overwriteAllowed)
+                if (File.Exists(item.OutputPath) && !overwriteAllowed && !item.ResumeRequested)
                 {
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogOutputExists, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed)));
+                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogOutputExists, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
                     continue;
                 }
 
@@ -406,6 +600,8 @@ public sealed class PipelineService
                 var encodeLastError = string.Empty;
                 var decodeStartupStderrCount = 0;
                 var upscaleStartupStderrCount = 0;
+                var decodeLoadingFrames = 0;
+                var decodeLoadingFpsText = "--";
                 var timestampBridge = timestampCacheHit ? null : new TimestampStreamBridge(Math.Max(totalFrames, 1));
                 var cachedTimestampIndex = resumeStartFrame;
                 var timestampRepairState = options.RepairBrokenTimestamps ? new TimestampRepairState() : null;
@@ -447,6 +643,37 @@ public sealed class PipelineService
                     cancellationToken,
                     line =>
                     {
+                        var separatorIndex = line.IndexOf('=');
+                        if (separatorIndex > 0)
+                        {
+                            var key = line[..separatorIndex];
+                            var value = line[(separatorIndex + 1)..];
+                            switch (key)
+                            {
+                                case "frame":
+                                    if (int.TryParse(value, out var parsedDecodeFrames))
+                                    {
+                                        decodeLoadingFrames = parsedDecodeFrames;
+                                    }
+                                    break;
+                                case "fps":
+                                    if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDecodeFps)
+                                        && parsedDecodeFps > 0)
+                                    {
+                                        decodeLoadingFpsText = $"{parsedDecodeFps:0.0} FPS";
+                                    }
+                                    break;
+                                case "progress":
+                                    if (string.Equals(decodeLoadingFpsText, "--", StringComparison.Ordinal)
+                                        && decodeLoadingFrames > 0
+                                        && stageWatch.Elapsed.TotalSeconds > 0.1)
+                                    {
+                                        decodeLoadingFpsText = $"{decodeLoadingFrames / stageWatch.Elapsed.TotalSeconds:0.0} FPS";
+                                    }
+                                    break;
+                            }
+                        }
+
                         if (timestampBridge is not null && timestampBridge.TryCaptureFromShowInfo(line))
                         {
                             return;
@@ -464,6 +691,7 @@ public sealed class PipelineService
                         }
                     },
                     out var decodeStderr);
+                pauseController.Register("FFmpeg decode", decode.SetPaused, () => decode.IsAlive);
                 var timestampCompletion = timestampBridge is null
                     ? Task.CompletedTask
                     : Task.Run(async () =>
@@ -502,6 +730,7 @@ public sealed class PipelineService
                         }
                     },
                     out var upscaleStderr);
+                pauseController.Register("Upscaler", upscale.SetPaused, () => upscale.IsAlive);
                 WriteStartupLog("Starting upscaler");
 
                 ProcessLease? refiner = null;
@@ -547,6 +776,7 @@ public sealed class PipelineService
                             }
                         },
                         out refinerStderr);
+                    pauseController.Register("Refiner", refiner.SetPaused, () => refiner.IsAlive);
                     refinerIn = refiner.Process.StandardInput.BaseStream;
                     refinerOut = refiner.Process.StandardOutput.BaseStream;
                     WriteStartupLog("Starting refiner");
@@ -600,6 +830,7 @@ public sealed class PipelineService
                 WriteStartupLog($"Encoder session: {encodeSession.GetType().Name}");
                 var encoderSupportsPerFrameTimestamps = encodeSession.SupportsPerFrameTimestamps;
                 await encodeSession.OpenAsync(cancellationToken).ConfigureAwait(false);
+                pauseController.Register("Encoder", encodeSession.SetPaused, () => encodeSession.IsAlive);
                 WriteStartupLog("Starting encoder");
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
@@ -608,6 +839,7 @@ public sealed class PipelineService
                     ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.AntiFlickerMode, options.ContentMode, options.AntiFlickerStrength)
                     : null;
                 var currentFrames = resumeStartFrame;
+                var firstProcessedFrameReceived = false;
                 var lastTick = Stopwatch.StartNew();
                 var previewUpdateWatch = Stopwatch.StartNew();
                 var draining = false;
@@ -639,6 +871,23 @@ public sealed class PipelineService
                 });
                 using var pipelineCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 var pipelineToken = pipelineCts.Token;
+                void AbortCurrentItemCore()
+                {
+                    try { pauseController.SetPaused(false); } catch { }
+                    try { encodeSession.SetPaused(false); } catch { }
+                    try { pipelineCts.Cancel(); } catch { }
+                    try { encodeSession.Abort(); } catch { }
+                    try { TryKillTree(decode.Process); } catch { }
+                    try { TryKillTree(upscale.Process); } catch { }
+                    try { if (refiner is not null) TryKillTree(refiner.Process); } catch { }
+                }
+
+                abortCurrentItemAction = AbortCurrentItemCore;
+
+                lock (_pauseSync)
+                {
+                    _abortCurrentItemAction = abortCurrentItemAction;
+                }
                 var decodeProducer = Task.Run(async () =>
                 {
                     byte[]? currentBuffer = null;
@@ -647,6 +896,7 @@ public sealed class PipelineService
                         currentBuffer = ArrayPool<byte>.Shared.Rent(inputFrameBytes);
                         while (true)
                         {
+                            pauseController.WaitIfPaused(pipelineToken);
                             var readStart = Stopwatch.GetTimestamp();
                             var hasFrame = await TryReadExactAsync(decodeOut, currentBuffer.AsMemory(0, inputFrameBytes), pipelineToken).ConfigureAwait(false);
                             Interlocked.Add(ref decodeReadTicks, Stopwatch.GetElapsedTime(readStart).Ticks);
@@ -687,6 +937,7 @@ public sealed class PipelineService
                     {
                         await foreach (var itemToWrite in encodeFrameChannel.Reader.ReadAllAsync(pipelineToken).ConfigureAwait(false))
                         {
+                            pauseController.WaitIfPaused(pipelineToken);
                             Interlocked.Decrement(ref encodeQueueCurrent);
                             var writeStart = Stopwatch.GetTimestamp();
                             try
@@ -720,10 +971,10 @@ public sealed class PipelineService
                 {
                     try
                     {
-                        while (!firstFrameHeartbeatCts.Token.IsCancellationRequested && currentFrames == 0)
+                        while (!firstFrameHeartbeatCts.Token.IsCancellationRequested && !firstProcessedFrameReceived)
                         {
                             await Task.Delay(1000, firstFrameHeartbeatCts.Token).ConfigureAwait(false);
-                            if (currentFrames == 0)
+                            if (!firstProcessedFrameReceived && !pauseController.IsPaused)
                             {
                                 UpdateProgress(heartbeat: true);
                             }
@@ -772,29 +1023,42 @@ public sealed class PipelineService
                         final);
                     if (final || perfCopyWatch.ElapsedMilliseconds >= 5000)
                     {
-                        TryCopyPerfLog(perfLog, perfLogExe);
                         perfCopyWatch.Restart();
                     }
                 }
 
                 void UpdateProgress(bool heartbeat = false)
                 {
+                    var processedFramesThisRun = Math.Max(0, currentFrames - resumeStartFrame);
+                    var totalFramesThisRun = Math.Max(0, totalFrames - resumeStartFrame);
                     var rawPct = totalFrames <= 0 ? 0 : currentFrames * 100.0 / totalFrames;
                     var pct = draining && rawPct >= 100 ? 99.9 : Math.Min(99.9, rawPct);
-                    var phase = currentFrames == 0
+                    var loadingResumeInput = isResumeRun && !firstProcessedFrameReceived;
+                    var phase = loadingResumeInput
+                        ? LocalizedStrings.Get("ResumePreflightLoadingFile")
+                        : currentFrames == 0
                         ? LocalizedStrings.LogExtractingFrames
                         : draining || currentFrames >= totalFrames
                             ? LocalizedStrings.LogEncodingVideo
                             : currentFrames < totalFrames
                             ? LocalizedStrings.LogUpscalingFrames
                             : LocalizedStrings.LogEncodingVideo;
-                    var currentText = totalFrames > 0 ? $"{Math.Min(currentFrames, totalFrames)}/{totalFrames}" : phase;
-                    var processingFps = stageWatch.Elapsed.TotalSeconds > 0
-                        ? currentFrames / stageWatch.Elapsed.TotalSeconds
+                    var currentText = loadingResumeInput
+                        ? LocalizedStrings.Get("ResumePreflightLoadingFile")
+                        : totalFrames > 0
+                            ? $"{Math.Min(currentFrames, totalFrames)}/{totalFrames}"
+                            : phase;
+                    var processingFps = !loadingResumeInput && stageWatch.Elapsed.TotalSeconds > 0
+                        ? processedFramesThisRun / stageWatch.Elapsed.TotalSeconds
                         : 0;
-                    var processingFpsText = processingFps > 0
+                    var processingFpsText = loadingResumeInput
+                        ? decodeLoadingFpsText
+                        : processingFps > 0
                         ? $"{processingFps:0.0} FPS"
                         : "--";
+                    var etaText = loadingResumeInput
+                        ? EstimateResumeLoadingEta(resumeSourceSegmentPath, stageWatch.Elapsed)
+                        : etaEstimator.Estimate(processedFramesThisRun, totalFramesThisRun, stageWatch.Elapsed, stageWatch.Elapsed, draining);
                     WriteResumeState(
                         resumeStatePath,
                         new ResumeStateEntry(
@@ -812,7 +1076,23 @@ public sealed class PipelineService
                         CanResume: true,
                         DateTime.UtcNow));
                     resumeProcessedFrames = currentFrames;
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, pct, $"{pct:0.0}%", Time(itemWatch.Elapsed), etaEstimator.Estimate(currentFrames, totalFrames, stageWatch.Elapsed, stageWatch.Elapsed, draining), phase, currentText, Summary(item.Index, total, overall.Elapsed), null, heartbeat, processingFpsText, latestFrameTimestampSeconds is double ts ? FormatFrameTimestamp(ts) : null));
+                    report(new PipelineProgress(
+                        item.Index,
+                        total,
+                        item.Title,
+                        loadingResumeInput ? LocalizedStrings.LogPreparing : LocalizedStrings.LogProcessing,
+                        pct,
+                        $"{pct:0.0}%",
+                        Time(itemWatch.Elapsed),
+                        etaText,
+                        phase,
+                        currentText,
+                        Summary(item.Index, total, overall.Elapsed),
+                        null,
+                        heartbeat,
+                        StageElapsedText: Time(stageWatch.Elapsed),
+                        CurrentFrameTimestampText: latestFrameTimestampSeconds is double ts ? FormatFrameTimestamp(ts) : null,
+                        ProcessingFpsText: processingFpsText));
                     if (heartbeat)
                     {
                         WritePerfSnapshot(TimeSpan.Zero);
@@ -830,6 +1110,7 @@ public sealed class PipelineService
                         var frameQueued = false;
                         try
                         {
+                            pauseController.WaitIfPaused(pipelineToken);
                             Interlocked.Decrement(ref rawQueueCurrent);
                             if (item.SkipRequested)
                             {
@@ -964,6 +1245,7 @@ public sealed class PipelineService
 
                             currentFrames++;
                             resumeProcessedFrames = currentFrames;
+                            firstProcessedFrameReceived = true;
                             if (currentFrames > 0 && !firstFrameHeartbeatCts.IsCancellationRequested)
                             {
                                 firstFrameHeartbeatCts.Cancel();
@@ -986,6 +1268,15 @@ public sealed class PipelineService
                 }
                 finally
                 {
+                    if (skipRequested)
+                    {
+                        try { pauseController.SetPaused(false); } catch { }
+                        try { pipelineCts.Cancel(); } catch { }
+                        try { TryKillTree(decode.Process); } catch { }
+                        try { TryKillTree(upscale.Process); } catch { }
+                        try { if (refiner is not null) TryKillTree(refiner.Process); } catch { }
+                    }
+
                     try { firstFrameHeartbeatCts.Cancel(); } catch { }
                     try { antiFlicker?.Dispose(); } catch { }
                     try { refinerIn?.Close(); } catch { }
@@ -1002,28 +1293,12 @@ public sealed class PipelineService
 
                 if (skipRequested)
                 {
-                    WriteResumeState(
-                        resumeStatePath,
-                        new ResumeStateEntry(
-                            1,
-                            item.SourcePath,
-                            item.OutputPath,
-                            codec,
-                            height,
-                            options.UpscalerBackend.ToString(),
-                            options.RefinerBackend.ToString(),
-                            currentFrames,
-                            totalFrames,
-                            "Skipped",
-                            Complete: false,
-                            CanResume: true,
-                            DateTime.UtcNow));
-                    item.IsInterrupted = true;
-                    item.IsBusy = false;
-                    item.Stage = LocalizedStrings.LogCancelled;
-                    item.OutputState = LocalizedStrings.LogCancelled;
-                    item.Detail = string.Empty;
-                    report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogSkippingEncode, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed)));
+                    MarkSkippedItem();
+                    if (ConsumeStopAfterCurrentItemRequested())
+                    {
+                        return;
+                    }
+
                     continue;
                 }
 
@@ -1085,15 +1360,10 @@ public sealed class PipelineService
                     ? GetFrameDurationsFromTimestamps(frameTimestamps, fallbackFrameDuration)
                     : BuildUniformDurations(currentFrames, fallbackFrameDuration);
                 WritePerfSnapshot(encodeWatch.Elapsed, final: true);
-                TryCopyPerfLog(perfLog, perfLogFinal);
                 if (!timestampCacheHit && rawFrameTimestamps.Count > 0)
                 {
                     SaveTimestampCache(item.SourcePath, rawFrameTimestamps);
                 }
-                var timingDebugLog = Path.Combine(
-                    options.OutputFolder,
-                    $"{Path.GetFileNameWithoutExtension(item.OutputPath)}.timing.debug.log");
-                WriteTimingDebugLog(timingDebugLog, metadata.Duration, frameTimestamps, durations);
                 if (isResumeRun)
                 {
                     WriteStartupLog($"Finalizing resumed render from frame {resumeStartFrame}");
@@ -1102,7 +1372,10 @@ public sealed class PipelineService
                         item.SourcePath,
                         subtitle,
                         hasSub,
-                        item.OutputPath,
+                        codec,
+                        options.EncoderPreset,
+                        crf,
+                        resumeSourceSegmentPath,
                         resumePartialVideoPath,
                         resumeContinuationOutputPath,
                         resumeMergedVideoPath,
@@ -1110,27 +1383,18 @@ public sealed class PipelineService
                         cancellationToken,
                         line => encodeLastError = line).ConfigureAwait(false);
                 }
-                WriteResumeState(
-                    resumeStatePath,
-                    new ResumeStateEntry(
-                        1,
-                        item.SourcePath,
-                        item.OutputPath,
-                        codec,
-                        height,
-                        options.UpscalerBackend.ToString(),
-                        options.RefinerBackend.ToString(),
-                        currentFrames,
-                        totalFrames,
-                        "Completed",
-                        Complete: true,
-                        CanResume: false,
-                        DateTime.UtcNow));
+                TryDelete(resumeStatePath);
+                MarkCompletedOutput(item.OutputPath, options);
 
-                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogEncodeComplete, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogWroteFile(Path.GetFileName(item.OutputPath)), StageElapsedText: Time(stageWatch.Elapsed)));
+                report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogEncodeComplete, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogWroteFile(Path.GetFileName(item.OutputPath)), StageElapsedText: Time(stageWatch.Elapsed), ProcessingFpsText: "--"));
+                if (ConsumeStopAfterCurrentItemRequested())
+                {
+                    return;
+                }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
+                RemoveCompletedOutput(item.OutputPath);
                 if (!isResumeRun)
                 {
                     HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
@@ -1160,6 +1424,18 @@ public sealed class PipelineService
             }
             catch
             {
+                if (item.SkipRequested)
+                {
+                    MarkSkippedItem();
+                    if (ConsumeStopAfterCurrentItemRequested())
+                    {
+                        return;
+                    }
+
+                    continue;
+                }
+
+                RemoveCompletedOutput(item.OutputPath);
                 if (!isResumeRun)
                 {
                     HandleIncompleteOutput(item.OutputPath, options.PreserveIncompleteOutput);
@@ -1190,14 +1466,72 @@ public sealed class PipelineService
             }
             finally
             {
+                lock (_pauseSync)
+                {
+                    if (ReferenceEquals(_abortCurrentItemAction, abortCurrentItemAction))
+                    {
+                        _abortCurrentItemAction = null;
+                    }
+
+                    if (ReferenceEquals(_activePauseController, pauseController))
+                    {
+                        _activePauseController = null;
+                    }
+                }
+
                 if (isResumeRun)
                 {
                     TryDeleteDirectory(resumeWorkingDirectory);
+                    if (!string.IsNullOrWhiteSpace(item.ResumeSourceOutputPath) &&
+                        !string.Equals(item.ResumeSourceOutputPath, item.OutputPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        TryDeleteFile(item.ResumeSourceOutputPath);
+                    }
                 }
+            }
+
+            void MarkSkippedItem()
+            {
+                WriteResumeState(
+                    resumeStatePath,
+                    new ResumeStateEntry(
+                        1,
+                        item.SourcePath,
+                        item.OutputPath,
+                        resumeCodec,
+                        resumeTargetHeight,
+                        options.UpscalerBackend.ToString(),
+                        options.RefinerBackend.ToString(),
+                        resumeProcessedFrames,
+                        resumeTotalFrames,
+                        "Skipped",
+                        Complete: false,
+                        CanResume: true,
+                        DateTime.UtcNow));
+                item.IsInterrupted = true;
+                item.IsBusy = false;
+                item.Stage = LocalizedStrings.LogCancelled;
+                item.OutputState = LocalizedStrings.LogCancelled;
+                item.Detail = string.Empty;
+                report(new PipelineProgress(
+                    item.Index,
+                    total,
+                    item.Title,
+                    LocalizedStrings.LogProcessing,
+                    100,
+                    "100%",
+                    Time(itemWatch.Elapsed),
+                    "00:00:00",
+                    LocalizedStrings.LogSkippingEncode,
+                    Path.GetFileName(item.OutputPath),
+                    Summary(item.Index, total, overall.Elapsed),
+                    LocalizedStrings.LogSkippingEncode,
+                    StageElapsedText: Time(itemWatch.Elapsed),
+                    ProcessingFpsText: "--"));
             }
         }
 
-        report(new PipelineProgress(total, total, items[^1].Title, LocalizedStrings.LogBatchComplete, 100, "100%", Time(overall.Elapsed), "00:00:00", LocalizedStrings.LogBatchComplete, string.Empty, Summary(total, total, overall.Elapsed), LocalizedStrings.LogBatchComplete, StageElapsedText: Time(overall.Elapsed)));
+        report(new PipelineProgress(total, total, items[^1].Title, LocalizedStrings.LogBatchComplete, 100, "100%", Time(overall.Elapsed), "00:00:00", LocalizedStrings.LogBatchComplete, string.Empty, Summary(total, total, overall.Elapsed), LocalizedStrings.LogBatchComplete, StageElapsedText: Time(overall.Elapsed), ProcessingFpsText: "--"));
     }
 
     private static string Q(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
@@ -1209,6 +1543,9 @@ public sealed class PipelineService
         string sourcePath,
         string subtitlePath,
         bool hasSubtitles,
+        string codec,
+        string preset,
+        int crf,
         string finalOutputPath,
         string partialVideoPath,
         string continuationOutputPath,
@@ -1230,7 +1567,7 @@ public sealed class PipelineService
         var workingDirectory = Path.GetDirectoryName(finalOutputPath) ?? Environment.CurrentDirectory;
         await RunToolAsync(
             ffmpegPath,
-            $"-hide_banner -y -nostats -loglevel error -i {Q(finalOutputPath)} -map 0:v:0 -c copy {Q(partialVideoPath)}",
+            $"-hide_banner -y -nostats -loglevel error -fflags +genpts+discardcorrupt -err_detect ignore_err -i {Q(finalOutputPath)} -map 0:v:0 -an -c:v {codec} -preset {preset} -crf {crf} -pix_fmt yuv420p {Q(partialVideoPath)}",
             workingDirectory,
             cancellationToken,
             onErrorLine).ConfigureAwait(false);
@@ -1431,6 +1768,84 @@ public sealed class PipelineService
         }
     }
 
+    internal static bool IsCompletedOutputMatch(string outputPath, PipelineOptions options)
+    {
+        try
+        {
+            if (!File.Exists(outputPath))
+            {
+                RemoveCompletedOutput(outputPath);
+                return false;
+            }
+
+            var entries = LoadCompletedRenderIndex();
+            var normalizedPath = NormalizeOutputPath(outputPath);
+            if (!entries.TryGetValue(normalizedPath, out var entry))
+            {
+                return false;
+            }
+
+            var info = new FileInfo(outputPath);
+            var signature = BuildCompletedSettingsSignature(options);
+            var matches =
+                entry.Length == info.Length &&
+                entry.LastWriteTimeUtcTicks == info.LastWriteTimeUtc.Ticks &&
+                string.Equals(entry.SettingsSignature, signature, StringComparison.Ordinal);
+
+            if (!matches)
+            {
+                entries.Remove(normalizedPath);
+                SaveCompletedRenderIndex(entries);
+                return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    internal static void MarkCompletedOutput(string outputPath, PipelineOptions options)
+    {
+        try
+        {
+            if (!File.Exists(outputPath))
+            {
+                return;
+            }
+
+            var info = new FileInfo(outputPath);
+            var entries = LoadCompletedRenderIndex();
+            entries[NormalizeOutputPath(outputPath)] = new CompletedRenderIndexEntry(
+                outputPath,
+                info.Length,
+                info.LastWriteTimeUtc.Ticks,
+                BuildCompletedSettingsSignature(options),
+                DateTime.UtcNow);
+            SaveCompletedRenderIndex(entries);
+        }
+        catch
+        {
+        }
+    }
+
+    internal static void RemoveCompletedOutput(string outputPath)
+    {
+        try
+        {
+            var entries = LoadCompletedRenderIndex();
+            if (entries.Remove(NormalizeOutputPath(outputPath)))
+            {
+                SaveCompletedRenderIndex(entries);
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private static void WriteResumeState(string path, ResumeStateEntry entry)
     {
         try
@@ -1444,6 +1859,93 @@ public sealed class PipelineService
         catch
         {
         }
+    }
+
+    private static Dictionary<string, CompletedRenderIndexEntry> LoadCompletedRenderIndex()
+    {
+        try
+        {
+            if (!File.Exists(CompletedRenderIndexPath))
+            {
+                return new Dictionary<string, CompletedRenderIndexEntry>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            var json = File.ReadAllText(CompletedRenderIndexPath);
+            var entries = JsonSerializer.Deserialize<List<CompletedRenderIndexEntry>>(json)
+                ?? new List<CompletedRenderIndexEntry>();
+            var result = new Dictionary<string, CompletedRenderIndexEntry>(StringComparer.OrdinalIgnoreCase);
+            var dirty = false;
+            foreach (var entry in entries)
+            {
+                if (string.IsNullOrWhiteSpace(entry.OutputPath) || !File.Exists(entry.OutputPath))
+                {
+                    dirty = true;
+                    continue;
+                }
+
+                result[NormalizeOutputPath(entry.OutputPath)] = entry;
+            }
+
+            if (dirty)
+            {
+                SaveCompletedRenderIndex(result);
+            }
+
+            return result;
+        }
+        catch
+        {
+            return new Dictionary<string, CompletedRenderIndexEntry>(StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    private static void SaveCompletedRenderIndex(Dictionary<string, CompletedRenderIndexEntry> entries)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(CompletedRenderIndexPath) ?? Environment.CurrentDirectory);
+            var ordered = entries.Values
+                .OrderByDescending(entry => entry.CompletedUtc)
+                .Take(5000)
+                .ToList();
+            File.WriteAllText(
+                CompletedRenderIndexPath,
+                JsonSerializer.Serialize(ordered, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch
+        {
+        }
+    }
+
+    private static string NormalizeOutputPath(string outputPath)
+        => Path.GetFullPath(outputPath).Trim().ToUpperInvariant();
+
+    private static string BuildCompletedSettingsSignature(PipelineOptions options)
+    {
+        var payload = new
+        {
+            options.UseX265,
+            options.OutputContainer,
+            options.EncoderPreset,
+            options.UpscalerBackend,
+            options.RefinerBackend,
+            options.UseAntiFlicker,
+            options.AntiFlickerMode,
+            AntiFlickerStrength = Math.Round(options.AntiFlickerStrength, 2),
+            options.ContentMode,
+            options.UseNativeEncoderBackend,
+            options.RepairBrokenTimestamps,
+            options.UpscalerPath,
+            options.UpscalerWorkingDirectory,
+            options.ModelDir,
+            options.ExternalUpscalerArgumentsTemplate,
+            options.RefinerPath,
+            options.RefinerWorkingDirectory,
+            options.RefinerModelDir,
+            options.RefinerArgumentsTemplate
+        };
+
+        return JsonSerializer.Serialize(payload);
     }
 
     private static bool TryLoadSourceMetadataCache(string sourcePath, out SourceMetadata metadata)
@@ -1951,6 +2453,20 @@ public sealed class PipelineService
         }
     }
 
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private static void HandleIncompleteOutput(string path, bool preserveIncompleteOutput)
     {
         if (preserveIncompleteOutput)
@@ -1969,6 +2485,37 @@ public sealed class PipelineService
     private static string Summary(int current, int total, TimeSpan elapsed) => LocalizedStrings.LogItemSummary(current, total, Time(elapsed));
 
     private static string Time(TimeSpan value) => value < TimeSpan.Zero ? "--:--:--" : value.ToString(@"hh\:mm\:ss");
+
+    private static string EstimateResumeLoadingEta(string resumeSourceSegmentPath, TimeSpan elapsed)
+    {
+        try
+        {
+            var sizeMb = File.Exists(resumeSourceSegmentPath)
+                ? new FileInfo(resumeSourceSegmentPath).Length / (1024d * 1024d)
+                : 0d;
+            var totalSeconds = Math.Clamp((6 + sizeMb / 80d) * 10, 60, 450);
+            var remaining = GetExtendedCountdown(TimeSpan.FromSeconds(totalSeconds), elapsed, TimeSpan.FromSeconds(15));
+            return $"~{Time(remaining)}";
+        }
+        catch
+        {
+            return "~00:01:00";
+        }
+    }
+
+    private static TimeSpan GetExtendedCountdown(TimeSpan estimatedTotal, TimeSpan elapsed, TimeSpan extensionStep)
+    {
+        var remaining = estimatedTotal - elapsed;
+        if (remaining > TimeSpan.Zero)
+        {
+            return remaining;
+        }
+
+        var step = extensionStep <= TimeSpan.Zero ? TimeSpan.FromSeconds(15) : extensionStep;
+        var overtime = -remaining;
+        var chunks = (int)Math.Floor(overtime.TotalSeconds / step.TotalSeconds) + 1;
+        return step * chunks - overtime;
+    }
 
     private static string FormatFrameTimestamp(double seconds)
     {

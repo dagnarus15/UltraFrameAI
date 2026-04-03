@@ -99,6 +99,36 @@
   <data name="RenderSkipFile" xml:space="preserve">
     <value>Datei überspringen</value>
   </data>
+  <data name="RenderPause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="RenderResume" xml:space="preserve">
+    <value>Fortsetzen</value>
+  </data>
+  <data name="PausedProcessExitedTitle" xml:space="preserve">
+    <value>Prozess wurde während der Pause beendet</value>
+  </data>
+  <data name="PausedProcessExitedMessage" xml:space="preserve">
+    <value>Einer der Hintergrundprozesse wurde beendet, während das Rendern pausiert war.\nDie aktuelle Datei wird gestoppt, und die App versucht jetzt, sie per Recovery fortzusetzen.</value>
+  </data>
+  <data name="PausedProcessExitedFileLabel" xml:space="preserve">
+    <value>Aktuelle Datei</value>
+  </data>
+  <data name="PausedProcessExitedProcessLabel" xml:space="preserve">
+    <value>Beendeter Prozess</value>
+  </data>
+  <data name="PausedProcessExitedOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="PausedProcessExitedLog" xml:space="preserve">
+    <value>Pausierter Prozess wurde beendet: {0}</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeStarting" xml:space="preserve">
+    <value>Es wird versucht, die unterbrochene Datei per Recovery fortzusetzen.</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeFailed" xml:space="preserve">
+    <value>Die unterbrochene Datei konnte nicht automatisch fortgesetzt werden: {0}</value>
+  </data>
   <data name="RenderStopAll" xml:space="preserve">
     <value>Alles stoppen</value>
   </data>
@@ -131,6 +161,42 @@
   </data>
   <data name="ResumeUnavailableMessage" xml:space="preserve">
     <value>Diese Datei kann aus dem gespeicherten Zustand nicht fortgesetzt werden.\nDu kannst sie ersetzen oder überspringen.</value>
+  </data>
+  <data name="ResumeUnavailableReasonHeader" xml:space="preserve">
+    <value>Grund</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingOutput" xml:space="preserve">
+    <value>Die unvollständige Ausgabedatei wurde neben dem erwarteten Ergebnis nicht gefunden.</value>
+  </data>
+  <data name="ResumeUnavailableReasonProbeUnavailable" xml:space="preserve">
+    <value>Die unvollständige Datei konnte nicht mit ffprobe geprüft werden, daher ist ein sicheres Fortsetzen nicht möglich.</value>
+  </data>
+  <data name="ResumeUnavailableReasonInvalidOutput" xml:space="preserve">
+    <value>Die unvollständige Ausgabedatei ist beschädigt oder nicht mehr als Video lesbar und kann daher nicht sicher fortgesetzt werden.</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingState" xml:space="preserve">
+    <value>Es wurde kein gültiger Status des unvollständigen Renderings gefunden, daher weiß die App nicht, an welcher Stelle sie fortsetzen soll.</value>
+  </data>
+  <data name="ResumeUnavailableReasonAlreadyComplete" xml:space="preserve">
+    <value>Für diese Datei ist bereits ein abgeschlossener Renderstatus gespeichert, daher ist kein Fortsetzen mehr nötig.</value>
+  </data>
+  <data name="ResumeUnavailableReasonSourceMismatch" xml:space="preserve">
+    <value>Der gespeicherte Status gehört zu einer anderen Quelldatei und kann für dieses Rendering nicht verwendet werden.</value>
+  </data>
+  <data name="ResumeUnavailableReasonSettingsChanged" xml:space="preserve">
+    <value>Die Rendereinstellungen wurden seit der Unterbrechung geändert, daher wäre ein Fortsetzen der alten Datei nicht sicher.</value>
+  </data>
+  <data name="ResumeUnavailableReasonGeneric" xml:space="preserve">
+    <value>Der gespeicherte Status oder die unvollständige Datei eignet sich nicht für ein sicheres Fortsetzen.</value>
+  </data>
+  <data name="ResumePreflightChecking" xml:space="preserve">
+    <value>Prüfe, ob ein Fortsetzen möglich ist</value>
+  </data>
+  <data name="ResumePreflightRecovering" xml:space="preserve">
+    <value>Stelle den lesbaren Teil der Datei wieder her</value>
+  </data>
+  <data name="ResumePreflightLoadingFile" xml:space="preserve">
+    <value>Datei wird geladen</value>
   </data>
   <data name="FileList" xml:space="preserve">
     <value>Dateiliste</value>

@@ -99,6 +99,36 @@
   <data name="RenderSkipFile" xml:space="preserve">
     <value>Пропустить файл</value>
   </data>
+  <data name="RenderPause" xml:space="preserve">
+    <value>Пауза</value>
+  </data>
+  <data name="RenderResume" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="PausedProcessExitedTitle" xml:space="preserve">
+    <value>Процесс завершился во время паузы</value>
+  </data>
+  <data name="PausedProcessExitedMessage" xml:space="preserve">
+    <value>Один из фоновых процессов завершился, пока рендер был на паузе.\nТекущий файл будет остановлен, и приложение сейчас попробует продолжить его через recovery.</value>
+  </data>
+  <data name="PausedProcessExitedFileLabel" xml:space="preserve">
+    <value>Текущий файл</value>
+  </data>
+  <data name="PausedProcessExitedProcessLabel" xml:space="preserve">
+    <value>Завершившийся процесс</value>
+  </data>
+  <data name="PausedProcessExitedOk" xml:space="preserve">
+    <value>Понятно</value>
+  </data>
+  <data name="PausedProcessExitedLog" xml:space="preserve">
+    <value>Процесс завершился во время паузы: {0}</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeStarting" xml:space="preserve">
+    <value>Пробую продолжить прерванный файл через recovery.</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeFailed" xml:space="preserve">
+    <value>Не удалось автоматически продолжить прерванный файл: {0}</value>
+  </data>
   <data name="RenderStopAll" xml:space="preserve">
     <value>Остановить всё</value>
   </data>
@@ -131,6 +161,42 @@
   </data>
   <data name="ResumeUnavailableMessage" xml:space="preserve">
     <value>Этот файл нельзя продолжить из сохранённого состояния.\nМожно перезаписать его или пропустить.</value>
+  </data>
+  <data name="ResumeUnavailableReasonHeader" xml:space="preserve">
+    <value>Причина</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingOutput" xml:space="preserve">
+    <value>Незавершённый выходной файл не найден рядом с ожидаемым результатом.</value>
+  </data>
+  <data name="ResumeUnavailableReasonProbeUnavailable" xml:space="preserve">
+    <value>Не удалось проверить незавершённый файл через ffprobe, поэтому безопасно продолжить рендер нельзя.</value>
+  </data>
+  <data name="ResumeUnavailableReasonInvalidOutput" xml:space="preserve">
+    <value>Незавершённый выходной файл повреждён или уже не читается как видео, поэтому его нельзя безопасно продолжить.</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingState" xml:space="preserve">
+    <value>Не найдено корректное состояние незавершённого рендера, поэтому приложение не знает, с какого места продолжать.</value>
+  </data>
+  <data name="ResumeUnavailableReasonAlreadyComplete" xml:space="preserve">
+    <value>Для этого файла уже сохранено состояние завершённого рендера, поэтому продолжение не требуется.</value>
+  </data>
+  <data name="ResumeUnavailableReasonSourceMismatch" xml:space="preserve">
+    <value>Сохранённое состояние относится к другому исходному файлу и не подходит для продолжения этого рендера.</value>
+  </data>
+  <data name="ResumeUnavailableReasonSettingsChanged" xml:space="preserve">
+    <value>Параметры рендера изменились с момента прерывания, поэтому безопасно продолжить старый файл нельзя.</value>
+  </data>
+  <data name="ResumeUnavailableReasonGeneric" xml:space="preserve">
+    <value>Сохранённое состояние или промежуточный файл не подходят для безопасного продолжения.</value>
+  </data>
+  <data name="ResumePreflightChecking" xml:space="preserve">
+    <value>Проверяю возможность дорендера</value>
+  </data>
+  <data name="ResumePreflightRecovering" xml:space="preserve">
+    <value>Восстанавливаю небитую часть файла</value>
+  </data>
+  <data name="ResumePreflightLoadingFile" xml:space="preserve">
+    <value>Загружаю файл</value>
   </data>
   <data name="FileList" xml:space="preserve">
     <value>Список файлов</value>
