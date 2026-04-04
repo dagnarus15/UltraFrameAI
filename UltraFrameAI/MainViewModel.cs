@@ -53,6 +53,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool Overwrite,
         string SelectedContentMode,
         string CurrentLanguage,
+        string? BackgroundColorHex,
         bool? UseAntiFlicker,
         string? SelectedAntiFlickerMode,
         bool PreserveIncompleteOutput,
@@ -226,6 +227,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _startSelectedCommand = new AsyncRelayCommand(StartSelectedAsync, () => !IsBusy);
 
         LocalizedStrings.LanguageChanged += (_, _) => RefreshLocalizedText();
+        AppThemeManager.ThemeChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(CurrentBackgroundPreviewBrush));
+            if (!_suppressAppSettingsPersistence)
+            {
+                PersistAppSettings();
+            }
+        };
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerPresets = LoadAntiFlickerPresets();
         _useNativeEncoderBackend = LoadNativeEncoderBackendPreference();
@@ -1379,6 +1388,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         progress?.Invoke(candidates.Length, candidates.Length, matches.Count, matches.Count > 0 ? Path.GetFileName(matches[^1]) : string.Empty);
         return matches.ToArray();
     }
+
+    public System.Windows.Media.Brush CurrentBackgroundPreviewBrush => AppThemeManager.CreatePreviewBrush();
 
     private Task StartAsync() => StartPipelineAsync(Items.Where(item => !item.IsBusy).ToArray(), LocalizedStrings.LogStartingBatch);
 
@@ -3947,6 +3958,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 CurrentLanguage = parsedLanguage;
             }
 
+            AppThemeManager.ApplyBackgroundColor(loaded.BackgroundColorHex);
+
             if (!string.IsNullOrWhiteSpace(loaded.SelectedContentMode))
             {
                 SelectedContentMode = loaded.SelectedContentMode;
@@ -4216,6 +4229,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Overwrite,
                 SelectedContentMode,
                 CurrentLanguage.ToString(),
+                AppThemeManager.CurrentBackgroundColorHex,
                 UseAntiFlicker,
                 SelectedAntiFlickerMode.ToString(),
                 PreserveIncompleteOutput,

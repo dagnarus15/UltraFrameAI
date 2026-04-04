@@ -1,0 +1,269 @@
+<Window x:Class="UltraFrameAI.BackgroundColorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:UltraFrameAI"
+        Title="{local:Loc BackgroundColorDialogTitle}"
+        Width="560"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        Background="Transparent">
+    <Border Background="{StaticResource AppBgBrush}"
+            BorderBrush="{StaticResource CardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="18">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="14" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc BackgroundColorDialogTitle}"
+                                   FontSize="20"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{local:Loc BackgroundColorDialogBody}"
+                                   Margin="0,6,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Border Grid.Column="1"
+                            Width="42"
+                            Height="42"
+                            CornerRadius="21"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1"
+                            Background="{Binding SelectedBackgroundBrush}" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Background="#0E1628"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        Padding="12"
+                        Cursor="Hand"
+                        MouseLeftButtonUp="InitialColorPanel_MouseLeftButtonUp">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding InitialColorText}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                        <Border Grid.Column="2"
+                                Width="18"
+                                Height="18"
+                                CornerRadius="9"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                Background="{Binding InitialBackgroundBrush}"
+                                VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2"
+                        Background="#0E1628"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        Padding="12"
+                        Cursor="Hand"
+                        MouseLeftButtonUp="DefaultColorPanel_MouseLeftButtonUp">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding DefaultColorText}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                        <Border Grid.Column="2"
+                                Width="18"
+                                Height="18"
+                                CornerRadius="9"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                Background="{Binding DefaultBackgroundBrush}"
+                                VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="4"
+                    Background="#0E1628"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Padding="14">
+                <StackPanel>
+                    <TextBlock Text="{local:Loc BackgroundColorSpectrum}"
+                               Style="{StaticResource CaptionStyle}" />
+
+                    <Border Margin="0,8,0,0"
+                            Height="220"
+                            CornerRadius="12"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1"
+                            ClipToBounds="True"
+                            x:Name="PaletteBorder"
+                            MouseLeftButtonDown="PaletteBorder_MouseLeftButtonDown"
+                            MouseMove="PaletteBorder_MouseMove"
+                            MouseLeftButtonUp="PaletteBorder_MouseLeftButtonUp">
+                        <Grid>
+                            <Image Source="{Binding PaletteImageSource}"
+                                   Stretch="Fill" />
+                            <Canvas IsHitTestVisible="False">
+                                <Border Width="14"
+                                        Height="14"
+                                        CornerRadius="7"
+                                        BorderBrush="White"
+                                        BorderThickness="1.5"
+                                        Background="{Binding SelectedBackgroundBrush}"
+                                        Canvas.Left="{Binding PaletteMarkerX}"
+                                        Canvas.Top="{Binding PaletteMarkerY}" />
+                            </Canvas>
+                        </Grid>
+                    </Border>
+
+                    <Border Margin="0,10,0,0"
+                            Height="26"
+                            CornerRadius="10"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1"
+                            MouseLeftButtonDown="HueBorder_MouseLeftButtonDown"
+                            MouseMove="HueBorder_MouseMove"
+                            MouseLeftButtonUp="HueBorder_MouseLeftButtonUp"
+                            x:Name="HueBorder">
+                        <Grid>
+                            <Rectangle RadiusX="10" RadiusY="10">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                        <GradientStop Color="#FF0000" Offset="0" />
+                                        <GradientStop Color="#FFFF00" Offset="0.17" />
+                                        <GradientStop Color="#00FF00" Offset="0.33" />
+                                        <GradientStop Color="#00FFFF" Offset="0.50" />
+                                        <GradientStop Color="#0000FF" Offset="0.67" />
+                                        <GradientStop Color="#FF00FF" Offset="0.83" />
+                                        <GradientStop Color="#FF0000" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Canvas IsHitTestVisible="False">
+                                <Border Width="12"
+                                        Height="26"
+                                        CornerRadius="6"
+                                        BorderBrush="White"
+                                        BorderThickness="1.5"
+                                        Background="#22000000"
+                                        Canvas.Left="{Binding HueMarkerX}" />
+                            </Canvas>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Margin="0,12,0,0"
+                               Text="{local:Loc BackgroundColorPresets}"
+                               Style="{StaticResource CaptionStyle}" />
+                    <ItemsControl ItemsSource="{Binding PresetBrushes}" Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Width="38"
+                                        Height="38"
+                                        Margin="0,0,8,8"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        Tag="{Binding}"
+                                        Click="PresetColor_Click"
+                                        ToolTip="{local:Loc BackgroundColor}">
+                                    <Ellipse Width="28"
+                                             Height="28"
+                                             Fill="{Binding}"
+                                             Stroke="{StaticResource CardBorderBrush}"
+                                             StrokeThickness="1" />
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Margin="0,4,0,0"
+                               Text="{local:Loc BackgroundColorHex}"
+                               Style="{StaticResource CaptionStyle}" />
+                    <Border Margin="0,8,0,0"
+                            Background="#121E34"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="12,0">
+                        <TextBox Height="42"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 VerticalContentAlignment="Center"
+                                 Text="{Binding HexColorText, UpdateSourceTrigger=PropertyChanged}"
+                                 LostFocus="HexColorTextBox_LostFocus"
+                                 KeyDown="HexColorTextBox_KeyDown" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="1"
+                        Content="{local:Loc Cancel}"
+                        MinWidth="116"
+                        Click="Cancel_Click"
+                        Background="#16243D"
+                        BorderBrush="{StaticResource CardBorderBrush}"
+                        Foreground="{StaticResource TextPrimaryBrush}" />
+                <Button Grid.Column="3"
+                        Content="{local:Loc Apply}"
+                        MinWidth="116"
+                        Click="Apply_Click"
+                        Background="#1F3A52"
+                        BorderBrush="{StaticResource AccentBrush}"
+                        Foreground="White"
+                        FontWeight="SemiBold" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

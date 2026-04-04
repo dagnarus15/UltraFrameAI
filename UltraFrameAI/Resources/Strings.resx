@@ -1156,6 +1156,51 @@ Turn it off if you want to preserve the source timeline exactly as-is, including
   <data name="LanguageGerman" xml:space="preserve">
     <value>Deutsch</value>
   </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="BackgroundColor" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+  <data name="BackgroundColorDialogTitle" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+  <data name="BackgroundColorDialogBody" xml:space="preserve">
+    <value>Choose the global app background color. It is applied immediately to every window behind the cards.</value>
+  </data>
+  <data name="BackgroundColorSpectrum" xml:space="preserve">
+    <value>Spectrum</value>
+  </data>
+  <data name="BackgroundColorPresets" xml:space="preserve">
+    <value>Main colors</value>
+  </data>
+  <data name="BackgroundColorActive" xml:space="preserve">
+    <value>Active color</value>
+  </data>
+  <data name="BackgroundColorPrevious" xml:space="preserve">
+    <value>Previous color</value>
+  </data>
+  <data name="BackgroundColorDefault" xml:space="preserve">
+    <value>Default color</value>
+  </data>
+  <data name="BackgroundColorHex" xml:space="preserve">
+    <value>HEX color</value>
+  </data>
+  <data name="SettingsTabGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="SettingsTabPerformance" xml:space="preserve">
+    <value>Performance</value>
+  </data>
+  <data name="SettingsTabBackends" xml:space="preserve">
+    <value>Backends</value>
+  </data>
+  <data name="SettingsTabAntiFlicker" xml:space="preserve">
+    <value>Anti-flicker</value>
+  </data>
+  <data name="SettingsTabAppearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
   <data name="QueueIndex" xml:space="preserve">
     <value>#</value>
   </data>

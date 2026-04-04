@@ -39,6 +39,8 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
         _ => "pack://application:,,,/images/flag-en.png"
     };
 
+    public ImageSource BackgroundColorWheelImage { get; } = AppThemeManager.CreateColorWheelImage();
+
     public RelayCommand SetLanguageCommand => new(SetLanguage);
 
     private void Run_Click(object sender, RoutedEventArgs e)
@@ -69,6 +71,19 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
     private void LanguageChoice_Click(object sender, RoutedEventArgs e)
     {
         _ = ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
+    }
+
+    private void BackgroundColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new BackgroundColorDialog(AppThemeManager.CurrentBackgroundColor)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            AppThemeManager.ApplyBackgroundColor(dialog.SelectedColor);
+        }
     }
 
     private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)

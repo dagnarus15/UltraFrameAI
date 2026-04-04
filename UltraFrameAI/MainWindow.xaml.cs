@@ -230,6 +230,19 @@ public partial class MainWindow : Window
         _ = RunStartupBenchmarkAsync(markCompletedOnSuccess: false);
     }
 
+    private void BackgroundColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new BackgroundColorDialog(AppThemeManager.CurrentBackgroundColor)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            AppThemeManager.ApplyBackgroundColor(dialog.SelectedColor);
+        }
+    }
+
     private void DeleteSelected_Click(object sender, RoutedEventArgs e)
     {
         var selectedItems = _viewModel.Items.Where(item => item.IsChecked && !item.IsBusy).ToArray();

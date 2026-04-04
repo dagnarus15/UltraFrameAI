@@ -49,12 +49,13 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Border Background="#0B1220"
+    <Border Background="{DynamicResource AppBgBrush}"
             BorderBrush="{StaticResource CardBorderBrush}"
             BorderThickness="1"
             CornerRadius="18"
             ClipToBounds="True">
-        <Grid Margin="18">
+        <Grid Margin="18"
+              Background="{DynamicResource AppBgBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="10" />
@@ -103,6 +104,17 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             Margin="12,0,0,0">
+                    <Button x:Name="BackgroundColorButton"
+                            Width="30"
+                            Height="30"
+                            Padding="0"
+                            Margin="0,0,0,8"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            ToolTip="{local:Loc BackgroundColor}"
+                            Click="BackgroundColorButton_Click">
+                        <Image Source="{Binding BackgroundColorWheelImage}" Width="22" Height="22" />
+                    </Button>
                     <Button x:Name="LanguageButton"
                             Width="42"
                             Height="30"

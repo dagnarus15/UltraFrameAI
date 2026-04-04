@@ -12,6 +12,7 @@
         MinWidth="1180"
         MinHeight="780"
         WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBgBrush}"
         AllowDrop="True"
         PreviewMouseDown="Window_PreviewMouseDown"
         DragEnter="Window_DragEnter"
@@ -172,6 +173,53 @@
         <Style TargetType="TextBlock" x:Key="CaptionStyle">
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
             <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="SettingsTabControlStyle" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style x:Key="SettingsTabItemStyle" TargetType="TabItem">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="#0F1728" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ContentSource="Header" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#16314F" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#13233A" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="TabBorder" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="Border" x:Key="DropZoneStyle">
@@ -472,7 +520,8 @@
         </Storyboard>
     </Window.Resources>
 
-    <Grid Margin="18">
+    <Grid Margin="18"
+          Background="{DynamicResource AppBgBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -1209,14 +1258,14 @@
                         </Button>
                     </Grid>
 
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.05*" />
-                            <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="0.95*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
+                    <TabControl Grid.Row="1"
+                                Style="{StaticResource SettingsTabControlStyle}"
+                                ItemContainerStyle="{StaticResource SettingsTabItemStyle}">
+                        <TabItem Header="{local:Loc SettingsTabGeneral}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          Padding="8,10,8,0">
+                                <StackPanel>
                             <TextBlock Text="{local:Loc OutputFolderLabel}"
                                        Style="{StaticResource CaptionStyle}"
                                        Margin="0,0,0,6" />
@@ -1267,6 +1316,64 @@
                                               HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{local:Loc GpuSelection}" Style="{StaticResource CaptionStyle}" />
+                                    <ComboBox ItemsSource="{Binding GpuOptions}"
+                                              SelectedItem="{Binding SelectedGpuOption}"
+                                              HorizontalAlignment="Stretch"
+                                              ToolTip="{local:Loc GpuSelectionHint}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2"
+                                           Text="{local:Loc GpuSelectionHint}"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Margin="0,20,0,0"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Top" />
+                            </Grid>
+
+                            <Button Click="BackgroundColorButton_Click"
+                                    ToolTip="{local:Loc BackgroundColor}"
+                                    Margin="0,0,0,10"
+                                    MinWidth="220"
+                                    Padding="14,11"
+                                    HorizontalAlignment="Left"
+                                    Background="#16243D"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Foreground="{StaticResource TextPrimaryBrush}">
+                                <Button.Content>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="18"
+                                                Height="18"
+                                                CornerRadius="9"
+                                                BorderBrush="{StaticResource CardBorderBrush}"
+                                                BorderThickness="1"
+                                                Background="{Binding CurrentBackgroundPreviewBrush}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{local:Loc BackgroundColor}"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Button.Content>
+                            </Button>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="{local:Loc SettingsTabBackends}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          Padding="8,10,8,0">
+                                <StackPanel>
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1388,6 +1495,15 @@
                                          MinHeight="88" />
                             </StackPanel>
 
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="{local:Loc SettingsTabPerformance}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          Padding="8,10,8,0">
+                                <StackPanel>
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1429,28 +1545,11 @@
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="{local:Loc TileSize}" Style="{StaticResource CaptionStyle}" />
                                     <TextBox Text="{Binding TileSizeText, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="{local:Loc GpuSelection}" Style="{StaticResource CaptionStyle}" />
-                                    <ComboBox ItemsSource="{Binding GpuOptions}"
-                                              SelectedItem="{Binding SelectedGpuOption}"
-                                              HorizontalAlignment="Stretch"
-                                              ToolTip="{local:Loc GpuSelectionHint}" />
-                                </StackPanel>
-                                <TextBlock Grid.Column="4"
-                                           Text="{local:Loc GpuSelectionHint}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           Margin="0,20,0,0"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Top" />
                             </Grid>
 
                             <WrapPanel Margin="0,0,0,12">
@@ -1480,10 +1579,6 @@
                                        Style="{StaticResource CaptionStyle}"
                                        TextWrapping="Wrap" />
 
-                            <Button Content="{local:Loc OpenOutputFolder}"
-                                    Command="{Binding OpenOutputCommand}"
-                                    Margin="0,0,0,2" />
-
                             <Button Content="{local:Loc Benchmark}"
                                     Click="BenchmarkButton_Click"
                                     MinWidth="132"
@@ -1494,9 +1589,15 @@
                                     ToolTip="{local:Loc BenchmarkHint}"
                                     Margin="0,10,0,0" />
 
-                        </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
 
-                        <StackPanel Grid.Column="2">
+                        <TabItem Header="{local:Loc SettingsTabAntiFlicker}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          Padding="8,10,8,0">
+                                <StackPanel>
                             <WrapPanel Margin="0,6,0,4"
                                        VerticalAlignment="Center">
                                 <CheckBox Content="{local:Loc AntiFlicker}"
@@ -1698,8 +1799,11 @@
                                     TickFrequency="5"
                                     IsSnapToTickEnabled="True"
                                     Margin="0,6,0,0" />
-                        </StackPanel>
-                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                    </TabControl>
                 </Grid>
             </Border>
         </Grid>

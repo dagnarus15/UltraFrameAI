@@ -1159,6 +1159,51 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
   <data name="LanguageGerman" xml:space="preserve">
     <value>Deutsch</value>
   </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Anwenden</value>
+  </data>
+  <data name="BackgroundColor" xml:space="preserve">
+    <value>Hintergrundfarbe</value>
+  </data>
+  <data name="BackgroundColorDialogTitle" xml:space="preserve">
+    <value>Hintergrundfarbe</value>
+  </data>
+  <data name="BackgroundColorDialogBody" xml:space="preserve">
+    <value>Waehlen Sie die globale Hintergrundfarbe der App. Sie wird sofort hinter den Karten in allen Fenstern angewendet.</value>
+  </data>
+  <data name="BackgroundColorSpectrum" xml:space="preserve">
+    <value>Spektrum</value>
+  </data>
+  <data name="BackgroundColorPresets" xml:space="preserve">
+    <value>Grundfarben</value>
+  </data>
+  <data name="BackgroundColorActive" xml:space="preserve">
+    <value>Aktive Farbe</value>
+  </data>
+  <data name="BackgroundColorPrevious" xml:space="preserve">
+    <value>Vorherige Farbe</value>
+  </data>
+  <data name="BackgroundColorDefault" xml:space="preserve">
+    <value>Standardfarbe</value>
+  </data>
+  <data name="BackgroundColorHex" xml:space="preserve">
+    <value>HEX-Farbe</value>
+  </data>
+  <data name="SettingsTabGeneral" xml:space="preserve">
+    <value>Allgemein</value>
+  </data>
+  <data name="SettingsTabPerformance" xml:space="preserve">
+    <value>Leistung</value>
+  </data>
+  <data name="SettingsTabBackends" xml:space="preserve">
+    <value>Backends</value>
+  </data>
+  <data name="SettingsTabAntiFlicker" xml:space="preserve">
+    <value>Anti-Flicker</value>
+  </data>
+  <data name="SettingsTabAppearance" xml:space="preserve">
+    <value>Darstellung</value>
+  </data>
   <data name="QueueIndex" xml:space="preserve">
     <value>#</value>
   </data>

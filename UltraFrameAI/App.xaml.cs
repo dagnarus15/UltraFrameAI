@@ -28,6 +28,7 @@ public partial class App : Application
     protected override async void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
+        AppThemeManager.InitializeMutableResources();
 
         if (e.Args.Any(arg => arg.Equals("--benchmark-source", StringComparison.OrdinalIgnoreCase) || arg.Equals("--benchmark", StringComparison.OrdinalIgnoreCase)))
         {
