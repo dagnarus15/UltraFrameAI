@@ -103,6 +103,23 @@
                 <StackPanel Grid.Column="1"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
+                    <Button x:Name="TopHelpButton"
+                            Width="42"
+                            Height="32"
+                            HorizontalAlignment="Right"
+                            Padding="0"
+                            Margin="0,0,0,6"
+                            Background="#13203A"
+                            BorderBrush="{StaticResource CardBorderBrush}"
+                            BorderThickness="1"
+                            ToolTip="{local:Loc GeneralHelpTitle}"
+                            Click="TopHelpButton_Click">
+                        <TextBlock Text="?"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center" />
+                    </Button>
                     <Grid HorizontalAlignment="Right">
                         <Button x:Name="LanguageButton"
                                 Width="42"

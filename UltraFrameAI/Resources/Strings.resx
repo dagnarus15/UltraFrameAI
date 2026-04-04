@@ -217,7 +217,7 @@
     <value>Benchmark</value>
   </data>
   <data name="BenchmarkHint" xml:space="preserve">
-    <value>Open the benchmark window.</value>
+    <value>Run the benchmark to check your hardware and suggest recommended settings.</value>
   </data>
   <data name="BenchmarkWindowTitle" xml:space="preserve">
     <value>Benchmark</value>
@@ -684,6 +684,287 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   </data>
   <data name="TileSize" xml:space="preserve">
     <value>Tile size</value>
+  </data>
+  <data name="GpuSelection" xml:space="preserve">
+    <value>GPU</value>
+  </data>
+  <data name="GpuSelectionHint" xml:space="preserve">
+    <value>Auto picks the strongest detected GPU at startup.</value>
+  </data>
+  <data name="GpuSelectionAuto" xml:space="preserve">
+    <value>Auto (strongest GPU)</value>
+  </data>
+  <data name="GpuSelectionAutoWithName" xml:space="preserve">
+    <value>Auto ({0})</value>
+  </data>
+  <data name="StartupBenchmarkPromptTitle" xml:space="preserve">
+    <value>Startup benchmark</value>
+  </data>
+  <data name="StartupBenchmarkPromptGreeting" xml:space="preserve">
+    <value>Welcome to UltraFrame AI.</value>
+  </data>
+  <data name="StartupBenchmarkPromptThanks" xml:space="preserve">
+    <value>Thank you for using my app. It grows thanks to your support. If you ever want to support the project, you can find that option in the help section behind the question mark at the top right.</value>
+  </data>
+  <data name="StartupBenchmarkPromptBody" xml:space="preserve">
+    <value>On the first start, UltraFrame AI can run a short benchmark on a One Piece sample clip, check whether this PC meets the practical minimum requirements, choose the fastest GPU, and suggest RealESRGAN settings. This may take a few minutes. If you skip it, you may run into conversion errors later. You can run this benchmark again later from Settings. Run it now?</value>
+  </data>
+  <data name="StartupBenchmarkPromptRun" xml:space="preserve">
+    <value>Run benchmark</value>
+  </data>
+  <data name="StartupBenchmarkPromptSkip" xml:space="preserve">
+    <value>Skip for now</value>
+  </data>
+  <data name="StartupBenchmarkUnavailableTitle" xml:space="preserve">
+    <value>Startup benchmark unavailable</value>
+  </data>
+  <data name="StartupBenchmarkUnavailableBody" xml:space="preserve">
+    <value>The startup benchmark could not start because no usable GPU or sample clip was found.</value>
+  </data>
+  <data name="StartupBenchmarkProgressTitle" xml:space="preserve">
+    <value>Startup benchmark</value>
+  </data>
+  <data name="StartupBenchmarkProgressIntro" xml:space="preserve">
+    <value>We are checking your GPUs and tuning RealESRGAN settings on a short sample clip.</value>
+  </data>
+  <data name="StartupBenchmarkCurrentPhase" xml:space="preserve">
+    <value>Phase</value>
+  </data>
+  <data name="StartupBenchmarkCurrentCase" xml:space="preserve">
+    <value>Current case</value>
+  </data>
+  <data name="StartupBenchmarkCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="StartupBenchmarkResultsTitle" xml:space="preserve">
+    <value>Benchmark results</value>
+  </data>
+  <data name="StartupBenchmarkResultsSummary" xml:space="preserve">
+    <value>Auto-tuning finished. The benchmark used {0} and prepared recommended settings for this PC.</value>
+  </data>
+  <data name="StartupBenchmarkResultsApplied" xml:space="preserve">
+    <value>Recommended settings</value>
+  </data>
+  <data name="StartupBenchmarkResultsApply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="StartupBenchmarkResultsSkipApply" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="GeneralHelpTitle" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="GeneralHelpBody" xml:space="preserve">
+    <value>This is a quick help entry point. The full help center opens from the question mark in the top right corner.</value>
+  </data>
+  <data name="HelpCenterIntro" xml:space="preserve">
+    <value>This window combines a quick usage guide, answers to common questions, and support information for the project.</value>
+  </data>
+  <data name="HelpCenterHowToTab" xml:space="preserve">
+    <value>How to use</value>
+  </data>
+  <data name="HelpCenterFaqTab" xml:space="preserve">
+    <value>FAQ</value>
+  </data>
+  <data name="HelpCenterLinksTab" xml:space="preserve">
+    <value>Contacts and links</value>
+  </data>
+  <data name="HelpCenterDonateTab" xml:space="preserve">
+    <value>Financial support</value>
+  </data>
+  <data name="HelpCenterHowToTitle" xml:space="preserve">
+    <value>How to use the app</value>
+  </data>
+  <data name="HelpCenterHowToBody" xml:space="preserve">
+    <value>1. Add a video file or a folder on the main screen.
+2. Open settings if you want to adjust resolution, codec, GPU, or other options.
+3. If the app offers the startup benchmark, it is usually a good idea to run it. It checks your hardware and suggests recommended settings.
+4. Start rendering. While rendering, the separate render window shows the current stage, preview, elapsed time, ETA, and FPS.
+5. If rendering is interrupted, use “Resume render” for unfinished files when possible.
+6. After the queue finishes, the app shows a summary window with per-file results.</value>
+  </data>
+  <data name="HelpCenterLinksTitle" xml:space="preserve">
+    <value>Contacts and links</value>
+  </data>
+  <data name="HelpCenterLinksContacts" xml:space="preserve">
+    <value>Ways to reach out</value>
+  </data>
+  <data name="HelpCenterLinksSources" xml:space="preserve">
+    <value>Used sources and repositories</value>
+  </data>
+  <data name="HelpFaqQuestion1" xml:space="preserve">
+    <value>Why is the startup benchmark useful?</value>
+  </data>
+  <data name="HelpFaqAnswer1" xml:space="preserve">
+    <value>It checks whether the PC is strong enough for the app, compares available GPUs, and suggests practical RealESRGAN settings for this machine.</value>
+  </data>
+  <data name="HelpFaqQuestion2" xml:space="preserve">
+    <value>What should I do if rendering stops unexpectedly?</value>
+  </data>
+  <data name="HelpFaqAnswer2" xml:space="preserve">
+    <value>If an unfinished result is still there, try the resume option. The app checks whether recovery is possible and continues from the valid part when it can.</value>
+  </data>
+  <data name="HelpFaqQuestion3" xml:space="preserve">
+    <value>Why can rendering be slow?</value>
+  </data>
+  <data name="HelpFaqAnswer3" xml:space="preserve">
+    <value>Speed mostly depends on your GPU, available VRAM, tile size, RealESRGAN thread settings, and encoder preset. More careful or higher-quality settings usually take longer.</value>
+  </data>
+  <data name="HelpFaqQuestion4" xml:space="preserve">
+    <value>When should I resume, and when should I overwrite?</value>
+  </data>
+  <data name="HelpFaqAnswer4" xml:space="preserve">
+    <value>Resume is best after an interruption or crash when there is already an unfinished result. Overwrite is better when you changed render settings or want to start the file again from scratch.</value>
+  </data>
+  <data name="HelpFaqQuestion5" xml:space="preserve">
+    <value>Where can I run the benchmark again later?</value>
+  </data>
+  <data name="HelpFaqAnswer5" xml:space="preserve">
+    <value>You can start it again from Settings with the Benchmark button. At the end, it shows recommended settings and asks whether you want to apply them.</value>
+  </data>
+  <data name="DonationDialogTitle" xml:space="preserve">
+    <value>Support the project</value>
+  </data>
+  <data name="DonationDialogThanks" xml:space="preserve">
+    <value>Thank you for wanting to support the app.</value>
+  </data>
+  <data name="DonationDialogBody" xml:space="preserve">
+    <value>Below are the suggested support methods. Feel free to use whichever one is most convenient for you.</value>
+  </data>
+  <data name="RenderSessionResultsTitle" xml:space="preserve">
+    <value>Render results</value>
+  </data>
+  <data name="RenderSessionResultsSummary" xml:space="preserve">
+    <value>Conversion finished in {0}.</value>
+  </data>
+  <data name="RenderSessionResultsItemComplete" xml:space="preserve">
+    <value>Rendering finished in {0}.</value>
+  </data>
+  <data name="RenderSessionResultsItemFps" xml:space="preserve">
+    <value>Average render FPS: {0}</value>
+  </data>
+  <data name="RenderSessionResultsDonatePrefix" xml:space="preserve">
+    <value>I would be grateful for your </value>
+  </data>
+  <data name="RenderSessionResultsDonateLink" xml:space="preserve">
+    <value>financial support</value>
+  </data>
+  <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
+    <value>Selected GPU</value>
+  </data>
+  <data name="StartupBenchmarkResultsThreads" xml:space="preserve">
+    <value>RealESRGAN jobs</value>
+  </data>
+  <data name="StartupBenchmarkResultsPreset" xml:space="preserve">
+    <value>Encoder preset</value>
+  </data>
+  <data name="StartupBenchmarkResultsTile" xml:space="preserve">
+    <value>Tile size</value>
+  </data>
+  <data name="StartupBenchmarkResultsThroughput" xml:space="preserve">
+    <value>Estimated throughput</value>
+  </data>
+  <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
+    <value>Best benchmark cases</value>
+  </data>
+  <data name="StartupBenchmarkResultsWeakWarning" xml:space="preserve">
+    <value>Your GPU looks quite weak for heavy upscaling. Rendering should still work, but expect long runtimes.</value>
+  </data>
+  <data name="StartupBenchmarkResultsOkay" xml:space="preserve">
+    <value>Your GPU looks healthy for this workload.</value>
+  </data>
+  <data name="HardwareAssessmentTitle" xml:space="preserve">
+    <value>Hardware check</value>
+  </data>
+  <data name="HardwareGpuTitle" xml:space="preserve">
+    <value>GPU</value>
+  </data>
+  <data name="HardwareVramTitle" xml:space="preserve">
+    <value>VRAM</value>
+  </data>
+  <data name="HardwareCpuTitle" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="HardwareRamTitle" xml:space="preserve">
+    <value>RAM</value>
+  </data>
+  <data name="HardwareEnough" xml:space="preserve">
+    <value>Enough</value>
+  </data>
+  <data name="HardwareWeak" xml:space="preserve">
+    <value>Weak</value>
+  </data>
+  <data name="HardwareTooLow" xml:space="preserve">
+    <value>Too low</value>
+  </data>
+  <data name="HardwareGpuMissingDetail" xml:space="preserve">
+    <value>No supported GPU was detected. The benchmark is strongly recommended because conversion may fail. Minimum: {0}. Comfortable target: {1}.</value>
+  </data>
+  <data name="HardwareGpuStaticEnoughDetail" xml:space="preserve">
+    <value>{0} was detected. The benchmark is still recommended for a real compatibility check. Comfortable target: {1}.</value>
+  </data>
+  <data name="HardwareGpuStaticLowDetail" xml:space="preserve">
+    <value>{0} looks weak for this app, so conversion may fail or run very poorly. The benchmark is strongly recommended.</value>
+  </data>
+  <data name="HardwareGpuEnoughDetail" xml:space="preserve">
+    <value>{0} looks usable for this app. Benchmark throughput was about {1:0.0} FPS. Comfortable target: {2}.</value>
+  </data>
+  <data name="HardwareGpuWeakDetail" xml:space="preserve">
+    <value>{0} works, but the benchmark only reached about {1:0.0} FPS. That is below the practical minimum. Minimum: at least {2:0.0}+ FPS and something like {3}. Comfortable target: {4}.</value>
+  </data>
+  <data name="HardwareGpuMinimumNvidia" xml:space="preserve">
+    <value>GeForce GTX 1050 Ti or similar</value>
+  </data>
+  <data name="HardwareGpuComfortableNvidia" xml:space="preserve">
+    <value>GeForce RTX 2060 / RTX 3060 or better</value>
+  </data>
+  <data name="HardwareGpuMinimumAmd" xml:space="preserve">
+    <value>Radeon RX 560 4 GB or similar</value>
+  </data>
+  <data name="HardwareGpuComfortableAmd" xml:space="preserve">
+    <value>Radeon RX 6600 or better</value>
+  </data>
+  <data name="HardwareGpuMinimumIntel" xml:space="preserve">
+    <value>Intel Arc A380 or similar</value>
+  </data>
+  <data name="HardwareGpuComfortableIntel" xml:space="preserve">
+    <value>Intel Arc A750 or better</value>
+  </data>
+  <data name="HardwareGpuMinimumGeneric" xml:space="preserve">
+    <value>a discrete GPU around GeForce GTX 1050 Ti or Radeon RX 560 level</value>
+  </data>
+  <data name="HardwareGpuComfortableGeneric" xml:space="preserve">
+    <value>a discrete GPU around GeForce RTX 2060 / Radeon RX 6600 level or better</value>
+  </data>
+  <data name="HardwareVramMinimumDetail" xml:space="preserve">
+    <value>Detected about {0:0.#} GB VRAM. That should be enough for the minimum. Minimum: 4 GB. A comfortable target is {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramEnoughDetail" xml:space="preserve">
+    <value>Detected about {0:0.#} GB VRAM. That is enough. A comfortable target is {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramLowDetail" xml:space="preserve">
+    <value>Detected about {0:0.#} GB VRAM. That is below the minimum. Minimum: {1:0.#} GB. A comfortable target is {2:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareCpuMinimumDetail" xml:space="preserve">
+    <value>Detected {0} logical CPU threads. That should be enough for the minimum. Minimum: 4 threads. A comfortable target is {1}+ threads.</value>
+  </data>
+  <data name="HardwareCpuEnoughDetail" xml:space="preserve">
+    <value>Detected {0} logical CPU threads. That is enough. A comfortable target is {1}+ threads.</value>
+  </data>
+  <data name="HardwareCpuLowDetail" xml:space="preserve">
+    <value>Detected {0} logical CPU threads. That is below the minimum. Minimum: {1} threads. A comfortable target is {2}+ threads.</value>
+  </data>
+  <data name="HardwareRamMinimumDetail" xml:space="preserve">
+    <value>Detected about {0:0.#} GB RAM. That should be enough for the minimum. Minimum: 8 GB. A comfortable target is {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamEnoughDetail" xml:space="preserve">
+    <value>Detected about {0:0.#} GB RAM. That is enough. A comfortable target is {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamLowDetail" xml:space="preserve">
+    <value>Detected about {0:0.#} GB RAM. That is below the minimum. Minimum: {1:0.#} GB. A comfortable target is {2:0.#}+ GB.</value>
   </data>
   <data name="UpscalerBackend" xml:space="preserve">
     <value>Upscaler</value>

@@ -217,7 +217,7 @@
     <value>Benchmark</value>
   </data>
   <data name="BenchmarkHint" xml:space="preserve">
-    <value>Benchmark-Fenster öffnen.</value>
+    <value>Benchmark starten, um die Hardware zu prüfen und empfohlene Einstellungen vorzuschlagen.</value>
   </data>
   <data name="BenchmarkWindowTitle" xml:space="preserve">
     <value>Benchmark</value>
@@ -687,6 +687,287 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   </data>
   <data name="TileSize" xml:space="preserve">
     <value>Kachelgröße</value>
+  </data>
+  <data name="GpuSelection" xml:space="preserve">
+    <value>Grafikkarte</value>
+  </data>
+  <data name="GpuSelectionHint" xml:space="preserve">
+    <value>Auto wählt beim Start die stärkste erkannte GPU aus.</value>
+  </data>
+  <data name="GpuSelectionAuto" xml:space="preserve">
+    <value>Auto (stärkste GPU)</value>
+  </data>
+  <data name="GpuSelectionAutoWithName" xml:space="preserve">
+    <value>Auto ({0})</value>
+  </data>
+  <data name="StartupBenchmarkPromptTitle" xml:space="preserve">
+    <value>Start-Benchmark</value>
+  </data>
+  <data name="StartupBenchmarkPromptGreeting" xml:space="preserve">
+    <value>Willkommen bei UltraFrame AI.</value>
+  </data>
+  <data name="StartupBenchmarkPromptThanks" xml:space="preserve">
+    <value>Vielen Dank, dass Sie mein Programm verwenden. Es entwickelt sich dank Ihrer Unterstützung weiter. Falls Sie das Projekt unterstützen möchten, finden Sie diese Möglichkeit im Hilfebereich hinter dem Fragezeichen oben rechts.</value>
+  </data>
+  <data name="StartupBenchmarkPromptBody" xml:space="preserve">
+    <value>Beim ersten Start kann UltraFrame AI einen kurzen Benchmark mit einem One-Piece-Sample ausführen, prüfen, ob dieser PC die praktischen Mindestanforderungen erfüllt, die schnellste GPU auswählen und empfohlene RealESRGAN-Einstellungen vorschlagen. Das kann ein paar Minuten dauern. Wenn Sie diesen Schritt überspringen, können später Konvertierungsfehler auftreten. Diesen Benchmark können Sie später auch in den Einstellungen starten. Jetzt starten?</value>
+  </data>
+  <data name="StartupBenchmarkPromptRun" xml:space="preserve">
+    <value>Benchmark starten</value>
+  </data>
+  <data name="StartupBenchmarkPromptSkip" xml:space="preserve">
+    <value>Vorerst überspringen</value>
+  </data>
+  <data name="StartupBenchmarkUnavailableTitle" xml:space="preserve">
+    <value>Start-Benchmark nicht verfügbar</value>
+  </data>
+  <data name="StartupBenchmarkUnavailableBody" xml:space="preserve">
+    <value>Der Start-Benchmark konnte nicht gestartet werden, weil kein nutzbarer GPU-Kandidat oder kein Sample-Clip gefunden wurde.</value>
+  </data>
+  <data name="StartupBenchmarkProgressTitle" xml:space="preserve">
+    <value>Start-Benchmark</value>
+  </data>
+  <data name="StartupBenchmarkProgressIntro" xml:space="preserve">
+    <value>Wir prüfen Ihre GPUs und stimmen die RealESRGAN-Einstellungen an einem kurzen Sample-Clip ab.</value>
+  </data>
+  <data name="StartupBenchmarkCurrentPhase" xml:space="preserve">
+    <value>Phase</value>
+  </data>
+  <data name="StartupBenchmarkCurrentCase" xml:space="preserve">
+    <value>Aktueller Test</value>
+  </data>
+  <data name="StartupBenchmarkCancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="StartupBenchmarkResultsTitle" xml:space="preserve">
+    <value>Benchmark-Ergebnis</value>
+  </data>
+  <data name="StartupBenchmarkResultsSummary" xml:space="preserve">
+    <value>Die Auto-Abstimmung ist fertig. Der Benchmark hat {0} verwendet und empfohlene Einstellungen für diesen PC vorbereitet.</value>
+  </data>
+  <data name="StartupBenchmarkResultsApplied" xml:space="preserve">
+    <value>Empfohlene Einstellungen</value>
+  </data>
+  <data name="StartupBenchmarkResultsApply" xml:space="preserve">
+    <value>Anwenden</value>
+  </data>
+  <data name="StartupBenchmarkResultsSkipApply" xml:space="preserve">
+    <value>Vorerst nicht</value>
+  </data>
+  <data name="GeneralHelpTitle" xml:space="preserve">
+    <value>Hilfe</value>
+  </data>
+  <data name="GeneralHelpBody" xml:space="preserve">
+    <value>Dies ist ein schneller Hilfe-Einstieg. Das vollständige Hilfecenter öffnen Sie über das Fragezeichen oben rechts.</value>
+  </data>
+  <data name="HelpCenterIntro" xml:space="preserve">
+    <value>Hier finden Sie eine kurze Anleitung, Antworten auf häufige Fragen und Informationen zur Unterstützung des Projekts.</value>
+  </data>
+  <data name="HelpCenterHowToTab" xml:space="preserve">
+    <value>Verwendung</value>
+  </data>
+  <data name="HelpCenterFaqTab" xml:space="preserve">
+    <value>FAQ</value>
+  </data>
+  <data name="HelpCenterLinksTab" xml:space="preserve">
+    <value>Kontakte und Links</value>
+  </data>
+  <data name="HelpCenterDonateTab" xml:space="preserve">
+    <value>Finanzielle Unterstützung</value>
+  </data>
+  <data name="HelpCenterHowToTitle" xml:space="preserve">
+    <value>So verwenden Sie das Programm</value>
+  </data>
+  <data name="HelpCenterHowToBody" xml:space="preserve">
+    <value>1. Fügen Sie auf dem Hauptbildschirm eine Videodatei oder einen Ordner hinzu.
+2. Öffnen Sie bei Bedarf die Einstellungen und wählen Sie Auflösung, Codec, GPU und weitere Parameter.
+3. Wenn das Programm den Start-Benchmark anbietet, ist es meist sinnvoll, ihn auszuführen. Er prüft die Hardware und schlägt passende Einstellungen vor.
+4. Starten Sie das Rendern. Währenddessen zeigt das separate Renderfenster den aktuellen Schritt, die Vorschau, die verstrichene Zeit, die ETA und die FPS.
+5. Wenn das Rendern unterbrochen wurde, verwenden Sie für unvollständige Dateien wenn möglich die Fortsetzungsfunktion.
+6. Nach Abschluss der Warteschlange zeigt das Programm ein Ergebnisfenster mit den Werten pro Datei.</value>
+  </data>
+  <data name="HelpCenterLinksTitle" xml:space="preserve">
+    <value>Kontakte und Links</value>
+  </data>
+  <data name="HelpCenterLinksContacts" xml:space="preserve">
+    <value>Kontaktmöglichkeiten</value>
+  </data>
+  <data name="HelpCenterLinksSources" xml:space="preserve">
+    <value>Verwendete Quellen und Repositories</value>
+  </data>
+  <data name="HelpFaqQuestion1" xml:space="preserve">
+    <value>Wozu ist der Start-Benchmark gut?</value>
+  </data>
+  <data name="HelpFaqAnswer1" xml:space="preserve">
+    <value>Er prüft, ob der PC für das Programm ausreicht, vergleicht verfügbare GPUs und schlägt praktische RealESRGAN-Einstellungen für diese Maschine vor.</value>
+  </data>
+  <data name="HelpFaqQuestion2" xml:space="preserve">
+    <value>Was soll ich tun, wenn das Rendern unerwartet stoppt?</value>
+  </data>
+  <data name="HelpFaqAnswer2" xml:space="preserve">
+    <value>Wenn noch ein unvollständiges Ergebnis vorhanden ist, versuchen Sie die Fortsetzungsfunktion. Das Programm prüft zuerst, ob eine Wiederherstellung möglich ist, und setzt dann vom gültigen Teil aus fort.</value>
+  </data>
+  <data name="HelpFaqQuestion3" xml:space="preserve">
+    <value>Warum kann das Rendern langsam sein?</value>
+  </data>
+  <data name="HelpFaqAnswer3" xml:space="preserve">
+    <value>Die Geschwindigkeit hängt vor allem von GPU, VRAM, Tile-Größe, RealESRGAN-Threads und dem Encoder-Preset ab. Vorsichtigere oder qualitativ höhere Einstellungen brauchen fast immer länger.</value>
+  </data>
+  <data name="HelpFaqQuestion4" xml:space="preserve">
+    <value>Wann sollte ich fortsetzen und wann überschreiben?</value>
+  </data>
+  <data name="HelpFaqAnswer4" xml:space="preserve">
+    <value>Fortsetzen ist am besten nach einer Unterbrechung oder einem Absturz, wenn bereits ein unvollständiges Ergebnis existiert. Überschreiben ist besser, wenn Sie die Rendereinstellungen geändert haben oder die Datei ganz neu erzeugen möchten.</value>
+  </data>
+  <data name="HelpFaqQuestion5" xml:space="preserve">
+    <value>Wo kann ich den Benchmark später erneut starten?</value>
+  </data>
+  <data name="HelpFaqAnswer5" xml:space="preserve">
+    <value>Sie können ihn jederzeit in den Einstellungen über die Benchmark-Schaltfläche starten. Am Ende zeigt er empfohlene Einstellungen an und fragt, ob diese übernommen werden sollen.</value>
+  </data>
+  <data name="DonationDialogTitle" xml:space="preserve">
+    <value>Projekt unterstützen</value>
+  </data>
+  <data name="DonationDialogThanks" xml:space="preserve">
+    <value>Vielen Dank für den Wunsch, das Programm zu unterstützen.</value>
+  </data>
+  <data name="DonationDialogBody" xml:space="preserve">
+    <value>Unten finden Sie die vorgeschlagenen Unterstützungsmöglichkeiten. Wählen Sie einfach den für Sie angenehmsten Weg.</value>
+  </data>
+  <data name="RenderSessionResultsTitle" xml:space="preserve">
+    <value>Render-Ergebnisse</value>
+  </data>
+  <data name="RenderSessionResultsSummary" xml:space="preserve">
+    <value>Die Konvertierung wurde in {0} abgeschlossen.</value>
+  </data>
+  <data name="RenderSessionResultsItemComplete" xml:space="preserve">
+    <value>Das Rendern wurde in {0} abgeschlossen.</value>
+  </data>
+  <data name="RenderSessionResultsItemFps" xml:space="preserve">
+    <value>Durchschnittliche Render-FPS: {0}</value>
+  </data>
+  <data name="RenderSessionResultsDonatePrefix" xml:space="preserve">
+    <value>Ich würde mich über Ihre </value>
+  </data>
+  <data name="RenderSessionResultsDonateLink" xml:space="preserve">
+    <value>finanzielle Unterstützung</value>
+  </data>
+  <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
+    <value> freuen.</value>
+  </data>
+  <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
+    <value>Ausgewählte GPU</value>
+  </data>
+  <data name="StartupBenchmarkResultsThreads" xml:space="preserve">
+    <value>RealESRGAN-Jobs</value>
+  </data>
+  <data name="StartupBenchmarkResultsPreset" xml:space="preserve">
+    <value>Encoder-Preset</value>
+  </data>
+  <data name="StartupBenchmarkResultsTile" xml:space="preserve">
+    <value>Kachelgröße</value>
+  </data>
+  <data name="StartupBenchmarkResultsThroughput" xml:space="preserve">
+    <value>Geschätzter Durchsatz</value>
+  </data>
+  <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
+    <value>Beste Testfälle</value>
+  </data>
+  <data name="StartupBenchmarkResultsWeakWarning" xml:space="preserve">
+    <value>Ihre GPU wirkt für schweres Upscaling eher schwach. Rendern sollte trotzdem funktionieren, aber rechnen Sie mit langen Laufzeiten.</value>
+  </data>
+  <data name="StartupBenchmarkResultsOkay" xml:space="preserve">
+    <value>Ihre GPU wirkt für diese Aufgabe ausreichend stark.</value>
+  </data>
+  <data name="HardwareAssessmentTitle" xml:space="preserve">
+    <value>Hardware-Prüfung</value>
+  </data>
+  <data name="HardwareGpuTitle" xml:space="preserve">
+    <value>GPU</value>
+  </data>
+  <data name="HardwareVramTitle" xml:space="preserve">
+    <value>VRAM</value>
+  </data>
+  <data name="HardwareCpuTitle" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="HardwareRamTitle" xml:space="preserve">
+    <value>RAM</value>
+  </data>
+  <data name="HardwareEnough" xml:space="preserve">
+    <value>Ausreichend</value>
+  </data>
+  <data name="HardwareWeak" xml:space="preserve">
+    <value>Eher schwach</value>
+  </data>
+  <data name="HardwareTooLow" xml:space="preserve">
+    <value>Zu wenig</value>
+  </data>
+  <data name="HardwareGpuMissingDetail" xml:space="preserve">
+    <value>Es wurde keine passende GPU erkannt. Der Benchmark wird dringend empfohlen, weil die Konvertierung sonst fehlschlagen kann. Minimum: {0}. Komfortziel: {1}.</value>
+  </data>
+  <data name="HardwareGpuStaticEnoughDetail" xml:space="preserve">
+    <value>{0} wurde erkannt. Für eine echte Prüfung wird der Benchmark trotzdem empfohlen. Komfortziel: {1}.</value>
+  </data>
+  <data name="HardwareGpuStaticLowDetail" xml:space="preserve">
+    <value>{0} wirkt für dieses Programm eher schwach, daher kann die Konvertierung fehlschlagen oder sehr schlecht laufen. Der Benchmark wird dringend empfohlen.</value>
+  </data>
+  <data name="HardwareGpuEnoughDetail" xml:space="preserve">
+    <value>{0} wirkt für dieses Programm nutzbar. Der Benchmark lag bei etwa {1:0.0} FPS. Komfortziel: {2}.</value>
+  </data>
+  <data name="HardwareGpuWeakDetail" xml:space="preserve">
+    <value>{0} funktioniert, aber der Benchmark erreichte nur etwa {1:0.0} FPS. Das liegt unter dem praktischen Minimum. Minimum: mindestens {2:0.0}+ FPS und etwa {3}. Komfortziel: {4}.</value>
+  </data>
+  <data name="HardwareGpuMinimumNvidia" xml:space="preserve">
+    <value>GeForce GTX 1050 Ti oder ähnlich</value>
+  </data>
+  <data name="HardwareGpuComfortableNvidia" xml:space="preserve">
+    <value>GeForce RTX 2060 / RTX 3060 oder besser</value>
+  </data>
+  <data name="HardwareGpuMinimumAmd" xml:space="preserve">
+    <value>Radeon RX 560 4 GB oder ähnlich</value>
+  </data>
+  <data name="HardwareGpuComfortableAmd" xml:space="preserve">
+    <value>Radeon RX 6600 oder besser</value>
+  </data>
+  <data name="HardwareGpuMinimumIntel" xml:space="preserve">
+    <value>Intel Arc A380 oder ähnlich</value>
+  </data>
+  <data name="HardwareGpuComfortableIntel" xml:space="preserve">
+    <value>Intel Arc A750 oder besser</value>
+  </data>
+  <data name="HardwareGpuMinimumGeneric" xml:space="preserve">
+    <value>eine dedizierte GPU auf dem Niveau einer GeForce GTX 1050 Ti oder Radeon RX 560</value>
+  </data>
+  <data name="HardwareGpuComfortableGeneric" xml:space="preserve">
+    <value>eine dedizierte GPU auf dem Niveau einer GeForce RTX 2060 / Radeon RX 6600 oder besser</value>
+  </data>
+  <data name="HardwareVramMinimumDetail" xml:space="preserve">
+    <value>Erkannt wurden etwa {0:0.#} GB VRAM. Das sollte fuer das Minimum ausreichen. Minimum: 4 GB. Das Komfortziel liegt bei {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramEnoughDetail" xml:space="preserve">
+    <value>Erkannt wurden etwa {0:0.#} GB VRAM. Das reicht aus. Das Komfortziel liegt bei {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramLowDetail" xml:space="preserve">
+    <value>Erkannt wurden etwa {0:0.#} GB VRAM. Das liegt unter dem Minimum. Minimum: {1:0.#} GB. Das Komfortziel liegt bei {2:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareCpuMinimumDetail" xml:space="preserve">
+    <value>Erkannt wurden {0} logische CPU-Threads. Das sollte fuer das Minimum ausreichen. Minimum: 4 Threads. Das Komfortziel liegt bei {1}+ Threads.</value>
+  </data>
+  <data name="HardwareCpuEnoughDetail" xml:space="preserve">
+    <value>Erkannt wurden {0} logische CPU-Threads. Das reicht aus. Das Komfortziel liegt bei {1}+ Threads.</value>
+  </data>
+  <data name="HardwareCpuLowDetail" xml:space="preserve">
+    <value>Erkannt wurden {0} logische CPU-Threads. Das liegt unter dem Minimum. Minimum: {1} Threads. Das Komfortziel liegt bei {2}+ Threads.</value>
+  </data>
+  <data name="HardwareRamMinimumDetail" xml:space="preserve">
+    <value>Erkannt wurden etwa {0:0.#} GB RAM. Das sollte fuer das Minimum ausreichen. Minimum: 8 GB. Das Komfortziel liegt bei {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamEnoughDetail" xml:space="preserve">
+    <value>Erkannt wurden etwa {0:0.#} GB RAM. Das reicht aus. Das Komfortziel liegt bei {1:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamLowDetail" xml:space="preserve">
+    <value>Erkannt wurden etwa {0:0.#} GB RAM. Das liegt unter dem Minimum. Minimum: {1:0.#} GB. Das Komfortziel liegt bei {2:0.#}+ GB.</value>
   </data>
   <data name="UpscalerBackend" xml:space="preserve">
     <value>Upscaler</value>

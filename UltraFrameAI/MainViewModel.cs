@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows;
@@ -36,6 +37,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string FfmpegThreadsText,
         string UpscalerThreadsText,
         string TileSizeText,
+        string SelectedGpuOptionKey,
         string SelectedUpscalerBackend,
         string SelectedRefinerBackend,
         bool EnableStableSr,
@@ -56,6 +58,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool PreserveIncompleteOutput,
         bool UseNativeEncoderBackend,
         bool? RepairBrokenTimestamps,
+        bool StartupBenchmarkPromptShown,
+        bool StartupBenchmarkCompleted,
         List<PersistedQueueItemCacheEntry>? QueueItems,
         string? SelectedItemSourcePath,
         bool Complete);
@@ -80,6 +84,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private IReadOnlyList<AntiFlickerModeOption> _antiFlickerModeOptions = Array.Empty<AntiFlickerModeOption>();
     private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
     private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
+    private IReadOnlyList<GpuDeviceOption> _gpuOptions = Array.Empty<GpuDeviceOption>();
+    private readonly IReadOnlyList<DetectedGpuDevice> _detectedGpuDevices;
     private readonly string _repoRoot = FindRepoRoot();
     private readonly string _lastRootFolderPath;
     private readonly string _recentRootFoldersPath;
@@ -101,6 +107,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _ffmpegThreadsText = "0";
     private string _upscalerThreadsText = "4:4:4";
     private string _tileSizeText = "1024";
+    private GpuDeviceOption? _selectedGpuOption;
     private UpscalerBackendKind _selectedUpscalerBackend = UpscalerBackendKind.RealEsrgan;
     private RefinerBackendKind _selectedRefinerBackend = RefinerBackendKind.None;
     private bool _enableStableSr;
@@ -114,6 +121,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _supirUpscalerModelDir = string.Empty;
     private string _supirUpscalerArgumentsTemplate = string.Empty;
     private bool _overwrite;
+    private bool _startupBenchmarkPromptShown;
+    private bool _startupBenchmarkCompleted;
     private bool _useAntiFlicker = true;
     private bool _useNativeEncoderBackend;
     private bool _preserveIncompleteOutput;
@@ -174,6 +183,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _lastRunProcessedFiles = "--";
     private string _lastRunElapsed = "--:--:--";
     private string _lastRunFps = "--";
+    private RenderSessionResults? _pendingRenderSessionResults;
 
     public MainViewModel() : this(true)
     {
@@ -222,6 +232,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
+        _detectedGpuDevices = GpuDeviceDetector.DetectDevices();
+        RebuildGpuOptions();
         LoadRecentRootFolders();
         _suppressAppSettingsPersistence = true;
         try
@@ -507,6 +519,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public IReadOnlyList<UpscalerBackendOption> UpscalerBackendOptions => _upscalerBackendOptions;
 
     public IReadOnlyList<RefinerBackendOption> RefinerBackendOptions => _refinerBackendOptions;
+
+    public IReadOnlyList<GpuDeviceOption> GpuOptions => _gpuOptions;
+
+    public GpuDeviceOption? SelectedGpuOption
+    {
+        get => _selectedGpuOption;
+        set
+        {
+            if (SetField(ref _selectedGpuOption, value))
+            {
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public bool ShouldOfferStartupBenchmark => IsStartupBenchmarkForced() || (!_startupBenchmarkPromptShown && !_startupBenchmarkCompleted);
+
+    public bool HasDetectedGpuCandidates => _detectedGpuDevices.Count > 0;
 
     public UpscalerBackendKind SelectedUpscalerBackend
     {
@@ -1387,7 +1417,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             Log(startMessage);
             _sessionOutputDecision = null;
             _sessionFrameProgress.Clear();
+            _pendingRenderSessionResults = null;
             var sessionWatch = Stopwatch.StartNew();
+            var sessionItems = new HashSet<QueueItemViewModel>(runItems);
 
             CurrentRenderItems.Clear();
             foreach (var item in runItems)
@@ -1414,6 +1446,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 foreach (var item in effectiveItems)
                 {
                     CurrentRenderItems.Add(item);
+                    sessionItems.Add(item);
                 }
 
                 ClearRenderPreviewPaths();
@@ -1428,15 +1461,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
             Log(LocalizedStrings.LogBatchFinished);
             sessionWatch.Stop();
             UpdateLastRunSummary(sessionWatch.Elapsed);
+            _pendingRenderSessionResults = BuildRenderSessionResults(sessionItems, sessionWatch.Elapsed);
         }
         catch (OperationCanceledException)
         {
             Log(LocalizedStrings.LogCancelled);
+            _pendingRenderSessionResults = null;
         }
         catch (Exception ex)
         {
             Log(LocalizedStrings.LogBatchFailed(ex.Message));
             PostToUi(() => System.Windows.MessageBox.Show(LocalizedStrings.LogBatchFailed(ex.Message), LocalizedStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error));
+            _pendingRenderSessionResults = null;
         }
         finally
         {
@@ -1497,7 +1533,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             FfmpegThreads = ParseInt(FfmpegThreadsText, 0),
             UpscalerThreads = string.IsNullOrWhiteSpace(UpscalerThreadsText) ? "4:4:4" : UpscalerThreadsText,
             TileSize = ParseInt(TileSizeText, 1024),
-            GpuId = null,
+            GpuId = SelectedGpuOption?.ResolvedGpuId,
             FfmpegPath = FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"),
             FfprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe"),
             UpscalerBackend = upscalerBackend,
@@ -1519,6 +1555,74 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PreserveIncompleteOutput = PreserveIncompleteOutput,
             RepairBrokenTimestamps = RepairBrokenTimestamps
         };
+    }
+
+    public void MarkStartupBenchmarkPromptShown()
+    {
+        if (IsStartupBenchmarkForced())
+        {
+            return;
+        }
+
+        if (_startupBenchmarkPromptShown)
+        {
+            return;
+        }
+
+        _startupBenchmarkPromptShown = true;
+        PersistAppSettings();
+    }
+
+    public void MarkStartupBenchmarkCompleted()
+    {
+        if (IsStartupBenchmarkForced())
+        {
+            return;
+        }
+
+        _startupBenchmarkPromptShown = true;
+        _startupBenchmarkCompleted = true;
+        PersistAppSettings();
+    }
+
+    public string? GetStartupBenchmarkSourcePath()
+    {
+        var preferred = Path.Combine(_repoRoot, "realesrgan-ncnn-vulkan-20220424", "onepiece_demo.mp4");
+        if (File.Exists(preferred))
+        {
+            return preferred;
+        }
+
+        return Items.Select(item => item.SourcePath).FirstOrDefault(File.Exists);
+    }
+
+    public IReadOnlyList<StartupBenchmarkGpuCandidate> GetStartupBenchmarkGpuCandidates()
+        => _detectedGpuDevices
+            .Select(device => new StartupBenchmarkGpuCandidate(device.DeviceId, BuildGpuLabel(device), device.MemoryMb))
+            .ToArray();
+
+    public void ApplyStartupBenchmarkRecommendation(StartupBenchmarkRecommendation recommendation)
+    {
+        if (recommendation.GpuId is int gpuId)
+        {
+            SelectedGpuOption = GpuOptions.FirstOrDefault(option => option.ResolvedGpuId == gpuId) ?? SelectedGpuOption;
+        }
+        else
+        {
+            SelectedGpuOption = GpuOptions.FirstOrDefault(option => option.IsAuto) ?? SelectedGpuOption;
+        }
+
+        UpscalerThreadsText = recommendation.UpscalerThreads;
+        EncoderPreset = recommendation.EncoderPreset;
+        TileSizeText = recommendation.TileSize.ToString(CultureInfo.InvariantCulture);
+        PersistAppSettings();
+    }
+
+    public RenderSessionResults? ConsumePendingRenderSessionResults()
+    {
+        var results = _pendingRenderSessionResults;
+        _pendingRenderSessionResults = null;
+        return results;
     }
 
     private void HandleProgress(PipelineProgress progress)
@@ -1836,6 +1940,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
         LastRunProcessedFiles = processedFiles > 0
             ? processedFiles.ToString(System.Globalization.CultureInfo.InvariantCulture)
             : "0";
+    }
+
+    private RenderSessionResults? BuildRenderSessionResults(IEnumerable<QueueItemViewModel> sessionItems, TimeSpan totalElapsed)
+    {
+        var results = sessionItems
+            .Where(item => item.IsCompleted)
+            .OrderBy(item => item.Index)
+            .Select(item =>
+            {
+                var averageFpsText = "--";
+                if (TryParseDisplayedDuration(item.ElapsedText, out var itemElapsed)
+                    && itemElapsed.TotalSeconds > 0
+                    && _sessionFrameProgress.TryGetValue(item.Index, out var frameProgress)
+                    && frameProgress.total > 0)
+                {
+                    var fps = frameProgress.total / itemElapsed.TotalSeconds;
+                    averageFpsText = fps.ToString("0.0", CultureInfo.InvariantCulture);
+                }
+
+                return new RenderSessionItemResult(item.Title, item.ElapsedText, averageFpsText);
+            })
+            .ToArray();
+
+        return results.Length == 0
+            ? null
+            : new RenderSessionResults(FormatDuration(totalElapsed), results);
+    }
+
+    private static bool TryParseDisplayedDuration(string text, out TimeSpan value)
+    {
+        return TimeSpan.TryParseExact(
+            text,
+            @"hh\:mm\:ss",
+            CultureInfo.InvariantCulture,
+            out value);
     }
 
     private async Task<List<QueueItemViewModel>> PrepareRunListAsync(IReadOnlyList<QueueItemViewModel> items, PipelineOptions options, CancellationToken ct)
@@ -3090,12 +3229,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
+        RebuildGpuOptions(_selectedGpuOption?.Key);
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(string.Empty);
         OnPropertyChanged(nameof(CurrentLanguageFlagPath));
         OnPropertyChanged(nameof(AntiFlickerModeOptions));
         OnPropertyChanged(nameof(UpscalerBackendOptions));
         OnPropertyChanged(nameof(RefinerBackendOptions));
+        OnPropertyChanged(nameof(GpuOptions));
 
         if (Items.Count == 0)
         {
@@ -3174,6 +3315,40 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         return options;
+    }
+
+    private void RebuildGpuOptions(string? preferredKey = null)
+    {
+        var options = BuildGpuOptions();
+        var keyToSelect = preferredKey ?? _selectedGpuOption?.Key ?? GpuDeviceOption.AutoKey;
+        _gpuOptions = options;
+        _selectedGpuOption = options.FirstOrDefault(option => string.Equals(option.Key, keyToSelect, StringComparison.OrdinalIgnoreCase))
+            ?? options.FirstOrDefault();
+    }
+
+    private IReadOnlyList<GpuDeviceOption> BuildGpuOptions()
+    {
+        var options = new List<GpuDeviceOption>();
+        var strongestDevice = _detectedGpuDevices.FirstOrDefault();
+        var autoLabel = strongestDevice is null
+            ? LocalizedStrings.GpuSelectionAuto
+            : LocalizedStrings.GpuSelectionAutoWithName(strongestDevice.Name);
+        options.Add(new GpuDeviceOption(GpuDeviceOption.AutoKey, autoLabel, strongestDevice?.DeviceId));
+
+        foreach (var device in _detectedGpuDevices)
+        {
+            options.Add(new GpuDeviceOption(
+                device.DeviceId.ToString(CultureInfo.InvariantCulture),
+                BuildGpuLabel(device),
+                device.DeviceId));
+        }
+
+        return options;
+    }
+
+    private static string BuildGpuLabel(DetectedGpuDevice device)
+    {
+        return device.Name;
     }
 
     private static AntiFlickerMode NormalizeAntiFlickerMode(string? raw) => raw?.Trim() switch
@@ -3704,6 +3879,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 TileSizeText = loaded.TileSizeText;
             }
 
+            RebuildGpuOptions(loaded.SelectedGpuOptionKey);
+
             EnableStableSr = loaded.EnableStableSr;
             EnableSupir = loaded.EnableSupir;
             var loadedUpscalerBackend = NormalizeUpscalerBackendKind(loaded.SelectedUpscalerBackend);
@@ -3788,6 +3965,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
             UseNativeEncoderBackend = loaded.UseNativeEncoderBackend;
             RepairBrokenTimestamps = loaded.RepairBrokenTimestamps ?? true;
+            _startupBenchmarkPromptShown = loaded.StartupBenchmarkPromptShown;
+            _startupBenchmarkCompleted = loaded.StartupBenchmarkCompleted;
 
             if (!string.IsNullOrWhiteSpace(loaded.OutputFolder))
             {
@@ -4021,6 +4200,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 FfmpegThreadsText,
                 UpscalerThreadsText,
                 TileSizeText,
+                SelectedGpuOption?.Key ?? GpuDeviceOption.AutoKey,
                 SelectedUpscalerBackend.ToString(),
                 SelectedRefinerBackend.ToString(),
                 EnableStableSr,
@@ -4041,6 +4221,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 PreserveIncompleteOutput,
                 UseNativeEncoderBackend,
                 RepairBrokenTimestamps,
+                _startupBenchmarkPromptShown,
+                _startupBenchmarkCompleted,
                 BuildPersistedQueueItems(),
                 SelectedItem?.SourcePath,
                 true);
@@ -4208,6 +4390,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
             "slower" => "slower",
             _ => "slower"
         };
+    }
+
+    private static bool IsStartupBenchmarkForced()
+    {
+#if FORCE_STARTUP_BENCHMARK_PROMPT
+        return true;
+#else
+        return false;
+#endif
     }
 
     private void ApplyAntiFlickerPreset(string mode, bool persist)

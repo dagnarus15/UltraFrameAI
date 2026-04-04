@@ -1,0 +1,137 @@
+<Window x:Class="UltraFrameAI.StartupBenchmarkResultsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:UltraFrameAI"
+        Title="{local:Loc StartupBenchmarkResultsTitle}"
+        Width="760"
+        Height="560"
+        MinWidth="700"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="18">
+        <Border Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="18"
+                Padding="18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="{local:Loc StartupBenchmarkResultsTitle}"
+                           FontSize="24"
+                           FontWeight="SemiBold" />
+                <TextBlock Grid.Row="2"
+                           Text="{Binding SummaryText}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" />
+
+                <Border Grid.Row="4"
+                        Background="#101A2B"
+                        BorderBrush="#223552"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        Padding="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{local:Loc StartupBenchmarkResultsApplied}"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="{Binding SelectedGpuText}" Margin="0,8,0,0" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SelectedThreadsText}" Margin="0,8,0,0" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SelectedPresetText}" Margin="0,8,0,0" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SelectedTileText}" Margin="0,8,0,0" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ThroughputText}" Margin="0,8,0,0" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <Border Grid.Column="2"
+                                Background="#0E1628"
+                                BorderBrush="#223552"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="12">
+                            <TextBlock Text="{Binding WarningText}"
+                                       Foreground="{Binding WarningBrush}"
+                                       TextWrapping="Wrap"
+                                       FontWeight="SemiBold" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Row="6">
+                    <TextBlock Text="{local:Loc HardwareAssessmentTitle}"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding AssessmentLines}" Margin="0,10,0,14">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#0E1628"
+                                        BorderBrush="#223552"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="10"
+                                        Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Verdict}" Margin="0,4,0,0" Foreground="#F0B35E" />
+                                        <TextBlock Text="{Binding Detail}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{local:Loc StartupBenchmarkResultsTopCases}"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding TopCases}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#0E1628"
+                                        BorderBrush="#223552"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="10"
+                                        Margin="0,0,0,8">
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <Grid Grid.Row="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1"
+                            Content="{local:Loc StartupBenchmarkResultsSkipApply}"
+                            MinWidth="150"
+                            Padding="14,8"
+                            Click="SkipApply_Click" />
+                    <Button Grid.Column="3"
+                            Content="{local:Loc StartupBenchmarkResultsApply}"
+                            IsDefault="True"
+                            MinWidth="150"
+                            Padding="14,8"
+                            Click="Apply_Click" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

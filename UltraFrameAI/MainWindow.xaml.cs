@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private bool _isScanOverlayAnimating;
     private RenderWindow? _renderWindow;
     private bool _suppressClosePrompt;
+    private bool _startupBenchmarkChecked;
 
     public MainWindow()
     {
@@ -20,7 +21,11 @@ public partial class MainWindow : Window
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.QueueStateChanged += (_, _) => UpdateDeleteButtonStates();
         _viewModel.OutputConflictRequested += ViewModel_OutputConflictRequested;
-        Loaded += async (_, _) => await _viewModel.InitializeAsync().ConfigureAwait(true);
+        Loaded += async (_, _) =>
+        {
+            await _viewModel.InitializeAsync().ConfigureAwait(true);
+            await MaybeOfferStartupBenchmarkAsync().ConfigureAwait(true);
+        };
         Closing += Window_Closing;
         SizeChanged += (_, _) => UpdateCardClips();
         ContentRendered += (_, _) => Dispatcher.BeginInvoke(() =>
@@ -177,6 +182,16 @@ public partial class MainWindow : Window
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("ExternalUpscalerHelpTitle"), LocalizedStrings.Get("ExternalUpscalerHelpBody"));
     }
 
+    private void GeneralHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenHelpCenter(HelpCenterTab.HowTo);
+    }
+
+    private void TopHelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenHelpCenter(HelpCenterTab.HowTo);
+    }
+
     private void OpenCodecFormatHelp(object sender, string title, string body)
     {
         if (sender is not System.Windows.Controls.Button button)
@@ -201,20 +216,18 @@ public partial class MainWindow : Window
         CodecFormatHelpPopup.IsOpen = true;
     }
 
-    private void BenchmarkButton_Click(object sender, RoutedEventArgs e)
+    private void OpenHelpCenter(HelpCenterTab tab)
     {
-        var sourcePath = _viewModel.SelectedItem?.SourcePath;
-        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
-        {
-            sourcePath = string.Empty;
-        }
-
-        var benchmarkWindow = new BenchmarkWindow(sourcePath)
+        var dialog = new HelpCenterDialog(tab)
         {
             Owner = this
         };
+        dialog.ShowDialog();
+    }
 
-        benchmarkWindow.ShowDialog();
+    private void BenchmarkButton_Click(object sender, RoutedEventArgs e)
+    {
+        _ = RunStartupBenchmarkAsync(markCompletedOnSuccess: false);
     }
 
     private void DeleteSelected_Click(object sender, RoutedEventArgs e)
@@ -576,6 +589,14 @@ public partial class MainWindow : Window
             else
             {
                 CloseRenderWindow();
+                if (_viewModel.ConsumePendingRenderSessionResults() is { } results)
+                {
+                    var dialog = new RenderSessionResultsDialog(results)
+                    {
+                        Owner = this
+                    };
+                    dialog.ShowDialog();
+                }
             }
         }
     }
@@ -646,6 +667,115 @@ public partial class MainWindow : Window
         var result = dialog.ShowDialog();
         await Task.Yield();
         return result == true ? dialog.Decision : OutputConflictDecision.Cancel;
+    }
+
+    private async Task MaybeOfferStartupBenchmarkAsync()
+    {
+        if (_startupBenchmarkChecked)
+        {
+            return;
+        }
+
+        _startupBenchmarkChecked = true;
+        if (!_viewModel.ShouldOfferStartupBenchmark)
+        {
+            return;
+        }
+
+        _viewModel.MarkStartupBenchmarkPromptShown();
+        var staticAssessment = HardwareAssessmentBuilder.BuildStatic(_viewModel.GetStartupBenchmarkGpuCandidates());
+
+        if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
+        {
+            System.Windows.MessageBox.Show(
+                LocalizedStrings.StartupBenchmarkUnavailableBody,
+                LocalizedStrings.StartupBenchmarkUnavailableTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var promptDialog = new StartupBenchmarkPromptDialog(staticAssessment)
+        {
+            Owner = this
+        };
+
+        var choice = promptDialog.ShowDialog();
+        if (choice != true || !promptDialog.ShouldRunBenchmark)
+        {
+            return;
+        }
+
+        await RunStartupBenchmarkAsync(markCompletedOnSuccess: true).ConfigureAwait(true);
+    }
+
+    private async Task RunStartupBenchmarkAsync(bool markCompletedOnSuccess)
+    {
+        if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
+        {
+            System.Windows.MessageBox.Show(
+                LocalizedStrings.StartupBenchmarkUnavailableBody,
+                LocalizedStrings.StartupBenchmarkUnavailableTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var sourcePath = _viewModel.GetStartupBenchmarkSourcePath();
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            return;
+        }
+
+        var outputDir = Path.Combine(Path.GetTempPath(), "UltraFrameAI-startup-benchmark", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(outputDir);
+        try
+        {
+            var request = new StartupBenchmarkRequest(
+                sourcePath,
+                _viewModel.GetStartupBenchmarkGpuCandidates(),
+                outputDir,
+                4);
+
+            var benchmarkWindow = new StartupBenchmarkWindow(request)
+            {
+                Owner = this
+            };
+
+            var result = benchmarkWindow.ShowDialog();
+            if (result == true && benchmarkWindow.Report is not null)
+            {
+                var resultsDialog = new StartupBenchmarkResultsDialog(benchmarkWindow.Report)
+                {
+                    Owner = this
+                };
+
+                if (resultsDialog.ShowDialog() == true && resultsDialog.ShouldApplyRecommendations)
+                {
+                    _viewModel.ApplyStartupBenchmarkRecommendation(benchmarkWindow.Report.Recommendation);
+                }
+
+                if (markCompletedOnSuccess)
+                {
+                    _viewModel.MarkStartupBenchmarkCompleted();
+                }
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(outputDir))
+                {
+                    Directory.Delete(outputDir, true);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        await Task.CompletedTask.ConfigureAwait(true);
     }
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)

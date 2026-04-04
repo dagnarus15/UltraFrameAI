@@ -33,6 +33,58 @@ public sealed record BenchmarkRequest(
     int BaselineTileSize = 1024,
     int? GpuId = null);
 
+public sealed record StartupBenchmarkRequest(
+    string SourcePath,
+    IReadOnlyList<StartupBenchmarkGpuCandidate> GpuCandidates,
+    string? OutputDir = null,
+    int SampleSeconds = 6);
+
+public sealed record StartupBenchmarkGpuCandidate(
+    int GpuId,
+    string Label,
+    long? MemoryMb);
+
+public sealed record StartupBenchmarkProgressUpdate(
+    int StepIndex,
+    int TotalSteps,
+    string Phase,
+    string CaseName,
+    double Progress,
+    string ProgressText,
+    string ElapsedText,
+    string EtaText,
+    string Detail);
+
+public sealed record StartupBenchmarkCaseResult(
+    string Phase,
+    int? GpuId,
+    string GpuLabel,
+    string UpscalerThreads,
+    string EncoderPreset,
+    int TileSize,
+    TimeSpan Elapsed,
+    bool Success,
+    string? Error,
+    BenchmarkMetricsSummary Metrics);
+
+public sealed record StartupBenchmarkRecommendation(
+    int? GpuId,
+    string GpuLabel,
+    long? GpuMemoryMb,
+    string UpscalerThreads,
+    string EncoderPreset,
+    int TileSize,
+    bool IsWeakGpu,
+    double ThroughputFps);
+
+public sealed record StartupBenchmarkReport(
+    string SourcePath,
+    string SampleFile,
+    double SampleDuration,
+    string OutputRoot,
+    IReadOnlyList<StartupBenchmarkCaseResult> Results,
+    StartupBenchmarkRecommendation Recommendation);
+
 public enum BenchmarkProgressKind
 {
     BenchmarkStarted,
@@ -637,6 +689,249 @@ public static class BenchmarkRunner
                 result.Success,
                 result.Error,
                 result.Metrics)).ToList());
+    }
+
+    public static async Task<StartupBenchmarkReport> RunStartupBenchmarkAsync(
+        StartupBenchmarkRequest request,
+        IProgress<StartupBenchmarkProgressUpdate>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var repoRoot = FindRepoRoot();
+        var ffmpeg = FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe", repoRoot);
+        var ffprobe = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe", repoRoot);
+        var upscaler = FindFile("realesrgan-ncnn-vulkan.exe", Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "realesrgan-ncnn-vulkan.exe"), repoRoot);
+        var modelDir = FindDirectory("models", Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "models"), repoRoot);
+
+        var source = ResolveSource(request.SourcePath);
+        var outputRoot = Path.GetFullPath(request.OutputDir ?? Path.Combine(Path.GetDirectoryName(source) ?? repoRoot, $"UltraFrameAI-startup-benchmark-{DateTime.Now:yyyyMMdd-HHmmss}"));
+        Directory.CreateDirectory(outputRoot);
+
+        var sampleDir = Path.Combine(outputRoot, "sample");
+        Directory.CreateDirectory(sampleDir);
+        var sampleFile = Path.GetFullPath(Path.Combine(sampleDir, Path.GetFileNameWithoutExtension(source) + "-startup-sample.mkv"));
+        cancellationToken.ThrowIfCancellationRequested();
+        var sourceDuration = await GetDurationAsync(ffprobe, source, cancellationToken).ConfigureAwait(false);
+        var sampleWindow = ChooseSampleWindow(sourceDuration, request.SampleSeconds);
+        await CreateSampleClipAsync(ffmpeg, source, sampleFile, sampleWindow.Start, sampleWindow.Length, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var sampleDuration = await GetDurationAsync(ffprobe, sampleFile, cancellationToken).ConfigureAwait(false);
+
+        var pipeline = new PipelineService();
+        var results = new List<StartupBenchmarkCaseResult>();
+        var gpuCandidates = request.GpuCandidates.Count > 0
+            ? request.GpuCandidates
+            : new[] { new StartupBenchmarkGpuCandidate(0, "GPU 0", null) };
+        var totalSteps = gpuCandidates.Count + 4;
+        var currentStep = 0;
+
+        StartupBenchmarkCaseResult? bestGpuResult = null;
+        foreach (var candidate in gpuCandidates)
+        {
+            currentStep++;
+            var caseResult = await RunStartupCaseAsync(
+                pipeline,
+                sampleFile,
+                outputRoot,
+                ffmpeg,
+                ffprobe,
+                upscaler,
+                modelDir,
+                "GPU",
+                candidate.GpuId,
+                candidate.Label,
+                "4:4:4",
+                "medium",
+                1024,
+                currentStep,
+                totalSteps,
+                progress,
+                cancellationToken).ConfigureAwait(false);
+            results.Add(caseResult);
+            if (caseResult.Success && (bestGpuResult is null || caseResult.Elapsed < bestGpuResult.Elapsed))
+            {
+                bestGpuResult = caseResult;
+            }
+        }
+
+        var selectedGpuId = bestGpuResult?.GpuId ?? gpuCandidates[0].GpuId;
+        var selectedGpuLabel = bestGpuResult?.GpuLabel ?? gpuCandidates[0].Label;
+        var selectedGpuMemoryMb = gpuCandidates.FirstOrDefault(candidate => candidate.GpuId == selectedGpuId)?.MemoryMb;
+        var tuningCases = new (string Profile, string Threads, string EncoderPreset, int TileSize)[]
+        {
+            ("Balanced", "6:6:6", "medium", 1536),
+            ("Fast", "8:8:8", "fast", 2048),
+            ("Safe", "4:4:4", "medium", 1024),
+            ("Quality", "4:4:4", "slower", 1024),
+        };
+
+        foreach (var tuningCase in tuningCases)
+        {
+            currentStep++;
+            var caseResult = await RunStartupCaseAsync(
+                pipeline,
+                sampleFile,
+                outputRoot,
+                ffmpeg,
+                ffprobe,
+                upscaler,
+                modelDir,
+                tuningCase.Profile,
+                selectedGpuId,
+                selectedGpuLabel,
+                tuningCase.Threads,
+                tuningCase.EncoderPreset,
+                tuningCase.TileSize,
+                currentStep,
+                totalSteps,
+                progress,
+                cancellationToken).ConfigureAwait(false);
+            results.Add(caseResult);
+        }
+
+        var successfulGpuCases = results.Where(result => result.Success && string.Equals(result.Phase, "GPU", StringComparison.OrdinalIgnoreCase)).ToList();
+        var strongestGpu = successfulGpuCases.OrderBy(result => result.Elapsed).FirstOrDefault() ?? bestGpuResult;
+        var successfulTuningCases = results.Where(result => result.Success && !string.Equals(result.Phase, "GPU", StringComparison.OrdinalIgnoreCase)).ToList();
+        var balancedTuning = successfulTuningCases.FirstOrDefault(result => string.Equals(result.Phase, "Balanced", StringComparison.OrdinalIgnoreCase));
+        var fastestTuning = successfulTuningCases.OrderBy(result => result.Elapsed).FirstOrDefault();
+        var bestTuning = fastestTuning is not null && balancedTuning is not null && fastestTuning.Elapsed.TotalSeconds > balancedTuning.Elapsed.TotalSeconds * 0.93
+            ? balancedTuning
+            : fastestTuning ?? balancedTuning;
+        var recommendedGpuId = strongestGpu?.GpuId ?? selectedGpuId;
+        var recommendedGpuLabel = strongestGpu?.GpuLabel ?? selectedGpuLabel;
+        var recommendedThreads = bestTuning?.UpscalerThreads ?? "4:4:4";
+        var recommendedPreset = bestTuning?.EncoderPreset ?? "medium";
+        var recommendedTile = bestTuning?.TileSize ?? 1024;
+        var bestElapsed = (bestTuning ?? strongestGpu)?.Elapsed ?? TimeSpan.FromSeconds(Math.Max(1, sampleDuration));
+        var sourceFps = sampleDuration > 0.01 ? 24d : 0d;
+        var throughputFps = bestElapsed.TotalSeconds > 0.01 ? (sampleDuration * sourceFps) / bestElapsed.TotalSeconds : 0d;
+        var isWeakGpu = sampleDuration > 0.01 && bestElapsed.TotalSeconds > sampleDuration * 3.0;
+
+        return new StartupBenchmarkReport(
+            source,
+            sampleFile,
+            sampleDuration,
+            outputRoot,
+            results,
+            new StartupBenchmarkRecommendation(
+                recommendedGpuId,
+                recommendedGpuLabel,
+                selectedGpuMemoryMb,
+                recommendedThreads,
+                recommendedPreset,
+                recommendedTile,
+                isWeakGpu,
+                throughputFps));
+    }
+
+    private static async Task<StartupBenchmarkCaseResult> RunStartupCaseAsync(
+        PipelineService pipeline,
+        string sampleFile,
+        string outputRoot,
+        string ffmpeg,
+        string ffprobe,
+        string upscaler,
+        string modelDir,
+        string phase,
+        int? gpuId,
+        string gpuLabel,
+        string upscalerThreads,
+        string encoderPreset,
+        int tileSize,
+        int stepIndex,
+        int totalSteps,
+        IProgress<StartupBenchmarkProgressUpdate>? progress,
+        CancellationToken cancellationToken)
+    {
+        var caseDir = Path.Combine(
+            outputRoot,
+            "startup-cases",
+            $"{stepIndex:00}-{Sanitize(phase)}-{Sanitize(gpuLabel)}-{upscalerThreads.Replace(':', '-')}-{encoderPreset}-tile{tileSize}");
+        Directory.CreateDirectory(caseDir);
+        var outputPath = Path.Combine(caseDir, "output.mkv");
+
+        var item = new QueueItemViewModel
+        {
+            Index = 1,
+            Title = $"{phase} / {gpuLabel} / {upscalerThreads} / {encoderPreset} / {tileSize}",
+            SourcePath = sampleFile,
+            OutputPath = outputPath
+        };
+        item.ResetUiState();
+
+        progress?.Report(new StartupBenchmarkProgressUpdate(
+            stepIndex,
+            totalSteps,
+            phase,
+            $"{gpuLabel}  {upscalerThreads}  {encoderPreset}  tile {tileSize}",
+            0,
+            "0%",
+            "--:--:--",
+            "--:--:--",
+            LocalizedStrings.BenchmarkStatusStarting));
+
+        var options = new PipelineOptions
+        {
+            RootFolder = Path.GetDirectoryName(sampleFile) ?? Path.GetPathRoot(sampleFile) ?? Environment.CurrentDirectory,
+            OutputFolder = caseDir,
+            Overwrite = true,
+            UseX265 = false,
+            FfmpegThreads = 0,
+            UpscalerThreads = upscalerThreads,
+            TileSize = tileSize,
+            GpuId = gpuId,
+            FfmpegPath = ffmpeg,
+            FfprobePath = ffprobe,
+            UpscalerBackend = UpscalerBackendKind.RealEsrgan,
+            UpscalerPath = upscaler,
+            UpscalerWorkingDirectory = Path.GetDirectoryName(upscaler) ?? Environment.CurrentDirectory,
+            ModelDir = modelDir,
+            ExternalUpscalerArgumentsTemplate = string.Empty,
+            RefinerBackend = RefinerBackendKind.None,
+            RefinerPath = string.Empty,
+            RefinerWorkingDirectory = string.Empty,
+            RefinerModelDir = string.Empty,
+            RefinerArgumentsTemplate = string.Empty,
+            UseAntiFlicker = false,
+            AntiFlickerMode = AntiFlickerMode.LumaStabilizer,
+            ContentMode = "anime",
+            AntiFlickerStrength = 0,
+            EncoderPreset = encoderPreset,
+            OutputContainer = "mkv",
+            UseNativeEncoderBackend = false,
+            PreserveIncompleteOutput = false,
+            RepairBrokenTimestamps = false
+        };
+
+        var started = Stopwatch.StartNew();
+        var metricsSampler = new BenchmarkMetricsSampler();
+        metricsSampler.Start();
+        BenchmarkMetricsSummary metrics = BenchmarkMetricsSummary.Empty;
+        try
+        {
+            await pipeline.RunAsync(new[] { item }, options, pipelineProgress =>
+            {
+                progress?.Report(new StartupBenchmarkProgressUpdate(
+                    stepIndex,
+                    totalSteps,
+                    phase,
+                    $"{gpuLabel}  {upscalerThreads}  {encoderPreset}  tile {tileSize}",
+                    pipelineProgress.Progress,
+                    pipelineProgress.ProgressText,
+                    pipelineProgress.ElapsedText,
+                    pipelineProgress.EtaText,
+                    string.IsNullOrWhiteSpace(pipelineProgress.CurrentStatus) ? pipelineProgress.CurrentDetail : pipelineProgress.CurrentStatus));
+            }, cancellationToken).ConfigureAwait(false);
+
+            started.Stop();
+            metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
+            return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, true, null, metrics);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            started.Stop();
+            metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
+            return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, false, ex.Message, metrics);
+        }
     }
 
     private sealed record BenchmarkSettings(string SourcePath, string? OutputDir, int SampleSeconds, string BaselineThreads, int BaselineTileSize, int? GpuId, string? DoneFile, string Profile);

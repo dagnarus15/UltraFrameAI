@@ -1,0 +1,99 @@
+<Window x:Class="UltraFrameAI.StartupBenchmarkWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:UltraFrameAI"
+        Title="{local:Loc StartupBenchmarkProgressTitle}"
+        Width="760"
+        Height="420"
+        MinWidth="680"
+        MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Closing="Window_Closing">
+    <Grid Margin="18">
+        <Border Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="18"
+                Padding="18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="18" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="{local:Loc StartupBenchmarkProgressTitle}"
+                           FontSize="24"
+                           FontWeight="SemiBold" />
+                <TextBlock Grid.Row="2"
+                           Text="{local:Loc StartupBenchmarkProgressIntro}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" />
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc StartupBenchmarkCurrentPhase}"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="{Binding CurrentPhase}"
+                                   Margin="0,4,0,0"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{local:Loc StartupBenchmarkCurrentCase}"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="{Binding CurrentCase}"
+                                   Margin="0,4,0,0"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Row="6">
+                    <TextBlock Text="{Binding CurrentDetail}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                    <ProgressBar Height="16"
+                                 Margin="0,12,0,0"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="{Binding CurrentProgress}" />
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding CurrentStepText}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="2" Text="{Binding CurrentProgressText}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="4" Text="{Binding CurrentElapsedText}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="6" Text="{Binding CurrentEtaText}" FontWeight="SemiBold" />
+                    </Grid>
+                </StackPanel>
+
+                <Button Grid.Row="8"
+                        Content="{local:Loc StartupBenchmarkCancel}"
+                        HorizontalAlignment="Right"
+                        MinWidth="110"
+                        Padding="14,8"
+                        Click="Cancel_Click" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

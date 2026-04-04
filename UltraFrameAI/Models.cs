@@ -218,6 +218,41 @@ public sealed record RenderPreviewFrameUpdate(
     int Height,
     int Stride);
 
+public sealed record RenderSessionItemResult(
+    string Title,
+    string ElapsedText,
+    string AverageFpsText);
+
+public sealed record RenderSessionResults(
+    string TotalElapsedText,
+    IReadOnlyList<RenderSessionItemResult> Items);
+
+public sealed record DonationSupportEntry(
+    string Title,
+    string Value,
+    string Note);
+
+public sealed record HelpFaqEntry(
+    string Question,
+    string Answer);
+
+public sealed record HelpLinkEntry(
+    string Title,
+    string Url,
+    string Note);
+
+public sealed record HelpVersionEntry(
+    string Title,
+    string Value);
+
+public enum HelpCenterTab
+{
+    HowTo,
+    Faq,
+    Links,
+    Support
+}
+
 public sealed class RenderPreviewFramePayload : IDisposable
 {
     private readonly ArrayPool<byte> _pool;
@@ -320,6 +355,15 @@ public enum RefinerBackendKind
 
 public sealed record RefinerBackendOption(RefinerBackendKind Value, string Label)
 {
+    public override string ToString() => Label;
+}
+
+public sealed record GpuDeviceOption(string Key, string Label, int? ResolvedGpuId)
+{
+    public const string AutoKey = "auto";
+
+    public bool IsAuto => string.Equals(Key, AutoKey, StringComparison.OrdinalIgnoreCase);
+
     public override string ToString() => Label;
 }
 

@@ -44,6 +44,15 @@ public partial class RenderWindow : Window
         _ = ClosePopupAsync(LanguagePopup, LanguagePopupBorder, LanguagePopupScale, LanguagePopupTranslate);
     }
 
+    private void TopHelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new HelpCenterDialog(HelpCenterTab.HowTo)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+    }
+
     private void FileListButton_Click(object sender, RoutedEventArgs e)
     {
         if (FileListPopup.IsOpen)
@@ -368,7 +377,7 @@ public partial class RenderWindow : Window
 
     private async void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (IsWithinButton(e.OriginalSource, LanguageButton) || IsWithinButton(e.OriginalSource, FileListButton))
+        if (IsWithinButton(e.OriginalSource, LanguageButton) || IsWithinButton(e.OriginalSource, FileListButton) || IsWithinButton(e.OriginalSource, TopHelpButton))
         {
             return;
         }
