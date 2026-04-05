@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -19,12 +18,8 @@ public static class WindowCaptionColorManager
 
     public static void Attach(Window window)
     {
-        void ApplyHandler(object? _, EventArgs __) => Apply(window);
-
         window.SourceInitialized += (_, _) => Apply(window);
         window.Activated += (_, _) => Apply(window);
-        AppThemeManager.ThemeChanged += ApplyHandler;
-        window.Closed += (_, _) => AppThemeManager.ThemeChanged -= ApplyHandler;
     }
 
     public static void Apply(Window window)
