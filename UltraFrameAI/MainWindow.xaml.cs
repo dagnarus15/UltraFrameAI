@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowCaptionColorManager.Attach(this);
         DataContext = _viewModel;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.QueueStateChanged += (_, _) => UpdateDeleteButtonStates();

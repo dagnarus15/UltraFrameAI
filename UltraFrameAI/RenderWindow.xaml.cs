@@ -23,6 +23,7 @@ public partial class RenderWindow : Window
     public RenderWindow()
     {
         InitializeComponent();
+        WindowCaptionColorManager.Attach(this);
         Loaded += (_, _) => Dispatcher.BeginInvoke(() => Focus());
         DataContextChanged += RenderWindow_DataContextChanged;
     }
