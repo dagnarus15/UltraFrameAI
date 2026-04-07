@@ -700,10 +700,13 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
     <value>Format</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>Format bedeutet hier die Ergebnisaufl?sung.
+    <value>Format bedeutet hier die Ergebnisauflösung.
 
-**1080p** — bleibt Full HD.
-**2160p** — rendert 4K.</value>
+**720p** — macht HD daraus.
+**1080p** — macht Full HD daraus.
+**1440p** — macht QHD daraus.
+**2160p** — rendert 4K.
+**4320p** — rendert 8K.</value>
   </data>
   <data name="ContainerHelpTitle" xml:space="preserve">
     <value>Container</value>

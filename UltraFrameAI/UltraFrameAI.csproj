@@ -36,6 +36,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\UltraFrameAI.ico" />
     <Resource Include="images\*.png" />
   </ItemGroup>
 

@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="{local:Loc AppTitle}"
-        Icon="pack://application:,,,/images/icon.png"
+        Icon="/Assets/UltraFrameAI.ico"
         Width="1400"
         Height="920"
         MinWidth="1180"
@@ -603,13 +603,27 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="{local:Loc AppTitle}" FontSize="28" FontWeight="SemiBold" />
-                    <TextBlock Text="{local:Loc Subtitle}"
-                               Margin="0,6,0,0"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap"
-                               MaxWidth="900" />
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="56"
+                            Height="56"
+                            CornerRadius="14"
+                            Background="#13203A"
+                            BorderBrush="#243451"
+                            BorderThickness="1"
+                            Margin="0,0,14,0"
+                            VerticalAlignment="Top">
+                        <Image Source="pack://application:,,,/images/logo.png"
+                               Margin="9"
+                               Stretch="Uniform" />
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc AppTitle}" FontSize="28" FontWeight="SemiBold" />
+                        <TextBlock Text="{local:Loc Subtitle}"
+                                   Margin="0,6,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="830" />
+                    </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Button x:Name="TopHelpButton"
@@ -982,7 +996,9 @@
                                             />
                                 </Grid>
                                 <ComboBox ItemsSource="{Binding TargetOptions}"
-                                          SelectedItem="{Binding SelectedTarget}"
+                                          DisplayMemberPath="Label"
+                                          SelectedValuePath="Value"
+                                          SelectedValue="{Binding SelectedTarget}"
                                           HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </Grid>
@@ -1544,7 +1560,9 @@
                                                 Click="FormatHelp_Click" />
                                     </Grid>
                                     <ComboBox ItemsSource="{Binding TargetOptions}"
-                                              SelectedItem="{Binding SelectedTarget}"
+                                              DisplayMemberPath="Label"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding SelectedTarget}"
                                               HorizontalAlignment="Stretch" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">

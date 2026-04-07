@@ -187,6 +187,7 @@ function New-FlagBitmap {
 }
 
 Copy-Item -LiteralPath (Join-Path $repoRoot 'images\icon.png') -Destination (Join-Path $imagesDir 'icon.png') -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot 'images\logo.png') -Destination (Join-Path $imagesDir 'logo.png') -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot 'images\splashscreen.png') -Destination (Join-Path $imagesDir 'splashscreen.png') -Force
 New-IconFile -Path (Join-Path $assetsDir 'UltraFrameAI.ico') -PngPath (Join-Path $imagesDir 'icon.png')
 New-FlagBitmap -Path (Join-Path $imagesDir 'flag-en.png') -Country 'en'

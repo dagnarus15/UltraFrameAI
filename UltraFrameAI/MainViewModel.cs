@@ -123,6 +123,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly string _antiFlickerProfilesPath;
     private readonly string _nativeEncoderBackendPath;
     private readonly string _appSettingsPath;
+    private static readonly string[] SupportedTargetValues = { "720p", "1080p", "1440p", "2160p", "4320p" };
 
     private CancellationTokenSource? _runCts;
     private CancellationTokenSource? _scanCts;
@@ -243,7 +244,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CurrentRenderItems.CollectionChanged += CurrentRenderItems_CollectionChanged;
         RecentRootFolders = new ObservableCollection<RecentFolderItem>();
         CodecOptions = new[] { "x264", "x265" };
-        TargetOptions = new[] { "1080p", "2160p" };
+        TargetOptions = BuildTargetOptions();
         ContainerOptions = new[] { "mkv" };
         EncoderPresetOptions = new[] { "fast", "medium", "slower" };
 
@@ -357,7 +358,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public IEnumerable<string> CodecOptions { get; }
 
-    public IEnumerable<string> TargetOptions { get; }
+    public IEnumerable<TargetFormatOption> TargetOptions { get; }
 
     public IEnumerable<string> ContainerOptions { get; }
 
@@ -3479,6 +3480,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
             new AntiFlickerModeOption(AntiFlickerMode.LumaStabilizer, LocalizedStrings.AntiFlickerModeLumaStabilizer)
         };
 
+    private static IReadOnlyList<TargetFormatOption> BuildTargetOptions() =>
+        new[]
+        {
+            new TargetFormatOption("720p", "720p (HD)"),
+            new TargetFormatOption("1080p", "1080p (Full HD)"),
+            new TargetFormatOption("1440p", "1440p (QHD)"),
+            new TargetFormatOption("2160p", "2160p (4K)"),
+            new TargetFormatOption("4320p", "4320p (8K)")
+        };
+
     private IReadOnlyList<UpscalerBackendOption> BuildUpscalerBackendOptions()
     {
         var options = new List<UpscalerBackendOption>
@@ -4173,7 +4184,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 RootFolder = loaded.RootFolder;
             }
 
-            var target = loaded.SelectedTarget == "2160p" ? "2160p" : "1080p";
+            var target = SupportedTargetValues.Contains(loaded.SelectedTarget, StringComparer.OrdinalIgnoreCase)
+                ? SupportedTargetValues.First(option => string.Equals(option, loaded.SelectedTarget, StringComparison.OrdinalIgnoreCase))
+                : "1080p";
             var codec = loaded.SelectedCodec == "x265" ? "x265" : "x264";
             const string container = "mkv";
 

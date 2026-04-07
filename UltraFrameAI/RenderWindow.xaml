@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="{local:Loc RenderWindowTitle}"
-        Icon="pack://application:,,,/images/icon.png"
+        Icon="/Assets/UltraFrameAI.ico"
         Width="1560"
         Height="1020"
         MinWidth="1360"

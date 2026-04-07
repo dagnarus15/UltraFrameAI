@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:UltraFrameAI"
         Title="Preview"
-        Icon="pack://application:,,,/images/icon.png"
+        Icon="/Assets/UltraFrameAI.ico"
         Width="1440"
         Height="900"
         MinWidth="640"

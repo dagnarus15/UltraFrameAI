@@ -699,8 +699,11 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   <data name="FormatHelpBody" xml:space="preserve">
     <value>Format here means the result resolution.
 
-**1080p** — keeps Full HD.
-**2160p** — renders 4K.</value>
+**720p** — makes it HD.
+**1080p** — makes it Full HD.
+**1440p** — makes it QHD.
+**2160p** — renders 4K.
+**4320p** — renders 8K.</value>
   </data>
   <data name="ContainerHelpTitle" xml:space="preserve">
     <value>Container</value>

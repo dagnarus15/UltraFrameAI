@@ -702,8 +702,11 @@
   <data name="FormatHelpBody" xml:space="preserve">
     <value>Формат здесь означает разрешение результата.
 
-**1080p** — оставляет Full HD.
-**2160p** — рендерит 4K.</value>
+**720p** — делает HD.
+**1080p** — делает Full HD.
+**1440p** — делает QHD.
+**2160p** — рендерит 4K.
+**4320p** — рендерит 8K.</value>
   </data>
   <data name="ContainerHelpTitle" xml:space="preserve">
     <value>Контейнер</value>
