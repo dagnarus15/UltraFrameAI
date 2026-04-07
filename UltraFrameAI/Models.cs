@@ -414,7 +414,7 @@ public sealed record GpuDeviceOption(string Key, string Label, int? ResolvedGpuI
     public override string ToString() => Label;
 }
 
-public sealed record TargetFormatOption(string Value, string Label)
+public sealed record TargetFormatOption(string Value, string Label, bool IsCustomAction = false)
 {
     public override string ToString() => Label;
 }

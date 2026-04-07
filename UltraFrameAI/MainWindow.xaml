@@ -995,10 +995,12 @@
                                             Click="FormatHelp_Click"
                                             />
                                 </Grid>
-                                <ComboBox ItemsSource="{Binding TargetOptions}"
+                                <ComboBox x:Name="MainTargetComboBox"
+                                          ItemsSource="{Binding TargetOptions}"
                                           DisplayMemberPath="Label"
                                           SelectedValuePath="Value"
                                           SelectedValue="{Binding SelectedTarget}"
+                                          SelectionChanged="TargetFormat_SelectionChanged"
                                           HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </Grid>
@@ -1559,10 +1561,12 @@
                                                 Content="?"
                                                 Click="FormatHelp_Click" />
                                     </Grid>
-                                    <ComboBox ItemsSource="{Binding TargetOptions}"
+                                    <ComboBox x:Name="SettingsTargetComboBox"
+                                              ItemsSource="{Binding TargetOptions}"
                                               DisplayMemberPath="Label"
                                               SelectedValuePath="Value"
                                               SelectedValue="{Binding SelectedTarget}"
+                                              SelectionChanged="TargetFormat_SelectionChanged"
                                               HorizontalAlignment="Stretch" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">

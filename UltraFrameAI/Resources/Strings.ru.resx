@@ -665,6 +665,18 @@
   <data name="Resolution" xml:space="preserve">
     <value>Разрешение</value>
   </data>
+  <data name="CustomTargetValue" xml:space="preserve">
+    <value>Своё значение</value>
+  </data>
+  <data name="CustomTargetDialogTitle" xml:space="preserve">
+    <value>Своё разрешение</value>
+  </data>
+  <data name="CustomTargetDialogPrompt" xml:space="preserve">
+    <value>Введите высоту результата в пикселях. Минимум — 120.</value>
+  </data>
+  <data name="CustomTargetDialogValidation" xml:space="preserve">
+    <value>Введите целое число от 120 и выше.</value>
+  </data>
   <data name="EncoderPreset" xml:space="preserve">
     <value>Пресет энкодера</value>
   </data>

@@ -11,6 +11,8 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel = new();
     private bool _isAdditionalOverlayAnimating;
+    private bool _isHandlingCustomTargetSelection;
+    private string _lastConfirmedTarget = "1080p";
     private bool _isScanOverlayAnimating;
     private DateTime _scanOverlayShownAtUtc;
     private RenderWindow? _renderWindow;
@@ -22,6 +24,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         WindowCaptionColorManager.Attach(this);
         DataContext = _viewModel;
+        _lastConfirmedTarget = _viewModel.SelectedTarget;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.QueueStateChanged += (_, _) => UpdateDeleteButtonStates();
         _viewModel.OutputConflictRequested += ViewModel_OutputConflictRequested;
@@ -236,6 +239,44 @@ public partial class MainWindow : Window
         OpenHelpCenter(HelpCenterTab.HowTo);
     }
 
+    private void TargetFormat_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_isHandlingCustomTargetSelection ||
+            sender is not System.Windows.Controls.ComboBox comboBox ||
+            comboBox.SelectedItem is not TargetFormatOption option ||
+            !option.IsCustomAction)
+        {
+            return;
+        }
+
+        var previousTarget = string.IsNullOrWhiteSpace(_lastConfirmedTarget)
+            ? "1080p"
+            : _lastConfirmedTarget;
+        var initialHeight = ExtractTargetHeight(previousTarget);
+        var dialog = new CustomTargetValueDialog(initialHeight)
+        {
+            Owner = this
+        };
+
+        _isHandlingCustomTargetSelection = true;
+        try
+        {
+            if (dialog.ShowDialog() == true)
+            {
+                _viewModel.ApplyCustomTargetHeight(dialog.SelectedHeight);
+                RestoreTargetComboSelection(_viewModel.SelectedTarget);
+            }
+            else
+            {
+                RestoreTargetComboSelection(previousTarget);
+            }
+        }
+        finally
+        {
+            _isHandlingCustomTargetSelection = false;
+        }
+    }
+
     private void OpenCodecFormatHelp(object sender, string title, string body)
     {
         if (sender is not System.Windows.Controls.Button button)
@@ -258,6 +299,42 @@ public partial class MainWindow : Window
         SetHelpPopupBody(body);
         CodecFormatHelpPopup.PlacementTarget = button;
         CodecFormatHelpPopup.IsOpen = true;
+    }
+
+    private static int ExtractTargetHeight(string target)
+    {
+        var digits = new string(target.Where(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var parsed) && parsed >= 120
+            ? parsed
+            : 1080;
+    }
+
+    private void RestoreTargetComboSelection(string targetValue)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            RestoreTargetComboSelection(MainTargetComboBox, targetValue);
+            RestoreTargetComboSelection(SettingsTargetComboBox, targetValue);
+        }, DispatcherPriority.Background);
+    }
+
+    private static void RestoreTargetComboSelection(System.Windows.Controls.ComboBox comboBox, string targetValue)
+    {
+        if (comboBox.ItemsSource is not IEnumerable<TargetFormatOption> options)
+        {
+            comboBox.SelectedValue = targetValue;
+            return;
+        }
+
+        var match = options.FirstOrDefault(option => string.Equals(option.Value, targetValue, StringComparison.Ordinal));
+        if (match is not null)
+        {
+            comboBox.SelectedItem = match;
+        }
+        else
+        {
+            comboBox.SelectedValue = targetValue;
+        }
     }
 
     private void SetHelpPopupBody(string body)
@@ -727,6 +804,10 @@ public partial class MainWindow : Window
                     dialog.ShowDialog();
                 }
             }
+        }
+        else if (e.PropertyName == nameof(MainViewModel.SelectedTarget))
+        {
+            _lastConfirmedTarget = _viewModel.SelectedTarget;
         }
     }
 

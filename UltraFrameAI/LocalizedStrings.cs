@@ -206,6 +206,10 @@ public static class LocalizedStrings
     public static string Codec => GetText(nameof(Codec));
     public static string Target => GetText(nameof(Target));
     public static string Resolution => GetText(nameof(Resolution));
+    public static string CustomTargetValue => GetText(nameof(CustomTargetValue));
+    public static string CustomTargetDialogTitle => GetText(nameof(CustomTargetDialogTitle));
+    public static string CustomTargetDialogPrompt => GetText(nameof(CustomTargetDialogPrompt));
+    public static string CustomTargetDialogValidation => GetText(nameof(CustomTargetDialogValidation));
     public static string Container => GetText(nameof(Container));
     public static string FFmpegThreads => GetText(nameof(FFmpegThreads));
     public static string UpscalerJobs => GetText(nameof(UpscalerJobs));

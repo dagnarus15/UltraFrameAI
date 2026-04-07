@@ -665,6 +665,18 @@ Am besten für maximale Stabilität.</value>
   <data name="Resolution" xml:space="preserve">
     <value>Auflösung</value>
   </data>
+  <data name="CustomTargetValue" xml:space="preserve">
+    <value>Eigener Wert</value>
+  </data>
+  <data name="CustomTargetDialogTitle" xml:space="preserve">
+    <value>Eigene Auflösung</value>
+  </data>
+  <data name="CustomTargetDialogPrompt" xml:space="preserve">
+    <value>Gib die Ergebnishöhe in Pixeln ein. Minimum ist 120.</value>
+  </data>
+  <data name="CustomTargetDialogValidation" xml:space="preserve">
+    <value>Gib eine ganze Zahl ab 120 ein.</value>
+  </data>
   <data name="EncoderPreset" xml:space="preserve">
     <value>Encoder-Preset</value>
   </data>

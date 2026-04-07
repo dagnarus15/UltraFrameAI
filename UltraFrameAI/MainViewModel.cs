@@ -112,6 +112,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AsyncRelayCommand _startSelectedCommand;
     private readonly ObservableCollection<LogEntryViewModel> _logLines = UiCollections.CreateLogCollection();
     private IReadOnlyList<AntiFlickerModeOption> _antiFlickerModeOptions = Array.Empty<AntiFlickerModeOption>();
+    private IReadOnlyList<TargetFormatOption> _targetOptions = Array.Empty<TargetFormatOption>();
     private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
     private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
     private IReadOnlyList<GpuDeviceOption> _gpuOptions = Array.Empty<GpuDeviceOption>();
@@ -123,7 +124,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly string _antiFlickerProfilesPath;
     private readonly string _nativeEncoderBackendPath;
     private readonly string _appSettingsPath;
-    private static readonly string[] SupportedTargetValues = { "720p", "1080p", "1440p", "2160p", "4320p" };
+    private const string DefaultTargetValue = "1080p";
+    private const string CustomTargetActionValue = "__custom_target__";
+    private static readonly string[] SupportedTargetValues = { "720p", DefaultTargetValue, "1440p", "2160p", "4320p" };
 
     private CancellationTokenSource? _runCts;
     private CancellationTokenSource? _scanCts;
@@ -133,7 +136,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _rootFolder = Directory.GetCurrentDirectory();
     private string _outputFolder = string.Empty;
     private string _selectedCodec = "x264";
-    private string _selectedTarget = "1080p";
+    private string _selectedTarget = DefaultTargetValue;
     private string _selectedContainer = "mkv";
     private string _encoderPreset = "slower";
     private string _ffmpegThreadsText = "0";
@@ -244,7 +247,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CurrentRenderItems.CollectionChanged += CurrentRenderItems_CollectionChanged;
         RecentRootFolders = new ObservableCollection<RecentFolderItem>();
         CodecOptions = new[] { "x264", "x265" };
-        TargetOptions = BuildTargetOptions();
+        _targetOptions = BuildTargetOptions(_selectedTarget);
         ContainerOptions = new[] { "mkv" };
         EncoderPresetOptions = new[] { "fast", "medium", "slower" };
 
@@ -358,7 +361,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public IEnumerable<string> CodecOptions { get; }
 
-    public IEnumerable<TargetFormatOption> TargetOptions { get; }
+    public IEnumerable<TargetFormatOption> TargetOptions => _targetOptions;
 
     public IEnumerable<string> ContainerOptions { get; }
 
@@ -523,8 +526,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _selectedTarget;
         set
         {
+            if (string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal))
+            {
+                return;
+            }
+
             if (SetField(ref _selectedTarget, value))
             {
+                RefreshTargetOptions();
                 RefreshComputedOutputState();
                 PersistAppSettings();
             }
@@ -1733,6 +1742,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         EncoderPreset = recommendation.EncoderPreset;
         TileSizeText = recommendation.TileSize.ToString(CultureInfo.InvariantCulture);
         PersistAppSettings();
+    }
+
+    public void ApplyCustomTargetHeight(int height)
+    {
+        if (height < 120)
+        {
+            height = 120;
+        }
+
+        SelectedTarget = $"{height}p";
     }
 
     public RenderSessionResults? ConsumePendingRenderSessionResults()
@@ -3431,6 +3450,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
+        RefreshTargetOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
         RebuildGpuOptions(_selectedGpuOption?.Key);
@@ -3481,15 +3501,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
             new AntiFlickerModeOption(AntiFlickerMode.LumaStabilizer, LocalizedStrings.AntiFlickerModeLumaStabilizer)
         };
 
-    private static IReadOnlyList<TargetFormatOption> BuildTargetOptions() =>
-        new[]
+    private static IReadOnlyList<TargetFormatOption> BuildTargetOptions(string? selectedTarget)
+    {
+        var options = new List<TargetFormatOption>
         {
-            new TargetFormatOption("720p", "720p (HD)"),
-            new TargetFormatOption("1080p", "1080p (Full HD)"),
-            new TargetFormatOption("1440p", "1440p (QHD)"),
-            new TargetFormatOption("2160p", "2160p (4K)"),
-            new TargetFormatOption("4320p", "4320p (8K)")
+            new("720p", "720p (HD)"),
+            new("1080p", "1080p (Full HD)"),
+            new("1440p", "1440p (QHD)"),
+            new("2160p", "2160p (4K)"),
+            new("4320p", "4320p (8K)")
         };
+
+        if (!string.IsNullOrWhiteSpace(selectedTarget) &&
+            !SupportedTargetValues.Contains(selectedTarget, StringComparer.OrdinalIgnoreCase))
+        {
+            options.Add(new TargetFormatOption(selectedTarget, selectedTarget));
+        }
+
+        options.Add(new TargetFormatOption(CustomTargetActionValue, LocalizedStrings.CustomTargetValue, true));
+        return options;
+    }
 
     private IReadOnlyList<UpscalerBackendOption> BuildUpscalerBackendOptions()
     {
@@ -4187,7 +4218,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             var target = SupportedTargetValues.Contains(loaded.SelectedTarget, StringComparer.OrdinalIgnoreCase)
                 ? SupportedTargetValues.First(option => string.Equals(option, loaded.SelectedTarget, StringComparison.OrdinalIgnoreCase))
-                : "1080p";
+                : DefaultTargetValue;
             var codec = loaded.SelectedCodec == "x265" ? "x265" : "x264";
             const string container = "mkv";
 
@@ -4657,6 +4688,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string GetOutputFolderName()
     {
         return $"_{SelectedCodec}_{SelectedTarget}_output";
+    }
+
+    private void RefreshTargetOptions()
+    {
+        _targetOptions = BuildTargetOptions(_selectedTarget);
+        OnPropertyChanged(nameof(TargetOptions));
     }
 
     private static int ParseTargetHeight(string? target)
