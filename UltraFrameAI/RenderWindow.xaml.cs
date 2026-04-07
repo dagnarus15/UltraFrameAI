@@ -54,6 +54,19 @@ public partial class RenderWindow : Window
         dialog.ShowDialog();
     }
 
+    private void BackgroundColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new BackgroundColorDialog(AppThemeManager.CurrentBackgroundColor)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            AppThemeManager.ApplyBackgroundColor(dialog.SelectedColor);
+        }
+    }
+
     private void FileListButton_Click(object sender, RoutedEventArgs e)
     {
         if (FileListPopup.IsOpen)
@@ -431,6 +444,14 @@ public partial class RenderWindow : Window
             return;
         }
 
+        if (CanCloseDuringPreRenderWarnings(viewModel))
+        {
+            e.Cancel = true;
+            _closingAfterStop = true;
+            viewModel.CancelCommand.Execute(null);
+            return;
+        }
+
         e.Cancel = true;
         var dialog = new RenderCloseDialog
         {
@@ -445,6 +466,13 @@ public partial class RenderWindow : Window
 
         _closingAfterStop = true;
         viewModel.CancelCommand.Execute(null);
+    }
+
+    private static bool CanCloseDuringPreRenderWarnings(MainViewModel viewModel)
+    {
+        return viewModel.IsRenderMode
+               && string.Equals(viewModel.CurrentStage, LocalizedStrings.LogPreparing, StringComparison.Ordinal)
+               && viewModel.OverallProgress <= 0.0001;
     }
 
     private static void OpenPopup(

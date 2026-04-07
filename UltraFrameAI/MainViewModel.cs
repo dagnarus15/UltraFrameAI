@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
@@ -15,10 +16,35 @@ namespace UltraFrameAI;
 
 public sealed class MainViewModel : INotifyPropertyChanged
 {
+    private sealed class NaturalStringComparer : IComparer<string>
+    {
+        public static NaturalStringComparer Instance { get; } = new();
+
+        public int Compare(string? x, string? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return 0;
+            }
+
+            if (x is null)
+            {
+                return -1;
+            }
+
+            if (y is null)
+            {
+                return 1;
+            }
+
+            return StrCmpLogicalW(x, y);
+        }
+    }
+
     private sealed record RecentRootFoldersCacheEntry(List<string> Folders, bool Complete);
     private sealed record AntiFlickerProfilesCacheEntry(Dictionary<string, AntiFlickerPresetState> Presets, bool Complete);
     private sealed record NativeEncoderBackendCacheEntry(bool Enabled, bool Complete);
-    private sealed record PersistedQueueItemCacheEntry(string SourcePath, string Title, string OutputPath, bool IsChecked);
+    private sealed record PersistedQueueItemCacheEntry(string SourcePath, string Title, string OutputPath, bool IsChecked, bool SkipInRender);
     private sealed record ResumePreflightTelemetry(string? PhaseText = null, string? DetailText = null, string? EtaText = null, string? FpsText = null);
     private sealed class ResumePreflightUiState
     {
@@ -61,6 +87,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool? RepairBrokenTimestamps,
         bool StartupBenchmarkPromptShown,
         bool StartupBenchmarkCompleted,
+        string? BenchmarkedHardwareSignature,
+        bool ShowQueuePaths,
         List<PersistedQueueItemCacheEntry>? QueueItems,
         string? SelectedItemSourcePath,
         bool Complete);
@@ -78,6 +106,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly RelayCommand _cancelCommand;
     private readonly RelayCommand _skipCurrentCommand;
     private readonly RelayCommand _togglePauseCommand;
+    private readonly RelayCommand _finishAfterCurrentCommand;
     private readonly AsyncRelayCommand _scanCommand;
     private readonly AsyncRelayCommand _startCommand;
     private readonly AsyncRelayCommand _startSelectedCommand;
@@ -87,6 +116,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
     private IReadOnlyList<GpuDeviceOption> _gpuOptions = Array.Empty<GpuDeviceOption>();
     private readonly IReadOnlyList<DetectedGpuDevice> _detectedGpuDevices;
+    private readonly string _currentHardwareSignature;
     private readonly string _repoRoot = FindRepoRoot();
     private readonly string _lastRootFolderPath;
     private readonly string _recentRootFoldersPath;
@@ -124,12 +154,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _overwrite;
     private bool _startupBenchmarkPromptShown;
     private bool _startupBenchmarkCompleted;
+    private string _benchmarkedHardwareSignature = string.Empty;
+    private StartupBenchmarkPromptKind _startupBenchmarkPromptKind;
     private bool _useAntiFlicker = true;
     private bool _useNativeEncoderBackend;
     private bool _preserveIncompleteOutput;
     private bool _repairBrokenTimestamps = true;
     private double _antiFlickerStrength = 65;
-    private AntiFlickerMode _selectedAntiFlickerMode = AntiFlickerMode.LumaStabilizer;
+    private AntiFlickerMode _selectedAntiFlickerMode = AntiFlickerMode.FlowGuided;
     private string _selectedContentMode = "Anime";
     private bool _suppressAntiFlickerPresetPersistence;
     private bool _suppressAppSettingsPersistence;
@@ -146,6 +178,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _stageDurationText = "--:--:--";
     private string _processingFpsText = "--";
     private string _queueSummary = string.Empty;
+    private string _queueSourceSummary = string.Empty;
+    private string _queueSourceTooltip = string.Empty;
     private string _currentFileName = string.Empty;
     private ImageSource? _renderPreviewOriginalImage;
     private ImageSource? _renderPreviewResultImage;
@@ -170,6 +204,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _canDeleteAll;
     private bool _canStartAll;
     private bool _canStartSelected;
+    private bool _showQueuePaths;
     private bool _isDeleteConfirmVisible;
     private double _overallProgress;
     private QueueItemViewModel? _selectedItem;
@@ -178,6 +213,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private OutputConflictDecision? _sessionOutputDecision;
     private bool _isRenderMode;
     private bool _isRenderPaused;
+    private bool _finishAfterCurrentRequested;
     private bool _closeRenderModeAfterCurrentSkip;
     private bool _keepRenderModeForAutoResume;
     private readonly List<QueueItemViewModel> _pendingAutoResumeItems = new();
@@ -222,6 +258,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _cancelCommand = new RelayCommand(CancelRun, () => IsBusy);
         _skipCurrentCommand = new RelayCommand(SkipCurrentItem, () => IsBusy);
         _togglePauseCommand = new RelayCommand(TogglePause, () => CanPauseRender);
+        _finishAfterCurrentCommand = new RelayCommand(FinishAfterCurrentItem, () => CanFinishAfterCurrent);
         _scanCommand = new AsyncRelayCommand(() => ScanAsync(showOverlay: true), () => !IsBusy);
         _startCommand = new AsyncRelayCommand(StartAsync, () => !IsBusy);
         _startSelectedCommand = new AsyncRelayCommand(StartSelectedAsync, () => !IsBusy);
@@ -242,13 +279,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
         _detectedGpuDevices = GpuDeviceDetector.DetectDevices();
+        _currentHardwareSignature = ComputeHardwareSignature(_detectedGpuDevices);
         RebuildGpuOptions();
         LoadRecentRootFolders();
         _suppressAppSettingsPersistence = true;
         try
         {
             RootFolder = LoadPersistedRootFolder(_repoRoot);
-            OutputFolder = GetDefaultOutputFolder(RootFolder);
             ApplyAntiFlickerPreset(_selectedContentMode, persist: false);
             LoadAppSettings();
         }
@@ -256,6 +293,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             _suppressAppSettingsPersistence = false;
         }
+        EvaluateStartupBenchmarkPromptState();
         RememberRecentFolder(RootFolder, persist: true);
         RefreshLocalizedText();
         PersistAppSettings();
@@ -272,6 +310,46 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<QueueItemViewModel> CurrentRenderItems { get; }
 
     public string CurrentRenderItemsCountText => LocalizedStrings.LogItemCount(CurrentRenderItems.Count);
+
+    public bool? QueueSelectAllState
+    {
+        get
+        {
+            var eligibleItems = Items.Where(item => !item.IsBusy).ToArray();
+            if (eligibleItems.Length == 0)
+            {
+                return false;
+            }
+
+            var selectedCount = eligibleItems.Count(item => item.IsChecked);
+            return selectedCount switch
+            {
+                0 => false,
+                _ when selectedCount == eligibleItems.Length => true,
+                _ => null
+            };
+        }
+    }
+
+    public bool? RenderSkipAllState
+    {
+        get
+        {
+            var eligibleItems = CurrentRenderItems.Where(CanToggleSkipInRender).ToArray();
+            if (eligibleItems.Length == 0)
+            {
+                return false;
+            }
+
+            var selectedCount = eligibleItems.Count(item => item.SkipInRender);
+            return selectedCount switch
+            {
+                0 => false,
+                _ when selectedCount == eligibleItems.Length => true,
+                _ => null
+            };
+        }
+    }
 
     public ObservableCollection<RecentFolderItem> RecentRootFolders { get; }
 
@@ -308,6 +386,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand SkipCurrentCommand => _skipCurrentCommand;
 
     public ICommand TogglePauseCommand => _togglePauseCommand;
+
+    public ICommand FinishAfterCurrentCommand => _finishAfterCurrentCommand;
 
     public ICommand ScanCommand => _scanCommand;
 
@@ -353,8 +433,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _cancelCommand.RaiseCanExecuteChanged();
                 _skipCurrentCommand.RaiseCanExecuteChanged();
                 _togglePauseCommand.RaiseCanExecuteChanged();
+                _finishAfterCurrentCommand.RaiseCanExecuteChanged();
                 _resetRootCommand.RaiseCanExecuteChanged();
                 _removeItemCommand.RaiseCanExecuteChanged();
+                if (!value)
+                {
+                    _finishAfterCurrentRequested = false;
+                    OnPropertyChanged(nameof(CanFinishAfterCurrent));
+                    OnPropertyChanged(nameof(RenderFinishAfterCurrentText));
+                }
                 UpdateActionStates();
                 UpdatePauseStateUi();
                 OnQueueStateChanged();
@@ -393,7 +480,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField(ref _rootFolder, value))
             {
-                OutputFolder = GetDefaultOutputFolder(value);
                 UpdateQueueSummary();
                 SavePersistedRootFolder(value);
                 RefreshRecentFolderSelection();
@@ -414,6 +500,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public string ComputedOutputFolderName => GetOutputFolderName();
+
+    public string OutputLocationHintText => LocalizedStrings.OutputLocationHint(ComputedOutputFolderName);
+
     public string SelectedCodec
     {
         get => _selectedCodec;
@@ -421,19 +511,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField(ref _selectedCodec, value))
             {
-                if (value == "x265")
-                {
-                    _selectedTarget = "2160p";
-                    OnPropertyChanged(nameof(SelectedTarget));
-                    OutputFolder = GetDefaultOutputFolder(RootFolder);
-                }
-                else
-                {
-                    _selectedTarget = "1080p";
-                    OnPropertyChanged(nameof(SelectedTarget));
-                    OutputFolder = GetDefaultOutputFolder(RootFolder);
-                }
-
+                RefreshComputedOutputState();
                 PersistAppSettings();
             }
         }
@@ -446,19 +524,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField(ref _selectedTarget, value))
             {
-                if (value == "2160p")
-                {
-                    _selectedCodec = "x265";
-                    OnPropertyChanged(nameof(SelectedCodec));
-                    OutputFolder = GetDefaultOutputFolder(RootFolder);
-                }
-                else
-                {
-                    _selectedCodec = "x264";
-                    OnPropertyChanged(nameof(SelectedCodec));
-                    OutputFolder = GetDefaultOutputFolder(RootFolder);
-                }
-
+                RefreshComputedOutputState();
                 PersistAppSettings();
             }
         }
@@ -543,7 +609,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool ShouldOfferStartupBenchmark => IsStartupBenchmarkForced() || (!_startupBenchmarkPromptShown && !_startupBenchmarkCompleted);
+    public bool ShouldOfferStartupBenchmark => IsStartupBenchmarkForced() || _startupBenchmarkPromptKind != StartupBenchmarkPromptKind.None;
+
+    public StartupBenchmarkPromptKind CurrentStartupBenchmarkPromptKind => IsStartupBenchmarkForced()
+        ? StartupBenchmarkPromptKind.Welcome
+        : _startupBenchmarkPromptKind;
 
     public bool HasDetectedGpuCandidates => _detectedGpuDevices.Count > 0;
 
@@ -952,10 +1022,46 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ? LocalizedStrings.Get("RenderResume")
         : LocalizedStrings.Get("RenderPause");
 
+    public bool CanFinishAfterCurrent =>
+        IsBusy
+        && IsRenderMode
+        && CurrentRenderItems.Count > 0
+        && !string.IsNullOrWhiteSpace(CurrentItemTitle)
+        && !_finishAfterCurrentRequested;
+
+    public string RenderFinishAfterCurrentText => _finishAfterCurrentRequested
+        ? LocalizedStrings.Get("RenderFinishAfterCurrentQueued")
+        : LocalizedStrings.Get("RenderFinishAfterCurrent");
+
     public string QueueSummary
     {
         get => _queueSummary;
         private set => SetField(ref _queueSummary, value);
+    }
+
+    public string QueueSourceSummary
+    {
+        get => _queueSourceSummary;
+        private set => SetField(ref _queueSourceSummary, value);
+    }
+
+    public string QueueSourceTooltip
+    {
+        get => _queueSourceTooltip;
+        private set => SetField(ref _queueSourceTooltip, value);
+    }
+
+    public bool ShowQueuePaths
+    {
+        get => _showQueuePaths;
+        set
+        {
+            if (SetField(ref _showQueuePaths, value))
+            {
+                ApplyQueuePathVisibilityToItems();
+                PersistAppSettings();
+            }
+        }
     }
 
     public string CurrentFileName
@@ -1087,6 +1193,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _ => "pack://application:,,,/images/flag-en.png"
     };
 
+    public ImageSource BackgroundColorWheelImage { get; } = AppThemeManager.CreateColorWheelImage();
+
     public UiLanguage CurrentLanguage
     {
         get => _currentLanguage;
@@ -1143,7 +1251,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _scanCts = null;
 
         RootFolder = path;
-        OutputFolder = GetDefaultOutputFolder(path);
         RememberRecentFolder(RootFolder, persist: true);
         if (File.Exists(path))
         {
@@ -1203,6 +1310,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         CanDeleteAll = anyDeletable && !IsBusy;
         CanStartAll = !IsBusy && anyDeletable;
         CanStartSelected = !IsBusy && anySelected;
+        OnPropertyChanged(nameof(QueueSelectAllState));
         _startCommand.RaiseCanExecuteChanged();
         _startSelectedCommand.RaiseCanExecuteChanged();
     }
@@ -1258,10 +1366,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             await Task.Yield();
             var videos = await FindVideoFilesAsync(inputPath, showOverlay ? ReportScanProgress : null, _scanCts.Token).ConfigureAwait(true);
 
-            var outputFolder = OutputFolder;
-            Directory.CreateDirectory(outputFolder);
             var total = videos.Length;
-            var addedCount = 0;
+            var addedItems = new List<QueueItemViewModel>();
             for (var i = 0; i < total; i++)
             {
                 var video = videos[i];
@@ -1285,22 +1391,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     ? Path.GetFileName(video)
                     : Path.Combine(relativeDir, Path.GetFileName(video));
 
-                var outputDir = string.IsNullOrWhiteSpace(relativeDir)
-                    ? outputFolder
-                    : Path.Combine(outputFolder, relativeDir);
-                var suffix = GetOutputSuffix();
-
                 var item = new QueueItemViewModel()
                 {
                     Index = Items.Count + 1,
                     Title = displayTitle,
                     SourcePath = video,
-                    OutputPath = Path.Combine(outputDir, baseName + suffix),
+                    OutputPath = BuildOutputPath(video),
                 };
-                AttachQueueItem(item);
-                Items.Add(item);
-                addedCount++;
+                addedItems.Add(item);
             }
+
+            AppendSortedItems(addedItems);
+            var addedCount = addedItems.Count;
 
             ReindexItems();
             UpdateQueueSummary();
@@ -1335,7 +1437,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private async Task<string[]> FindVideoFilesAsync(string inputPath, Action<int, int, int, string?>? progress, CancellationToken ct)
     {
         var ffprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
-        var outputFolder = string.IsNullOrWhiteSpace(OutputFolder) ? null : Path.GetFullPath(OutputFolder);
         var candidates = await Task.Run(() =>
         {
             if (File.Exists(inputPath))
@@ -1347,7 +1448,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             foreach (var path in Directory.EnumerateFiles(inputPath, "*", SearchOption.TopDirectoryOnly))
             {
                 ct.ThrowIfCancellationRequested();
-                if (ShouldSkipScanCandidate(path, outputFolder) || !IsLikelyVideoFile(path))
+                if (ShouldSkipScanCandidate(path, GetOutputFolderName()) || !IsLikelyVideoFile(path))
                 {
                     continue;
                 }
@@ -1537,7 +1638,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return new PipelineOptions
         {
             RootFolder = RootFolder,
-            OutputFolder = OutputFolder,
+            OutputFolder = GetScanRoot(RootFolder),
             Overwrite = Overwrite,
             UseX265 = SelectedCodec == "x265",
             OutputContainer = SelectedContainer,
@@ -1581,6 +1682,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         _startupBenchmarkPromptShown = true;
+        EvaluateStartupBenchmarkPromptState();
         PersistAppSettings();
     }
 
@@ -1593,6 +1695,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         _startupBenchmarkPromptShown = true;
         _startupBenchmarkCompleted = true;
+        _benchmarkedHardwareSignature = _currentHardwareSignature;
+        EvaluateStartupBenchmarkPromptState();
         PersistAppSettings();
     }
 
@@ -1758,6 +1862,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IsRenderPaused = paused;
     }
 
+    private void FinishAfterCurrentItem()
+    {
+        if (!CanFinishAfterCurrent)
+        {
+            return;
+        }
+
+        _pipeline.RequestStopAfterCurrentItem();
+        _finishAfterCurrentRequested = true;
+        OnPropertyChanged(nameof(CanFinishAfterCurrent));
+        OnPropertyChanged(nameof(RenderFinishAfterCurrentText));
+        _finishAfterCurrentCommand.RaiseCanExecuteChanged();
+        Log(LocalizedStrings.Get("RenderFinishAfterCurrentLog"));
+    }
+
     private async Task<List<QueueItemViewModel>> PrepareAutoResumeRunListAsync(PipelineOptions options, CancellationToken ct)
     {
         if (_pendingAutoResumeItems.Count == 0)
@@ -1846,7 +1965,20 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (autoResumeSet.Contains(item))
             {
-                result.Add(item);
+                if (!item.SkipInRender)
+                {
+                    result.Add(item);
+                }
+                else
+                {
+                    MarkItemSkipped(item);
+                }
+                continue;
+            }
+
+            if (item.SkipInRender)
+            {
+                MarkItemSkipped(item);
                 continue;
             }
 
@@ -1858,7 +1990,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         foreach (var item in autoResumeItems)
         {
-            if (!result.Contains(item))
+            if (!item.SkipInRender && !result.Contains(item))
             {
                 result.Add(item);
             }
@@ -1970,7 +2102,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     averageFpsText = fps.ToString("0.0", CultureInfo.InvariantCulture);
                 }
 
-                return new RenderSessionItemResult(item.Title, item.ElapsedText, averageFpsText);
+                return new RenderSessionItemResult(item.Title, item.ElapsedText, averageFpsText, item.OutputPath);
             })
             .ToArray();
 
@@ -1994,13 +2126,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
         foreach (var item in items)
         {
             ct.ThrowIfCancellationRequested();
-            item.SkipRequested = false;
+            item.SkipRequested = item.SkipInRender;
             item.ForceOverwrite = false;
             item.ResumeRequested = false;
             item.ResumeProcessedFrames = 0;
             item.ResumeSourceOutputPath = string.Empty;
             item.IsSkipped = false;
             item.IsInterrupted = false;
+
+            if (item.SkipInRender)
+            {
+                MarkItemSkipped(item);
+                continue;
+            }
 
             var overwriteAllowed = options.Overwrite;
             if (File.Exists(item.OutputPath) && !overwriteAllowed)
@@ -2948,6 +3086,56 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void UpdateQueueSummary()
     {
         QueueSummary = LocalizedStrings.LogItemCount(Items.Count);
+        QueueSourceSummary = BuildQueueSourceSummary();
+        QueueSourceTooltip = BuildQueueSourceTooltip();
+    }
+
+    private string BuildQueueSourceSummary()
+    {
+        if (Items.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var directories = Items
+            .Select(item => Path.GetDirectoryName(item.SourcePath))
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(path => path, NaturalStringComparer.Instance)
+            .ToArray();
+
+        if (directories.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        if (directories.Length == 1)
+        {
+            return LocalizedStrings.QueueSourceSingle(directories[0]);
+        }
+
+        return LocalizedStrings.QueueSourceMultiple(directories.Length);
+    }
+
+    private string BuildQueueSourceTooltip()
+    {
+        if (Items.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var directories = Items
+            .Select(item => Path.GetDirectoryName(item.SourcePath))
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => path!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(path => path, NaturalStringComparer.Instance)
+            .ToArray();
+
+        return directories.Length == 0
+            ? string.Empty
+            : string.Join(Environment.NewLine, directories);
     }
 
     private void UpdateSelectionDetails()
@@ -3119,7 +3307,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanPauseRender));
         OnPropertyChanged(nameof(RenderPauseGlyph));
         OnPropertyChanged(nameof(RenderPauseToolTip));
+        OnPropertyChanged(nameof(CanFinishAfterCurrent));
+        OnPropertyChanged(nameof(RenderFinishAfterCurrentText));
         _togglePauseCommand.RaiseCanExecuteChanged();
+        _finishAfterCurrentCommand.RaiseCanExecuteChanged();
     }
 
     private void BeginScanOverlay(string folder)
@@ -3284,8 +3475,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private static IReadOnlyList<AntiFlickerModeOption> BuildAntiFlickerModeOptions() =>
         new[]
         {
-            new AntiFlickerModeOption(AntiFlickerMode.LumaStabilizer, LocalizedStrings.AntiFlickerModeLumaStabilizer),
-            new AntiFlickerModeOption(AntiFlickerMode.FlowGuided, LocalizedStrings.AntiFlickerModeFlowGuided)
+            new AntiFlickerModeOption(AntiFlickerMode.FlowGuided, LocalizedStrings.AntiFlickerModeFlowGuided),
+            new AntiFlickerModeOption(AntiFlickerMode.LumaStabilizer, LocalizedStrings.AntiFlickerModeLumaStabilizer)
         };
 
     private IReadOnlyList<UpscalerBackendOption> BuildUpscalerBackendOptions()
@@ -3362,12 +3553,47 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return device.Name;
     }
 
+    private static string ComputeHardwareSignature(IReadOnlyList<DetectedGpuDevice> devices)
+    {
+        if (devices.Count == 0)
+        {
+            return "none";
+        }
+
+        return string.Join(
+            "||",
+            devices.Select(device => $"{device.Name.Trim().ToUpperInvariant()}|{device.MemoryMb?.ToString(CultureInfo.InvariantCulture) ?? "?"}"));
+    }
+
+    private void EvaluateStartupBenchmarkPromptState()
+    {
+        if (string.IsNullOrWhiteSpace(_benchmarkedHardwareSignature))
+        {
+            _startupBenchmarkPromptKind = !_startupBenchmarkCompleted && !_startupBenchmarkPromptShown
+                ? StartupBenchmarkPromptKind.Welcome
+                : StartupBenchmarkPromptKind.None;
+        }
+        else if (!string.Equals(_benchmarkedHardwareSignature, _currentHardwareSignature, StringComparison.Ordinal))
+        {
+            _startupBenchmarkPromptKind = StartupBenchmarkPromptKind.NewHardware;
+            _selectedGpuOption = _gpuOptions.FirstOrDefault(option => option.IsAuto) ?? _selectedGpuOption;
+            OnPropertyChanged(nameof(SelectedGpuOption));
+        }
+        else
+        {
+            _startupBenchmarkPromptKind = StartupBenchmarkPromptKind.None;
+        }
+
+        OnPropertyChanged(nameof(ShouldOfferStartupBenchmark));
+        OnPropertyChanged(nameof(CurrentStartupBenchmarkPromptKind));
+    }
+
     private static AntiFlickerMode NormalizeAntiFlickerMode(string? raw) => raw?.Trim() switch
     {
         nameof(AntiFlickerMode.FlowGuided) => AntiFlickerMode.FlowGuided,
         "EdgeClamp" => AntiFlickerMode.LumaStabilizer,
         "Legacy" => AntiFlickerMode.LumaStabilizer,
-        _ => AntiFlickerMode.LumaStabilizer
+        _ => AntiFlickerMode.FlowGuided
     };
 
     private static UpscalerBackendKind NormalizeUpscalerBackendKind(string? raw) => raw?.Trim() switch
@@ -3409,6 +3635,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void CurrentRenderItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(CurrentRenderItemsCountText));
+        OnPropertyChanged(nameof(RenderSkipAllState));
         UpdatePauseStateUi();
     }
 
@@ -3425,6 +3652,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
         for (var i = 0; i < Items.Count; i++)
         {
             Items[i].Index = i + 1;
+        }
+    }
+
+    private void AppendSortedItems(IEnumerable<QueueItemViewModel> items)
+    {
+        foreach (var item in items
+                     .OrderBy(item => item.Title, NaturalStringComparer.Instance)
+                     .ThenBy(item => item.SourcePath, NaturalStringComparer.Instance))
+        {
+            item.ShowPathInQueue = ShowQueuePaths;
+            AttachQueueItem(item);
+            Items.Add(item);
+        }
+    }
+
+    private void ApplyQueuePathVisibilityToItems()
+    {
+        foreach (var item in Items)
+        {
+            item.ShowPathInQueue = ShowQueuePaths;
         }
     }
 
@@ -3460,11 +3707,68 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PostToUi(() =>
             {
                 UpdateActionStates();
+                OnPropertyChanged(nameof(QueueSelectAllState));
                 _removeItemCommand.RaiseCanExecuteChanged();
                 OnQueueStateChanged();
             });
         }
+
+        if (e.PropertyName is nameof(QueueItemViewModel.SkipInRender))
+        {
+            PostToUi(() =>
+            {
+                PersistAppSettings();
+                OnPropertyChanged(nameof(RenderSkipAllState));
+                OnQueueStateChanged();
+            });
+        }
+
+        if (e.PropertyName is nameof(QueueItemViewModel.IsCompleted) or nameof(QueueItemViewModel.IsSkipped) or nameof(QueueItemViewModel.IsInterrupted))
+        {
+            PostToUi(() => OnPropertyChanged(nameof(RenderSkipAllState)));
+        }
     }
+
+    public void ToggleQueueSelectAll()
+    {
+        var eligibleItems = Items.Where(item => !item.IsBusy).ToArray();
+        if (eligibleItems.Length == 0)
+        {
+            return;
+        }
+
+        var shouldSelectAll = QueueSelectAllState != true;
+        foreach (var item in eligibleItems)
+        {
+            item.IsChecked = shouldSelectAll;
+        }
+
+        UpdateActionStates();
+        OnPropertyChanged(nameof(QueueSelectAllState));
+        OnQueueStateChanged();
+    }
+
+    public void ToggleRenderSkipAll()
+    {
+        var eligibleItems = CurrentRenderItems.Where(CanToggleSkipInRender).ToArray();
+        if (eligibleItems.Length == 0)
+        {
+            return;
+        }
+
+        var shouldSkipAll = RenderSkipAllState != true;
+        foreach (var item in eligibleItems)
+        {
+            item.SkipInRender = shouldSkipAll;
+        }
+
+        PersistAppSettings();
+        OnPropertyChanged(nameof(RenderSkipAllState));
+        OnQueueStateChanged();
+    }
+
+    private static bool CanToggleSkipInRender(QueueItemViewModel item)
+        => !item.IsBusy && !item.IsCompleted && !item.IsInterruptedOrSkipped;
 
     private static void PostToUi(Action action)
     {
@@ -3484,6 +3788,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     private static int ParseInt(string? text, int fallback) => int.TryParse(text, out var value) ? value : fallback;
+
+    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
+    private static extern int StrCmpLogicalW(string left, string right);
 
     private static string FormatDuration(TimeSpan value) => value < TimeSpan.Zero ? "--:--:--" : value.ToString(@"hh\:mm\:ss");
 
@@ -3978,13 +4285,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
             UseNativeEncoderBackend = loaded.UseNativeEncoderBackend;
             RepairBrokenTimestamps = loaded.RepairBrokenTimestamps ?? true;
+            ShowQueuePaths = loaded.ShowQueuePaths;
             _startupBenchmarkPromptShown = loaded.StartupBenchmarkPromptShown;
             _startupBenchmarkCompleted = loaded.StartupBenchmarkCompleted;
-
-            if (!string.IsNullOrWhiteSpace(loaded.OutputFolder))
-            {
-                OutputFolder = loaded.OutputFolder;
-            }
+            _benchmarkedHardwareSignature = loaded.BenchmarkedHardwareSignature ?? string.Empty;
+            EvaluateStartupBenchmarkPromptState();
 
             RestorePersistedQueueItems(loaded.QueueItems, loaded.SelectedItemSourcePath);
         }
@@ -4023,12 +4328,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             }
 
-            var baseName = Path.GetFileNameWithoutExtension(filePath);
-            var suffix = GetOutputSuffix();
-            var outputFolder = OutputFolder;
-            Directory.CreateDirectory(outputFolder);
-
-            var outputPath = Path.Combine(outputFolder, baseName + suffix);
+            var outputPath = BuildOutputPath(filePath);
 
             var item = new QueueItemViewModel
             {
@@ -4237,6 +4537,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 RepairBrokenTimestamps,
                 _startupBenchmarkPromptShown,
                 _startupBenchmarkCompleted,
+                _benchmarkedHardwareSignature,
+                ShowQueuePaths,
                 BuildPersistedQueueItems(),
                 SelectedItem?.SourcePath,
                 true);
@@ -4256,7 +4558,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 item.SourcePath,
                 item.Title,
                 item.OutputPath,
-                item.IsChecked))
+                item.IsChecked,
+                item.SkipInRender))
             .ToList();
 
     private void RestorePersistedQueueItems(IReadOnlyList<PersistedQueueItemCacheEntry>? queueItems, string? selectedItemSourcePath)
@@ -4278,9 +4581,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var title = string.IsNullOrWhiteSpace(entry.Title)
                 ? Path.GetFileName(sourcePath)
                 : entry.Title;
-            var outputPath = string.IsNullOrWhiteSpace(entry.OutputPath)
-                ? Path.Combine(OutputFolder, Path.GetFileNameWithoutExtension(sourcePath) + GetOutputSuffix())
-                : entry.OutputPath;
+            var outputPath = BuildOutputPath(sourcePath);
 
             var item = new QueueItemViewModel
             {
@@ -4289,7 +4590,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 SourcePath = sourcePath,
                 OutputPath = outputPath
             };
+            item.ShowPathInQueue = ShowQueuePaths;
             item.IsChecked = entry.IsChecked;
+            item.SkipInRender = entry.SkipInRender;
             AttachQueueItem(item);
             restoredItems.Add(item);
         }
@@ -4305,6 +4608,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         ReindexItems();
+        ApplyQueuePathVisibilityToItems();
         UpdateQueueSummary();
         UpdateActionStates();
         SelectedItem = restoredItems.FirstOrDefault(item =>
@@ -4336,20 +4640,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private string GetDefaultOutputFolder(string inputPath)
+    private string GetOutputFolderName()
     {
-        var baseDirectory = GetInputDirectory(inputPath);
-        if (string.IsNullOrWhiteSpace(baseDirectory) || !Directory.Exists(baseDirectory))
-        {
-            baseDirectory = _repoRoot;
-        }
-
-        return Path.Combine(baseDirectory, $"{SelectedCodec}_{SelectedTarget}");
+        return $"_{SelectedCodec}_{SelectedTarget}_output";
     }
 
     private string GetOutputSuffix()
     {
         return ".mkv";
+    }
+
+    private string GetOutputFolderForSource(string sourcePath)
+    {
+        var baseDirectory = GetInputDirectory(sourcePath);
+        if (string.IsNullOrWhiteSpace(baseDirectory) || !Directory.Exists(baseDirectory))
+        {
+            baseDirectory = _repoRoot;
+        }
+
+        return Path.Combine(baseDirectory, GetOutputFolderName());
+    }
+
+    private string BuildOutputPath(string sourcePath)
+    {
+        return Path.Combine(GetOutputFolderForSource(sourcePath), Path.GetFileNameWithoutExtension(sourcePath) + GetOutputSuffix());
+    }
+
+    private void RefreshComputedOutputState()
+    {
+        OnPropertyChanged(nameof(ComputedOutputFolderName));
+        OnPropertyChanged(nameof(OutputLocationHintText));
+
+        foreach (var item in Items)
+        {
+            item.OutputPath = BuildOutputPath(item.SourcePath);
+        }
     }
 
     private static string GetInputDirectory(string inputPath)
@@ -4424,6 +4749,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         try
         {
             UseAntiFlicker = preset.Enabled;
+            SelectedAntiFlickerMode = preset.Mode;
             AntiFlickerStrength = preset.Strength;
         }
         finally
@@ -4448,6 +4774,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _antiFlickerPresets[normalized] = new AntiFlickerPresetState
         {
             Enabled = UseAntiFlicker,
+            Mode = SelectedAntiFlickerMode,
             Strength = AntiFlickerStrength
         };
         PersistAllAntiFlickerPresets();
@@ -4568,6 +4895,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             presets[mode] = new AntiFlickerPresetState
             {
                 Enabled = pair.Value.Enabled,
+                Mode = pair.Value.Mode,
                 Strength = Math.Clamp(pair.Value.Strength, 0, 100)
             };
         }
@@ -4577,10 +4905,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         return new Dictionary<string, AntiFlickerPresetState>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Anime"] = new AntiFlickerPresetState { Enabled = true, Strength = 70 },
-            ["AnimeUltra"] = new AntiFlickerPresetState { Enabled = true, Strength = 88 },
-            ["Video"] = new AntiFlickerPresetState { Enabled = true, Strength = 42 },
-            ["Faces"] = new AntiFlickerPresetState { Enabled = true, Strength = 28 }
+            ["Anime"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 68 },
+            ["AnimeUltra"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 84 },
+            ["Video"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 40 },
+            ["Faces"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 26 }
         };
     }
 
@@ -4621,24 +4949,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private static bool ShouldSkipScanCandidate(string filePath, string? outputFolder)
+    private static bool ShouldSkipScanCandidate(string filePath, string? outputFolderName)
     {
         var full = Path.GetFullPath(filePath);
-        if (!string.IsNullOrWhiteSpace(outputFolder))
-        {
-            var normalizedOutput = Path.GetFullPath(outputFolder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            if (full.StartsWith(normalizedOutput + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(full, normalizedOutput, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
 
         var current = Path.GetDirectoryName(full);
         while (!string.IsNullOrWhiteSpace(current))
         {
             var leaf = Path.GetFileName(current);
             if (leaf.StartsWith("_work_", StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(outputFolderName) && leaf.Equals(outputFolderName, StringComparison.OrdinalIgnoreCase)) ||
                 leaf.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
                 leaf.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
                 leaf.Equals("dist", StringComparison.OrdinalIgnoreCase) ||

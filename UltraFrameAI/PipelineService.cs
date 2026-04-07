@@ -477,12 +477,11 @@ public sealed class PipelineService
 
         var total = items.Count;
         var overall = Stopwatch.StartNew();
-        Directory.CreateDirectory(options.OutputFolder);
-
         for (var i = 0; i < total; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var item = items[i];
+            Directory.CreateDirectory(Path.GetDirectoryName(item.OutputPath) ?? options.OutputFolder);
             var itemWatch = Stopwatch.StartNew();
             var resumeStatePath = GetResumeStatePath(item.OutputPath);
             var resumeCodec = options.UseX265 ? "libx265" : "libx264";
@@ -515,6 +514,14 @@ public sealed class PipelineService
 
                 if (item.SkipRequested)
                 {
+                    item.IsSkipped = true;
+                    item.IsInterrupted = true;
+                    item.IsBusy = false;
+                    item.Stage = LocalizedStrings.LogSkippingEncode;
+                    item.Progress = 100;
+                    item.ProgressText = "100%";
+                    item.OutputState = LocalizedStrings.LogSkippingEncode;
+                    item.Detail = Path.GetFileName(item.OutputPath);
                     report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogSkippingEncode, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
                     continue;
                 }

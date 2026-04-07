@@ -3,15 +3,26 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:UltraFrameAI"
         Title="{local:Loc GeneralHelpTitle}"
-        Width="900"
-        Height="700"
-        MinWidth="820"
-        MinHeight="620"
+        Width="980"
+        Height="760"
+        MinWidth="900"
+        MinHeight="680"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanMinimize"
         Background="#0B1220">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <Style x:Key="HelpTabButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="MinHeight" Value="40" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <Grid Margin="18">
         <Grid.RowDefinitions>
@@ -61,31 +72,28 @@
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2"
+              Margin="0,4,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0"
                     Content="{local:Loc HelpCenterHowToTab}"
-                    Click="HowTo_Click"
-                    Padding="16,10"
-                    MinWidth="180">
+                    Click="HowTo_Click">
                 <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#16243D" />
-                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-                        <Setter Property="BorderThickness" Value="1" />
+                    <Style TargetType="Button" BasedOn="{StaticResource HelpTabButtonStyle}">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding SelectedTab}" Value="{x:Static local:HelpCenterTab.HowTo}">
-                                <Setter Property="Background" Value="#2B4D7A" />
+                                <Setter Property="Background" Value="#16314F" />
                                 <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -95,18 +103,12 @@
 
             <Button Grid.Column="2"
                     Content="{local:Loc HelpCenterFaqTab}"
-                    Click="Faq_Click"
-                    Padding="16,10"
-                    MinWidth="180">
+                    Click="Faq_Click">
                 <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#16243D" />
-                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-                        <Setter Property="BorderThickness" Value="1" />
+                    <Style TargetType="Button" BasedOn="{StaticResource HelpTabButtonStyle}">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding SelectedTab}" Value="{x:Static local:HelpCenterTab.Faq}">
-                                <Setter Property="Background" Value="#2B4D7A" />
+                                <Setter Property="Background" Value="#16314F" />
                                 <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -115,19 +117,13 @@
             </Button>
 
             <Button Grid.Column="4"
-                    Content="{local:Loc HelpCenterLinksTab}"
-                    Click="Links_Click"
-                    Padding="16,10"
-                    MinWidth="180">
+                    Content="{local:Loc HelpCenterHardwareTab}"
+                    Click="Hardware_Click">
                 <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#16243D" />
-                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-                        <Setter Property="BorderThickness" Value="1" />
+                    <Style TargetType="Button" BasedOn="{StaticResource HelpTabButtonStyle}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedTab}" Value="{x:Static local:HelpCenterTab.Links}">
-                                <Setter Property="Background" Value="#2B4D7A" />
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="{x:Static local:HelpCenterTab.Hardware}">
+                                <Setter Property="Background" Value="#16314F" />
                                 <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -136,19 +132,29 @@
             </Button>
 
             <Button Grid.Column="6"
-                    Content="{local:Loc HelpCenterDonateTab}"
-                    Click="Donate_Click"
-                    Padding="16,10"
-                    MinWidth="180">
+                    Content="{local:Loc HelpCenterLinksTab}"
+                    Click="Links_Click">
                 <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#16243D" />
-                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-                        <Setter Property="BorderThickness" Value="1" />
+                    <Style TargetType="Button" BasedOn="{StaticResource HelpTabButtonStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="{x:Static local:HelpCenterTab.Links}">
+                                <Setter Property="Background" Value="#16314F" />
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button Grid.Column="8"
+                    Content="{local:Loc HelpCenterDonateTab}"
+                    Click="Donate_Click">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource HelpTabButtonStyle}">
+                        <Setter Property="Margin" Value="0" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding SelectedTab}" Value="{x:Static local:HelpCenterTab.Support}">
-                                <Setter Property="Background" Value="#2B4D7A" />
+                                <Setter Property="Background" Value="#16314F" />
                                 <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -210,6 +216,73 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <Grid Visibility="{Binding IsHardwareVisible, Converter={StaticResource BoolToVisibility}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="{local:Loc HardwareAssessmentTitle}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold" />
+                            <ItemsControl ItemsSource="{Binding HardwareLines}"
+                                          Margin="0,12,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#101A2B"
+                                                BorderBrush="#223552"
+                                                BorderThickness="1"
+                                                CornerRadius="12"
+                                                Padding="10"
+                                                Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Verdict}" Margin="0,4,0,0" Foreground="{StaticResource WarningBrush}" />
+                                                <TextBlock Text="{Binding Detail}" Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="{local:Loc HelpCenterDetectedDevicesTitle}"
+                                       Margin="0,14,0,8"
+                                       FontSize="18"
+                                       FontWeight="SemiBold" />
+                            <Border Background="#0E1628"
+                                    BorderBrush="#223552"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="10">
+                                <ScrollViewer MaxHeight="240"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              CanContentScroll="False">
+                                    <ItemsControl ItemsSource="{Binding HardwareDevices}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#101A2B"
+                                                        BorderBrush="#223552"
+                                                        BorderThickness="1"
+                                                        CornerRadius="12"
+                                                        Padding="10"
+                                                        Margin="0,0,0,8">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Label}"
+                                                                   FontWeight="SemiBold"
+                                                                   TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding MemoryText}"
+                                                                   Margin="0,6,0,0"
+                                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                                   TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

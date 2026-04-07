@@ -76,16 +76,16 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="{local:Loc StartupBenchmarkPromptTitle}"
+                            <TextBlock Text="{Binding PromptTitle}"
                                        FontSize="22"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="{local:Loc StartupBenchmarkPromptGreeting}"
+                            <TextBlock Text="{Binding PromptGreeting}"
                                        Margin="0,8,0,0"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="{local:Loc StartupBenchmarkPromptThanks}"
+                            <TextBlock Text="{Binding PromptDetails}"
                                        Margin="0,4,0,0"
                                        Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="{local:Loc StartupBenchmarkPromptBody}"
+                            <TextBlock Text="{Binding PromptBody}"
                                        Margin="0,10,0,0"
                                        Foreground="{StaticResource TextSecondaryBrush}"
                                        TextWrapping="Wrap" />

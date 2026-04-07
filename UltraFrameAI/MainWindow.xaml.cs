@@ -1,6 +1,8 @@
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -10,6 +12,7 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel = new();
     private bool _isAdditionalOverlayAnimating;
     private bool _isScanOverlayAnimating;
+    private DateTime _scanOverlayShownAtUtc;
     private RenderWindow? _renderWindow;
     private bool _suppressClosePrompt;
     private bool _startupBenchmarkChecked;
@@ -22,11 +25,6 @@ public partial class MainWindow : Window
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.QueueStateChanged += (_, _) => UpdateDeleteButtonStates();
         _viewModel.OutputConflictRequested += ViewModel_OutputConflictRequested;
-        Loaded += async (_, _) =>
-        {
-            await _viewModel.InitializeAsync().ConfigureAwait(true);
-            await MaybeOfferStartupBenchmarkAsync().ConfigureAwait(true);
-        };
         Closing += Window_Closing;
         SizeChanged += (_, _) => UpdateCardClips();
         ContentRendered += (_, _) => Dispatcher.BeginInvoke(() =>
@@ -34,6 +32,16 @@ public partial class MainWindow : Window
             RootFolderTextBox.Focus();
             RootFolderTextBox.SelectAll();
         });
+    }
+
+    public Task InitializeStartupAsync()
+    {
+        return _viewModel.InitializeAsync();
+    }
+
+    public Task ShowStartupBenchmarkPromptIfNeededAsync()
+    {
+        return MaybeOfferStartupBenchmarkAsync();
     }
 
     private void UpdateCardClips()
@@ -163,9 +171,39 @@ public partial class MainWindow : Window
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("FormatHelpTitle"), LocalizedStrings.Get("FormatHelpBody"));
     }
 
+    private void ContainerHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("ContainerHelpTitle"), LocalizedStrings.Get("ContainerHelpBody"));
+    }
+
+    private void OverwriteExistingOutputHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("OverwriteExistingOutputHelpTitle"), LocalizedStrings.Get("OverwriteExistingOutputHelpBody"));
+    }
+
+    private void PreserveIncompleteOutputHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("PreserveIncompleteOutputHelpTitle"), LocalizedStrings.Get("PreserveIncompleteOutputHelpBody"));
+    }
+
     private void EncoderPresetHelp_Click(object sender, RoutedEventArgs e)
     {
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("EncoderPresetHelpTitle"), LocalizedStrings.Get("EncoderPresetHelpBody"));
+    }
+
+    private void FfmpegThreadsHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("FfmpegThreadsHelpTitle"), LocalizedStrings.Get("FfmpegThreadsHelpBody"));
+    }
+
+    private void UpscalerJobsHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("UpscalerJobsHelpTitle"), LocalizedStrings.Get("UpscalerJobsHelpBody"));
+    }
+
+    private void TileSizeHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("TileSizeHelpTitle"), LocalizedStrings.Get("TileSizeHelpBody"));
     }
 
     private void RepairBrokenTimestampsHelp_Click(object sender, RoutedEventArgs e)
@@ -186,6 +224,11 @@ public partial class MainWindow : Window
     private void GeneralHelp_Click(object sender, RoutedEventArgs e)
     {
         OpenHelpCenter(HelpCenterTab.HowTo);
+    }
+
+    private void SettingsOverlayHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("SettingsOverviewHelpTitle"), LocalizedStrings.Get("SettingsOverviewHelpBody"));
     }
 
     private void TopHelpButton_Click(object sender, RoutedEventArgs e)
@@ -212,9 +255,66 @@ public partial class MainWindow : Window
         _ = ClosePopupAsync(RecentFoldersPopup, RecentFoldersPopupBorder, RecentFoldersPopupScale, RecentFoldersPopupTranslate);
 
         CodecFormatHelpPopupTitle.Text = title;
-        CodecFormatHelpPopupBody.Text = body;
+        SetHelpPopupBody(body);
         CodecFormatHelpPopup.PlacementTarget = button;
         CodecFormatHelpPopup.IsOpen = true;
+    }
+
+    private void SetHelpPopupBody(string body)
+    {
+        CodecFormatHelpPopupBody.Inlines.Clear();
+
+        var index = 0;
+        while (index < body.Length)
+        {
+            var boldStart = body.IndexOf("**", index, StringComparison.Ordinal);
+            if (boldStart < 0)
+            {
+                AppendHelpRun(body[index..], false);
+                return;
+            }
+
+            if (boldStart > index)
+            {
+                AppendHelpRun(body[index..boldStart], false);
+            }
+
+            var boldEnd = body.IndexOf("**", boldStart + 2, StringComparison.Ordinal);
+            if (boldEnd < 0)
+            {
+                AppendHelpRun(body[boldStart..], false);
+                return;
+            }
+
+            AppendHelpRun(body[(boldStart + 2)..boldEnd], true);
+            index = boldEnd + 2;
+        }
+    }
+
+    private void AppendHelpRun(string text, bool isBold)
+    {
+        var segments = text.Replace("\r\n", "\n").Split('\n');
+        for (var i = 0; i < segments.Length; i++)
+        {
+            if (i > 0)
+            {
+                CodecFormatHelpPopupBody.Inlines.Add(new LineBreak());
+            }
+
+            if (segments[i].Length == 0)
+            {
+                continue;
+            }
+
+            var run = new Run(segments[i]);
+            if (isBold)
+            {
+                run.FontWeight = FontWeights.SemiBold;
+                run.Foreground = (System.Windows.Media.Brush)FindResource("TextPrimaryBrush");
+            }
+
+            CodecFormatHelpPopupBody.Inlines.Add(run);
+        }
     }
 
     private void OpenHelpCenter(HelpCenterTab tab)
@@ -264,6 +364,11 @@ public partial class MainWindow : Window
     private void QueueItemCheckChanged(object sender, RoutedEventArgs e)
     {
         _viewModel.UpdateActionStates();
+    }
+
+    private void QueueSelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ToggleQueueSelectAll();
     }
 
     private async void DeleteConfirmCancel_Click(object sender, RoutedEventArgs e)
@@ -324,7 +429,17 @@ public partial class MainWindow : Window
     {
         if (IsWithinButton(e.OriginalSource, CodecHelpButton) ||
             IsWithinButton(e.OriginalSource, FormatHelpButton) ||
-            IsWithinButton(e.OriginalSource, EncoderPresetHelpButton))
+            IsWithinButton(e.OriginalSource, EncoderPresetHelpButton) ||
+            IsWithinButton(e.OriginalSource, FfmpegThreadsHelpButton) ||
+            IsWithinButton(e.OriginalSource, UpscalerJobsHelpButton) ||
+            IsWithinButton(e.OriginalSource, TileSizeHelpButton) ||
+            IsWithinButton(e.OriginalSource, SettingsCodecHelpButton) ||
+            IsWithinButton(e.OriginalSource, SettingsFormatHelpButton) ||
+            IsWithinButton(e.OriginalSource, SettingsContainerHelpButton) ||
+            IsWithinButton(e.OriginalSource, SettingsOverlayHelpButton) ||
+            IsWithinButton(e.OriginalSource, OverwriteExistingOutputHelpButton) ||
+            IsWithinButton(e.OriginalSource, PreserveIncompleteOutputHelpButton) ||
+            IsWithinButton(e.OriginalSource, RepairBrokenTimestampsHelpButton))
         {
             return;
         }
@@ -709,7 +824,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var promptDialog = new StartupBenchmarkPromptDialog(staticAssessment)
+        var promptDialog = new StartupBenchmarkPromptDialog(staticAssessment, _viewModel.CurrentStartupBenchmarkPromptKind)
         {
             Owner = this
         };
@@ -720,76 +835,86 @@ public partial class MainWindow : Window
             return;
         }
 
+        await Dispatcher.Yield(DispatcherPriority.Background);
         await RunStartupBenchmarkAsync(markCompletedOnSuccess: true).ConfigureAwait(true);
     }
 
     private async Task RunStartupBenchmarkAsync(bool markCompletedOnSuccess)
     {
-        if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
-        {
-            System.Windows.MessageBox.Show(
-                LocalizedStrings.StartupBenchmarkUnavailableBody,
-                LocalizedStrings.StartupBenchmarkUnavailableTitle,
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        var sourcePath = _viewModel.GetStartupBenchmarkSourcePath();
-        if (string.IsNullOrWhiteSpace(sourcePath))
-        {
-            return;
-        }
-
-        var outputDir = Path.Combine(Path.GetTempPath(), "UltraFrameAI-startup-benchmark", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(outputDir);
         try
         {
-            var request = new StartupBenchmarkRequest(
-                sourcePath,
-                _viewModel.GetStartupBenchmarkGpuCandidates(),
-                outputDir,
-                4);
-
-            var benchmarkWindow = new StartupBenchmarkWindow(request)
+            if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
             {
-                Owner = this
-            };
+                System.Windows.MessageBox.Show(
+                    LocalizedStrings.StartupBenchmarkUnavailableBody,
+                    LocalizedStrings.StartupBenchmarkUnavailableTitle,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
 
-            var result = benchmarkWindow.ShowDialog();
-            if (result == true && benchmarkWindow.Report is not null)
+            var sourcePath = _viewModel.GetStartupBenchmarkSourcePath();
+            if (string.IsNullOrWhiteSpace(sourcePath))
             {
-                var resultsDialog = new StartupBenchmarkResultsDialog(benchmarkWindow.Report)
+                return;
+            }
+
+            var outputDir = Path.Combine(Path.GetTempPath(), "UltraFrameAI-startup-benchmark", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(outputDir);
+            try
+            {
+                var request = new StartupBenchmarkRequest(
+                    sourcePath,
+                    _viewModel.GetStartupBenchmarkGpuCandidates(),
+                    outputDir,
+                    4);
+
+                var benchmarkWindow = new StartupBenchmarkWindow(request)
                 {
                     Owner = this
                 };
 
-                if (resultsDialog.ShowDialog() == true && resultsDialog.ShouldApplyRecommendations)
+                var result = benchmarkWindow.ShowDialog();
+                if (result == true && benchmarkWindow.Report is not null)
                 {
-                    _viewModel.ApplyStartupBenchmarkRecommendation(benchmarkWindow.Report.Recommendation);
-                }
+                    var resultsDialog = new StartupBenchmarkResultsDialog(benchmarkWindow.Report)
+                    {
+                        Owner = this
+                    };
 
-                if (markCompletedOnSuccess)
+                    if (resultsDialog.ShowDialog() == true && resultsDialog.ShouldApplyRecommendations)
+                    {
+                        _viewModel.ApplyStartupBenchmarkRecommendation(benchmarkWindow.Report.Recommendation);
+                    }
+
+                    if (markCompletedOnSuccess)
+                    {
+                        _viewModel.MarkStartupBenchmarkCompleted();
+                    }
+                }
+            }
+            finally
+            {
+                try
                 {
-                    _viewModel.MarkStartupBenchmarkCompleted();
+                    if (Directory.Exists(outputDir))
+                    {
+                        Directory.Delete(outputDir, true);
+                    }
+                }
+                catch
+                {
                 }
             }
         }
-        finally
+        catch (Exception ex)
         {
-            try
-            {
-                if (Directory.Exists(outputDir))
-                {
-                    Directory.Delete(outputDir, true);
-                }
-            }
-            catch
-            {
-            }
+            System.Windows.MessageBox.Show(
+                ex.ToString(),
+                LocalizedStrings.StartupBenchmarkProgressTitle,
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
-
-        await Task.CompletedTask.ConfigureAwait(true);
     }
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -803,14 +928,15 @@ public partial class MainWindow : Window
 
     private async Task OpenScanOverlayAsync()
     {
-        if (_isScanOverlayAnimating)
+        if (ScanOverlayRoot.Visibility == Visibility.Visible && !_isScanOverlayAnimating)
         {
             return;
         }
 
         _isScanOverlayAnimating = true;
+        _scanOverlayShownAtUtc = DateTime.UtcNow;
         ScanOverlayRoot.Visibility = Visibility.Visible;
-        ScanOverlayRoot.Opacity = 0;
+        ScanOverlayRoot.Opacity = 1;
         ScanPopupBorder.Opacity = 0;
         ScanPopupScale.ScaleX = 0.96;
         ScanPopupScale.ScaleY = 0.96;
@@ -832,9 +958,15 @@ public partial class MainWindow : Window
 
     private async Task CloseScanOverlayAsync()
     {
-        if (_isScanOverlayAnimating)
+        if (ScanOverlayRoot.Visibility != Visibility.Visible)
         {
             return;
+        }
+
+        var remainingVisible = (_scanOverlayShownAtUtc + TimeSpan.FromMilliseconds(260)) - DateTime.UtcNow;
+        if (remainingVisible > TimeSpan.Zero)
+        {
+            await Task.Delay(remainingVisible).ConfigureAwait(true);
         }
 
         _isScanOverlayAnimating = true;
@@ -851,6 +983,8 @@ public partial class MainWindow : Window
 
         await Task.Delay(110).ConfigureAwait(true);
         ScanOverlayRoot.Visibility = Visibility.Collapsed;
+        ScanOverlayRoot.Opacity = 1;
+        ScanPopupBorder.Opacity = 0;
         _isScanOverlayAnimating = false;
     }
 }

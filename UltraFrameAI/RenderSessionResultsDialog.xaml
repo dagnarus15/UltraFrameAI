@@ -34,40 +34,77 @@
                            Foreground="{StaticResource TextSecondaryBrush}"
                            TextWrapping="Wrap" />
 
-                <ItemsControl Grid.Row="4"
-                              ItemsSource="{Binding Items}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#0E1628"
-                                    BorderBrush="#223552"
-                                    BorderThickness="1"
-                                    CornerRadius="12"
-                                    Padding="12"
-                                    Margin="0,0,0,8">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Title}"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Margin="0,6,0,0"
-                                               Text="{Binding CompletionText}" />
-                                    <TextBlock Margin="0,4,0,0"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Text="{Binding AverageFpsText}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ScrollViewer Grid.Row="4"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              CanContentScroll="True">
+                    <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#0E1628"
+                                        BorderBrush="#223552"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="12"
+                                        Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="16" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="6"
-                           HorizontalAlignment="Left"
-                           VerticalAlignment="Center"
-                           TextWrapping="Wrap">
-                    <Run Text="{local:Loc RenderSessionResultsDonatePrefix}" />
-                    <Hyperlink Click="Donate_Click">
-                        <Run Text="{local:Loc RenderSessionResultsDonateLink}" />
-                    </Hyperlink>
-                    <Run Text="{local:Loc RenderSessionResultsDonateSuffix}" />
-                </TextBlock>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock Margin="0,6,0,0"
+                                                       Text="{Binding CompletionText}" />
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Text="{Binding AverageFpsText}" />
+                                        </StackPanel>
+
+                                        <Button Grid.Column="2"
+                                                MinWidth="132"
+                                                Padding="14,8"
+                                                VerticalAlignment="Center"
+                                                Content="{local:Loc OpenResultFolder}"
+                                                Click="OpenResultFolder_Click" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Grid Grid.Row="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}">
+                        <Run Text="{local:Loc RenderSessionResultsDonatePrefix}" />
+                        <Hyperlink Click="Donate_Click"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   TextDecorations="{x:Null}">
+                            <Run Text="{local:Loc RenderSessionResultsDonateLink}" />
+                        </Hyperlink>
+                        <Run Text="{local:Loc RenderSessionResultsDonateSuffix}" />
+                    </TextBlock>
+
+                    <Button Grid.Column="2"
+                            MinWidth="88"
+                            Padding="18,10"
+                            HorizontalAlignment="Right"
+                            Content="{local:Loc Ok}"
+                            Click="Ok_Click" />
+                </Grid>
             </Grid>
         </Border>
     </Grid>

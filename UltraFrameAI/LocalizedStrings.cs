@@ -213,10 +213,27 @@ public static class LocalizedStrings
     public static string GpuSelection => GetText(nameof(GpuSelection));
     public static string GpuSelectionHint => GetText(nameof(GpuSelectionHint));
     public static string GpuSelectionAuto => GetText(nameof(GpuSelectionAuto));
+    public static string ContainerHelpTitle => GetText(nameof(ContainerHelpTitle));
+    public static string ContainerHelpBody => GetText(nameof(ContainerHelpBody));
+    public static string SettingsOverviewHelpTitle => GetText(nameof(SettingsOverviewHelpTitle));
+    public static string SettingsOverviewHelpBody => GetText(nameof(SettingsOverviewHelpBody));
+    public static string OverwriteExistingOutputHelpTitle => GetText(nameof(OverwriteExistingOutputHelpTitle));
+    public static string OverwriteExistingOutputHelpBody => GetText(nameof(OverwriteExistingOutputHelpBody));
+    public static string PreserveIncompleteOutputHelpTitle => GetText(nameof(PreserveIncompleteOutputHelpTitle));
+    public static string PreserveIncompleteOutputHelpBody => GetText(nameof(PreserveIncompleteOutputHelpBody));
+    public static string FfmpegThreadsHelpTitle => GetText(nameof(FfmpegThreadsHelpTitle));
+    public static string FfmpegThreadsHelpBody => GetText(nameof(FfmpegThreadsHelpBody));
+    public static string UpscalerJobsHelpTitle => GetText(nameof(UpscalerJobsHelpTitle));
+    public static string UpscalerJobsHelpBody => GetText(nameof(UpscalerJobsHelpBody));
+    public static string TileSizeHelpTitle => GetText(nameof(TileSizeHelpTitle));
+    public static string TileSizeHelpBody => GetText(nameof(TileSizeHelpBody));
     public static string StartupBenchmarkPromptTitle => GetText(nameof(StartupBenchmarkPromptTitle));
     public static string StartupBenchmarkPromptGreeting => GetText(nameof(StartupBenchmarkPromptGreeting));
     public static string StartupBenchmarkPromptThanks => GetText(nameof(StartupBenchmarkPromptThanks));
     public static string StartupBenchmarkPromptBody => GetText(nameof(StartupBenchmarkPromptBody));
+    public static string StartupBenchmarkNewHardwareTitle => GetText(nameof(StartupBenchmarkNewHardwareTitle));
+    public static string StartupBenchmarkNewHardwareGreeting => GetText(nameof(StartupBenchmarkNewHardwareGreeting));
+    public static string StartupBenchmarkNewHardwareBody => GetText(nameof(StartupBenchmarkNewHardwareBody));
     public static string StartupBenchmarkPromptRun => GetText(nameof(StartupBenchmarkPromptRun));
     public static string StartupBenchmarkPromptSkip => GetText(nameof(StartupBenchmarkPromptSkip));
     public static string StartupBenchmarkUnavailableTitle => GetText(nameof(StartupBenchmarkUnavailableTitle));
@@ -236,6 +253,7 @@ public static class LocalizedStrings
     public static string StartupBenchmarkResultsTile => GetText(nameof(StartupBenchmarkResultsTile));
     public static string StartupBenchmarkResultsThroughput => GetText(nameof(StartupBenchmarkResultsThroughput));
     public static string StartupBenchmarkResultsTopCases => GetText(nameof(StartupBenchmarkResultsTopCases));
+    public static string StartupBenchmarkResultsRecommendationsTitle => GetText(nameof(StartupBenchmarkResultsRecommendationsTitle));
     public static string StartupBenchmarkResultsWeakWarning => GetText(nameof(StartupBenchmarkResultsWeakWarning));
     public static string StartupBenchmarkResultsOkay => GetText(nameof(StartupBenchmarkResultsOkay));
     public static string GeneralHelpTitle => GetText(nameof(GeneralHelpTitle));
@@ -243,10 +261,12 @@ public static class LocalizedStrings
     public static string HelpCenterIntro => GetText(nameof(HelpCenterIntro));
     public static string HelpCenterHowToTab => GetText(nameof(HelpCenterHowToTab));
     public static string HelpCenterFaqTab => GetText(nameof(HelpCenterFaqTab));
+    public static string HelpCenterHardwareTab => GetText(nameof(HelpCenterHardwareTab));
     public static string HelpCenterDonateTab => GetText(nameof(HelpCenterDonateTab));
     public static string HelpCenterLinksTab => GetText(nameof(HelpCenterLinksTab));
     public static string HelpCenterHowToTitle => GetText(nameof(HelpCenterHowToTitle));
     public static string HelpCenterHowToBody => GetText(nameof(HelpCenterHowToBody));
+    public static string HelpCenterDetectedDevicesTitle => GetText(nameof(HelpCenterDetectedDevicesTitle));
     public static string HelpCenterLinksTitle => GetText(nameof(HelpCenterLinksTitle));
     public static string HelpCenterLinksContacts => GetText(nameof(HelpCenterLinksContacts));
     public static string HelpCenterLinksSources => GetText(nameof(HelpCenterLinksSources));
@@ -328,7 +348,10 @@ public static class LocalizedStrings
     public static string PreserveIncompleteOutputHint => GetText(nameof(PreserveIncompleteOutputHint));
     public static string StartBatch => GetText(nameof(StartBatch));
     public static string StartSelected => GetText(nameof(StartSelected));
+    public static string OutputLocationHint(string folderName) => Format(nameof(OutputLocationHint), folderName);
+    public static string OutputFolderNearFileLabel => GetText(nameof(OutputFolderNearFileLabel));
     public static string OpenOutputFolder => GetText(nameof(OpenOutputFolder));
+    public static string OpenResultFolder => GetText(nameof(OpenResultFolder));
     public static string DeleteItem => GetText(nameof(DeleteItem));
     public static string DeleteSelected => GetText(nameof(DeleteSelected));
     public static string DeleteAll => GetText(nameof(DeleteAll));
@@ -354,6 +377,7 @@ public static class LocalizedStrings
     public static string LanguageRussian => GetText(nameof(LanguageRussian));
     public static string LanguageGerman => GetText(nameof(LanguageGerman));
     public static string Apply => GetText(nameof(Apply));
+    public static string Ok => GetText(nameof(Ok));
     public static string BackgroundColor => GetText(nameof(BackgroundColor));
     public static string BackgroundColorDialogTitle => GetText(nameof(BackgroundColorDialogTitle));
     public static string BackgroundColorDialogBody => GetText(nameof(BackgroundColorDialogBody));
@@ -379,6 +403,18 @@ public static class LocalizedStrings
     public static string QueueStatusNew => GetText(nameof(QueueStatusNew));
     public static string QueueStatusInterrupted => GetText(nameof(QueueStatusInterrupted));
     public static string QueueStatusCompleted => GetText(nameof(QueueStatusCompleted));
+    public static string QueuePath => GetText(nameof(QueuePath));
+    public static string QueueShowPaths => GetText(nameof(QueueShowPaths));
+    public static string QueueSourceSingle(string path) => Format(nameof(QueueSourceSingle), path);
+    public static string QueueSourceMultiple(int count)
+    {
+        return CurrentLanguage switch
+        {
+            UiLanguage.Russian => $"Источники: {count} {GetRussianFolderWord(count)}",
+            UiLanguage.German => $"Quellen: {count} {GetGermanFolderWord(count)}",
+            _ => $"Sources: {count} {GetEnglishFolderWord(count)}"
+        };
+    }
     public static string LogReady => GetText(nameof(LogReady));
     public static string LogIdle => GetText(nameof(LogIdle));
     public static string LogNoItemSelected => GetText(nameof(LogNoItemSelected));
@@ -422,6 +458,11 @@ public static class LocalizedStrings
     public static string LogFoundVideoFiles(int count) => Format(nameof(LogFoundVideoFiles), count);
     public static string GpuSelectionAutoWithName(string gpuName) => Format(nameof(GpuSelectionAutoWithName), gpuName);
     public static string StartupBenchmarkResultsSummary(string clipName) => Format(nameof(StartupBenchmarkResultsSummary), clipName);
+    public static string StartupBenchmarkResultsWeakSummary(string weakParts) => Format(nameof(StartupBenchmarkResultsWeakSummary), weakParts);
+    public static string HardwareDeviceMemoryDetail(double gigabytes) => Format(nameof(HardwareDeviceMemoryDetail), gigabytes.ToString("0.#", CultureInfo.InvariantCulture));
+    public static string HardwareDeviceMemoryUnknown => GetText(nameof(HardwareDeviceMemoryUnknown));
+    public static string HardwareNoDevicesFound => GetText(nameof(HardwareNoDevicesFound));
+    public static string HardwareNoDevicesFoundDetail => GetText(nameof(HardwareNoDevicesFoundDetail));
     public static string RenderSessionResultsSummary(string elapsed) => Format(nameof(RenderSessionResultsSummary), elapsed);
     public static string RenderSessionResultsItemComplete(string elapsed) => Format(nameof(RenderSessionResultsItemComplete), elapsed);
     public static string RenderSessionResultsItemFps(string fps) => Format(nameof(RenderSessionResultsItemFps), fps);
@@ -469,6 +510,10 @@ public static class LocalizedStrings
 
     private static string GetGermanFileWord(int count) => count == 1 ? "Datei" : "Dateien";
 
+    private static string GetEnglishFolderWord(int count) => count == 1 ? "folder" : "folders";
+
+    private static string GetGermanFolderWord(int count) => count == 1 ? "Ordner" : "Ordner";
+
     private static string GetRussianFileWord(int count)
     {
         var absoluteCount = Math.Abs(count);
@@ -483,6 +528,23 @@ public static class LocalizedStrings
             1 => "файл",
             2 or 3 or 4 => "файла",
             _ => "файлов"
+        };
+    }
+
+    private static string GetRussianFolderWord(int count)
+    {
+        var absoluteCount = Math.Abs(count);
+        var lastTwoDigits = absoluteCount % 100;
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 14)
+        {
+            return "папок";
+        }
+
+        return (absoluteCount % 10) switch
+        {
+            1 => "папка",
+            2 or 3 or 4 => "папки",
+            _ => "папок"
         };
     }
 

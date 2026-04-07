@@ -55,13 +55,19 @@
     <value>Letzten Ordner wiederherstellen</value>
   </data>
   <data name="RecentFolders" xml:space="preserve">
-    <value>Zuletzt verwendete Ordner</value>
+    <value>Zuletzt verwendete Ordner/Dateien</value>
   </data>
   <data name="OutputFolder" xml:space="preserve">
-    <value>Ausgabeordner</value>
+    <value>Ergebnisordner</value>
   </data>
   <data name="OutputFolderLabel" xml:space="preserve">
-    <value>Ausgabeordner:</value>
+    <value>Ergebnisordner:</value>
+  </data>
+  <data name="OutputLocationHint" xml:space="preserve">
+    <value>Das Ergebnis erscheint im Ordner „{0}“ neben der Datei.</value>
+  </data>
+  <data name="OutputFolderNearFileLabel" xml:space="preserve">
+    <value>Ergebnisordner neben der Datei</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>Erweitert</value>
@@ -105,6 +111,15 @@
   <data name="RenderResume" xml:space="preserve">
     <value>Fortsetzen</value>
   </data>
+  <data name="RenderFinishAfterCurrent" xml:space="preserve">
+    <value>Nach aktueller Datei beenden</value>
+  </data>
+  <data name="RenderFinishAfterCurrentQueued" xml:space="preserve">
+    <value>Beenden nach Datei ist aktiviert</value>
+  </data>
+  <data name="RenderFinishAfterCurrentLog" xml:space="preserve">
+    <value>Die aktuelle Warteschlange wird nach Abschluss dieser Datei gestoppt.</value>
+  </data>
   <data name="PausedProcessExitedTitle" xml:space="preserve">
     <value>Prozess wurde während der Pause beendet</value>
   </data>
@@ -133,10 +148,10 @@
     <value>Alles stoppen</value>
   </data>
   <data name="OutputConflictTitle" xml:space="preserve">
-    <value>Ausgabedatei existiert bereits</value>
+    <value>Ergebnisdatei existiert bereits</value>
   </data>
   <data name="OutputConflictMessage" xml:space="preserve">
-    <value>Diese Ausgabedatei existiert bereits:\n{0}\nWas möchten Sie tun?</value>
+    <value>Diese Ergebnisdatei existiert bereits:\n{0}\nWas möchten Sie tun?</value>
   </data>
   <data name="OutputConflictSkip" xml:space="preserve">
     <value>Überspringen</value>
@@ -166,13 +181,13 @@
     <value>Grund</value>
   </data>
   <data name="ResumeUnavailableReasonMissingOutput" xml:space="preserve">
-    <value>Die unvollständige Ausgabedatei wurde neben dem erwarteten Ergebnis nicht gefunden.</value>
+    <value>Die unvollständige Ergebnisdatei wurde neben dem erwarteten Ergebnis nicht gefunden.</value>
   </data>
   <data name="ResumeUnavailableReasonProbeUnavailable" xml:space="preserve">
     <value>Die unvollständige Datei konnte nicht mit ffprobe geprüft werden, daher ist ein sicheres Fortsetzen nicht möglich.</value>
   </data>
   <data name="ResumeUnavailableReasonInvalidOutput" xml:space="preserve">
-    <value>Die unvollständige Ausgabedatei ist beschädigt oder nicht mehr als Video lesbar und kann daher nicht sicher fortgesetzt werden.</value>
+    <value>Die unvollständige Ergebnisdatei ist beschädigt oder nicht mehr als Video lesbar und kann daher nicht sicher fortgesetzt werden.</value>
   </data>
   <data name="ResumeUnavailableReasonMissingState" xml:space="preserve">
     <value>Es wurde kein gültiger Status des unvollständigen Renderings gefunden, daher weiß die App nicht, an welcher Stelle sie fortsetzen soll.</value>
@@ -403,7 +418,7 @@
     <value>Zeit</value>
   </data>
   <data name="BenchmarkReportTableOutputMb" xml:space="preserve">
-    <value>Ausgabe MB</value>
+    <value>Ergebnis MB</value>
   </data>
   <data name="BenchmarkReportTableCpu" xml:space="preserve">
     <value>CPU Start/Avg/Peak</value>
@@ -571,21 +586,23 @@
     <value>Modus</value>
   </data>
   <data name="AntiFlickerModeHint" xml:space="preserve">
-    <value>Bestimmt, wie das Programm Flimmern reduziert. Wenn du unsicher bist, lass Luma Stabilizer aktiv.</value>
+    <value>Bestimmt, wie das Programm Flimmern reduziert. Wenn du unsicher bist, lass Flow Guided aktiv.</value>
   </data>
   <data name="AntiFlickerModeHelpTitle" xml:space="preserve">
     <value>Anti-Flicker-Modus</value>
   </data>
   <data name="AntiFlickerModeHelpBody" xml:space="preserve">
-    <value>Luma Stabilizer ist der Hauptmodus. Er kostet nur wenig zusätzliche Renderzeit und reduziert leichtes Flimmern sanft, ohne zu viele Details weichzuzeichnen.
+    <value>**Flow Guided** ist der empfohlene Standardmodus. In unseren Tests kam er mit schwierigerem Flimmern besser zurecht und berücksichtigte Bewegung zwischen Frames wirkungsvoller.
 
-Flow Guided ist der aufwendigere Modus. Er berücksichtigt Bewegung stärker und kann in schwierigeren Szenen helfen, belastet aber meist die CPU mehr und verlängert die Renderzeit deutlicher.</value>
+**Luma Stabilizer** ist der weichere und einfachere Modus. Er kostet weniger Rechenzeit, stabilisiert aber meist auch schwächer.
+
+Wenn du unsicher bist, bleib bei **Flow Guided**.</value>
   </data>
   <data name="AntiFlickerModeLumaStabilizer" xml:space="preserve">
-    <value>Luma Stabilizer</value>
+    <value>Sanft — Luma Stabilizer</value>
   </data>
   <data name="AntiFlickerModeFlowGuided" xml:space="preserve">
-    <value>Flow Guided</value>
+    <value>Stärker — Flow Guided</value>
   </data>
   <data name="AntiFlickerModeEdgeClamp" xml:space="preserve">
     <value>Edge Clamp</value>
@@ -600,22 +617,22 @@ Flow Guided ist der aufwendigere Modus. Er berücksichtigt Bewegung stärker und
     <value>Profil</value>
   </data>
   <data name="AntiFlickerPresetHint" xml:space="preserve">
-    <value>Jedes Profil merkt sich Schalter und Stärke separat. Der gleiche Prozentwert fühlt sich je nach Modus unterschiedlich an.</value>
+    <value>jedes Preset enthält eigenen Modus, Schalter und Stärke</value>
   </data>
   <data name="AntiFlickerAnimeHint" xml:space="preserve">
-    <value>Am besten für Linien und feine Details.</value>
+    <value>Standardmäßig Flow Guided. Am besten für Linien und feine Details.</value>
   </data>
   <data name="AntiFlickerVideoHint" xml:space="preserve">
-    <value>Ausgewogen für gemischtes Realbild-Material.</value>
+    <value>Standardmäßig Flow Guided. Ausgewogen für gemischtes Realbild-Material.</value>
   </data>
   <data name="AntiFlickerFacesHint" xml:space="preserve">
-    <value>Stabilisiert Flimmern und schützt Gesichter.</value>
+    <value>Standardmäßig Flow Guided. Stabilisiert Flimmern und schützt Gesichter.</value>
   </data>
   <data name="AntiFlickerUltra" xml:space="preserve">
     <value>Ultra</value>
   </data>
   <data name="AntiFlickerUltraHint" xml:space="preserve">
-    <value>Für das hartnäckigste Anime-Flimmern.
+    <value>Flow Guided mit stärkerer Intensität für das hartnäckigste Anime-Flimmern.
 Am besten für maximale Stabilität.</value>
   </data>
   <data name="ContentMode" xml:space="preserve">
@@ -657,13 +674,16 @@ Am besten für maximale Stabilität.</value>
   <data name="Container" xml:space="preserve">
     <value>Container</value>
   </data>
+  <data name="ContainerFutureLabel" xml:space="preserve">
+    <value>Container (später wird es hier eine Auswahl geben)</value>
+  </data>
   <data name="EncoderPresetHelpTitle" xml:space="preserve">
     <value>Encoder-Preset</value>
   </data>
   <data name="EncoderPresetHelpBody" xml:space="preserve">
-    <value>fast: benötigt am wenigsten Kodierzeit und eignet sich für schnelle Kontrollen oder schwächere Rechner.
-medium: ausgewogener Kompromiss aus Qualität, Größe und Geschwindigkeit für die meisten Jobs.
-slower: verbringt mehr Zeit pro Bild und zielt meist auf etwas bessere Kompression und kleinere Dateien.
+    <value>**fast**: benötigt am wenigsten Kodierzeit und eignet sich für schnelle Kontrollen oder schwächere Rechner.
+**medium**: ausgewogener Kompromiss aus Kodierzeit und Dateigröße für die meisten Jobs.
+**slower**: verbringt mehr Zeit pro Bild und liefert meist eine effizientere Kompression und eine etwas kleinere Datei.
 
 Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder in Kompressionsentscheidungen steckt. Langsamere Presets tauschen CPU-Zeit oft gegen kleinere Dateien und manchmal etwas effizientere Kompression.</value>
   </data>
@@ -671,22 +691,77 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
     <value>Codec</value>
   </data>
   <data name="CodecHelpBody" xml:space="preserve">
-    <value>Ein Codec bestimmt, wie das Video komprimiert wird. x264 ist schneller und weit kompatibel. x265 erzeugt meist kleinere Dateien, braucht aber l?nger.</value>
+    <value>Ein Codec bestimmt, wie das Video komprimiert wird.
+
+**x264** — schneller und breit kompatibel.
+**x265** — erzeugt meist kleinere Ergebnisdateien, braucht aber l?nger.</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
     <value>Format</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>Format bedeutet hier die Ausgabaufl?sung. 1080p bleibt Full HD, 2160p rendert 4K.</value>
+    <value>Format bedeutet hier die Ergebnisaufl?sung.
+
+**1080p** — bleibt Full HD.
+**2160p** — rendert 4K.</value>
+  </data>
+  <data name="ContainerHelpTitle" xml:space="preserve">
+    <value>Container</value>
+  </data>
+  <data name="ContainerHelpBody" xml:space="preserve">
+    <value>Ein Container ist die äußere Dateihülle des Videos.
+
+Aktuell ist hier nur **MKV** verfügbar.
+Weitere Container werden später ergänzt.</value>
   </data>
   <data name="FFmpegThreads" xml:space="preserve">
     <value>FFmpeg-Threads</value>
   </data>
+  <data name="FfmpegThreadsHelpTitle" xml:space="preserve">
+    <value>FFmpeg-Threads</value>
+  </data>
+  <data name="FfmpegThreadsHelpBody" xml:space="preserve">
+    <value>Das ist die Thread-Anzahl für FFmpeg-Schritte wie Dekodierung, Vorbereitung und Kodierung.
+
+Mehr Threads können auf einer starken CPU helfen.
+Ein zu hoher Wert kann aber auch nur zusätzliche Last erzeugen, ohne spürbaren Gewinn.</value>
+  </data>
   <data name="UpscalerJobs" xml:space="preserve">
     <value>Upscaler-Jobs</value>
   </data>
+  <data name="UpscalerJobsHelpTitle" xml:space="preserve">
+    <value>Upscaler-Jobs</value>
+  </data>
+  <data name="UpscalerJobsHelpBody" xml:space="preserve">
+    <value>Dieses Feld verwendet das Format **A:B:C**. Drei Zahlen sind nötig, weil RealESRGAN intern mit drei Pipeline-Warteschlangen arbeitet.
+
+**Die erste Zahl** bestimmt, wie viele Jobs gleichzeitig in die Pipeline geschickt werden.
+**Die zweite Zahl** bestimmt, wie viele Jobs gleichzeitig aktiv verarbeitet werden dürfen.
+**Die dritte Zahl** bestimmt, wie viele bereits verarbeitete Jobs auf die nächste Stufe warten dürfen.
+
+Beispiele:
+**1:1:1** — der sicherste und leichteste Modus.
+**4:4:4** — ein schnellerer, ausgewogener Modus.
+**8:8:8** — ein aggressiver Modus für eine starke GPU mit gutem VRAM-Spielraum.
+
+Meist setzt man alle drei Zahlen gleich, damit die Pipeline ausgeglichen bleibt.</value>
+  </data>
   <data name="TileSize" xml:space="preserve">
     <value>Kachelgröße</value>
+  </data>
+  <data name="TileSizeHelpTitle" xml:space="preserve">
+    <value>Kachelgröße</value>
+  </data>
+  <data name="TileSizeHelpBody" xml:space="preserve">
+    <value>Eine Kachel ist der quadratische Bildausschnitt, den der Upscaler auf einmal verarbeitet.
+
+Mit Größe sind hier Breite und Höhe in Pixeln gemeint:
+**128** = ungefähr **128x128**
+**256** = ungefähr **256x256**
+**1024** = ungefähr **1024x1024**
+
+Eine größere Kachel ist meist schneller, braucht aber mehr VRAM.
+Eine kleinere Kachel ist für schwächere GPUs sicherer, kann aber langsamer sein.</value>
   </data>
   <data name="GpuSelection" xml:space="preserve">
     <value>Grafikkarte</value>
@@ -707,10 +782,20 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
     <value>Willkommen bei UltraFrame AI.</value>
   </data>
   <data name="StartupBenchmarkPromptThanks" xml:space="preserve">
-    <value>Vielen Dank, dass Sie mein Programm verwenden. Es entwickelt sich dank Ihrer Unterstützung weiter. Falls Sie das Projekt unterstützen möchten, finden Sie diese Möglichkeit im Hilfebereich hinter dem Fragezeichen oben rechts.</value>
+    <value>Vielen Dank, dass Sie mein Programm verwenden. Es entwickelt sich dank Ihrer Unterstützung weiter.
+Falls Sie das Projekt unterstützen möchten, finden Sie diese Möglichkeit im Hilfebereich hinter dem Fragezeichen oben rechts.</value>
   </data>
   <data name="StartupBenchmarkPromptBody" xml:space="preserve">
     <value>Beim ersten Start kann UltraFrame AI einen kurzen Benchmark mit einem One-Piece-Sample ausführen, prüfen, ob dieser PC die praktischen Mindestanforderungen erfüllt, die schnellste GPU auswählen und empfohlene RealESRGAN-Einstellungen vorschlagen. Das kann ein paar Minuten dauern. Wenn Sie diesen Schritt überspringen, können später Konvertierungsfehler auftreten. Diesen Benchmark können Sie später auch in den Einstellungen starten. Jetzt starten?</value>
+  </data>
+  <data name="StartupBenchmarkNewHardwareTitle" xml:space="preserve">
+    <value>Benchmark für neue Geräte</value>
+  </data>
+  <data name="StartupBenchmarkNewHardwareGreeting" xml:space="preserve">
+    <value>Wir haben ein neues oder geändertes Gerät erkannt.</value>
+  </data>
+  <data name="StartupBenchmarkNewHardwareBody" xml:space="preserve">
+    <value>UltraFrame AI hat die GPU-Auswahl auf die stärkste verfügbare Option aktualisiert und empfiehlt, den kurzen Benchmark erneut auszuführen. So können die neue Hardware geprüft, die beste GPU gewählt und die empfohlenen RealESRGAN-Einstellungen neu bestimmt werden. Sie können diesen Benchmark auch später in den Einstellungen starten. Jetzt starten?</value>
   </data>
   <data name="StartupBenchmarkPromptRun" xml:space="preserve">
     <value>Benchmark starten</value>
@@ -719,13 +804,13 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
     <value>Vorerst überspringen</value>
   </data>
   <data name="StartupBenchmarkUnavailableTitle" xml:space="preserve">
-    <value>Start-Benchmark nicht verfügbar</value>
+    <value>Benchmark nicht verfügbar</value>
   </data>
   <data name="StartupBenchmarkUnavailableBody" xml:space="preserve">
-    <value>Der Start-Benchmark konnte nicht gestartet werden, weil kein nutzbarer GPU-Kandidat oder kein Sample-Clip gefunden wurde.</value>
+    <value>Der Benchmark konnte nicht gestartet werden, weil kein nutzbarer GPU-Kandidat oder kein Sample-Clip gefunden wurde.</value>
   </data>
   <data name="StartupBenchmarkProgressTitle" xml:space="preserve">
-    <value>Start-Benchmark</value>
+    <value>Benchmark</value>
   </data>
   <data name="StartupBenchmarkProgressIntro" xml:space="preserve">
     <value>Wir prüfen Ihre GPUs und stimmen die RealESRGAN-Einstellungen an einem kurzen Sample-Clip ab.</value>
@@ -745,11 +830,14 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   <data name="StartupBenchmarkResultsSummary" xml:space="preserve">
     <value>Die Auto-Abstimmung ist fertig. Der Benchmark hat {0} verwendet und empfohlene Einstellungen für diesen PC vorbereitet.</value>
   </data>
+  <data name="StartupBenchmarkResultsWeakSummary" xml:space="preserve">
+    <value>Schwachstellen erkannt: {0}.</value>
+  </data>
   <data name="StartupBenchmarkResultsApplied" xml:space="preserve">
     <value>Empfohlene Einstellungen</value>
   </data>
   <data name="StartupBenchmarkResultsApply" xml:space="preserve">
-    <value>Anwenden</value>
+    <value>Empfohlene Einstellungen anwenden</value>
   </data>
   <data name="StartupBenchmarkResultsSkipApply" xml:space="preserve">
     <value>Vorerst nicht</value>
@@ -760,6 +848,16 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   <data name="GeneralHelpBody" xml:space="preserve">
     <value>Dies ist ein schneller Hilfe-Einstieg. Das vollständige Hilfecenter öffnen Sie über das Fragezeichen oben rechts.</value>
   </data>
+  <data name="SettingsOverviewHelpTitle" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="SettingsOverviewHelpBody" xml:space="preserve">
+    <value>Hier finden Sie die wichtigsten Programmeinstellungen.
+
+Allgemein: Codec, Auflösung, Container, GPU-Auswahl und die grundlegenden Verarbeitungsschalter.
+Leistung: Encoder-Preset, Thread-Anzahlen und Parameter für die Rendergeschwindigkeit.
+Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres Bild.</value>
+  </data>
   <data name="HelpCenterIntro" xml:space="preserve">
     <value>Hier finden Sie eine kurze Anleitung, Antworten auf häufige Fragen und Informationen zur Unterstützung des Projekts.</value>
   </data>
@@ -768,6 +866,9 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   </data>
   <data name="HelpCenterFaqTab" xml:space="preserve">
     <value>FAQ</value>
+  </data>
+  <data name="HelpCenterHardwareTab" xml:space="preserve">
+    <value>Hardware-Prüfung</value>
   </data>
   <data name="HelpCenterLinksTab" xml:space="preserve">
     <value>Kontakte und Links</value>
@@ -785,6 +886,9 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
 4. Starten Sie das Rendern. Währenddessen zeigt das separate Renderfenster den aktuellen Schritt, die Vorschau, die verstrichene Zeit, die ETA und die FPS.
 5. Wenn das Rendern unterbrochen wurde, verwenden Sie für unvollständige Dateien wenn möglich die Fortsetzungsfunktion.
 6. Nach Abschluss der Warteschlange zeigt das Programm ein Ergebnisfenster mit den Werten pro Datei.</value>
+  </data>
+  <data name="HelpCenterDetectedDevicesTitle" xml:space="preserve">
+    <value>Erkannte Geräte</value>
   </data>
   <data name="HelpCenterLinksTitle" xml:space="preserve">
     <value>Kontakte und Links</value>
@@ -873,6 +977,9 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
     <value>Beste Testfälle</value>
   </data>
+  <data name="StartupBenchmarkResultsRecommendationsTitle" xml:space="preserve">
+    <value>Empfehlungen</value>
+  </data>
   <data name="StartupBenchmarkResultsWeakWarning" xml:space="preserve">
     <value>Ihre GPU wirkt für schweres Upscaling eher schwach. Rendern sollte trotzdem funktionieren, aber rechnen Sie mit langen Laufzeiten.</value>
   </data>
@@ -902,6 +1009,18 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
   </data>
   <data name="HardwareTooLow" xml:space="preserve">
     <value>Zu wenig</value>
+  </data>
+  <data name="HardwareDeviceMemoryDetail" xml:space="preserve">
+    <value>Videospeicher: {0} GB</value>
+  </data>
+  <data name="HardwareDeviceMemoryUnknown" xml:space="preserve">
+    <value>Die Größe des Videospeichers konnte nicht erkannt werden</value>
+  </data>
+  <data name="HardwareNoDevicesFound" xml:space="preserve">
+    <value>Keine Geräte gefunden</value>
+  </data>
+  <data name="HardwareNoDevicesFoundDetail" xml:space="preserve">
+    <value>Das Programm konnte auf diesem System keine GPU-Liste auslesen.</value>
   </data>
   <data name="HardwareGpuMissingDetail" xml:space="preserve">
     <value>Es wurde keine passende GPU erkannt. Der Benchmark wird dringend empfohlen, weil die Konvertierung sonst fehlschlagen kann. Minimum: {0}. Komfortziel: {1}.</value>
@@ -1048,13 +1167,34 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
     <value>Die Argumentvorlage für den externen Upscaler ist leer.</value>
   </data>
   <data name="OverwriteExistingOutput" xml:space="preserve">
-    <value>Vorhandene Ausgabe überschreiben</value>
+    <value>Vorhandene Ergebnisdateien überschreiben</value>
+  </data>
+  <data name="OverwriteExistingOutputHelpTitle" xml:space="preserve">
+    <value>Ergebnisdateien überschreiben</value>
+  </data>
+  <data name="OverwriteExistingOutputHelpBody" xml:space="preserve">
+    <value>Wenn aktiviert, wird eine bereits vorhandene Ergebnisdatei automatisch ersetzt.
+
+Wenn deaktiviert, fragt die App bei jedem Konflikt:
+überspringen,
+ersetzen,
+alle überspringen,
+alle ersetzen.
+
+Diese Auswahl gilt nur für die aktuelle Render-Sitzung.</value>
   </data>
   <data name="PreserveIncompleteOutput" xml:space="preserve">
-    <value>Unvollständige Ausgabe behalten</value>
+    <value>Unvollständige Ergebnisdatei behalten</value>
   </data>
   <data name="PreserveIncompleteOutputHint" xml:space="preserve">
-    <value>Unvollständige Ausgabedateien am Speicherort belassen statt sie zu löschen.</value>
+    <value>Unvollständige Ergebnisdateien am Speicherort belassen statt sie zu löschen.</value>
+  </data>
+  <data name="PreserveIncompleteOutputHelpTitle" xml:space="preserve">
+    <value>Unvollständige Ergebnisdatei</value>
+  </data>
+  <data name="PreserveIncompleteOutputHelpBody" xml:space="preserve">
+    <value>Wenn aktiviert, bleibt eine unvollständige Ergebnisdatei nach Stopp oder Fehler erhalten.
+Das kann bei Analyse oder späterer Wiederherstellung helfen.</value>
   </data>
   <data name="RepairBrokenTimestamps" xml:space="preserve">
     <value>Defekte Zeitstempel reparieren</value>
@@ -1079,7 +1219,10 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
     <value>Ausgewählte starten</value>
   </data>
   <data name="OpenOutputFolder" xml:space="preserve">
-    <value>Ausgabeordner öffnen</value>
+    <value>Ergebnisordner öffnen</value>
+  </data>
+  <data name="OpenResultFolder" xml:space="preserve">
+    <value>Ordner öffnen</value>
   </data>
   <data name="DeleteItem" xml:space="preserve">
     <value>Eintrag löschen</value>
@@ -1162,6 +1305,9 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
   <data name="Apply" xml:space="preserve">
     <value>Anwenden</value>
   </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="BackgroundColor" xml:space="preserve">
     <value>Hintergrundfarbe</value>
   </data>
@@ -1237,6 +1383,18 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
   <data name="QueueStatusCompleted" xml:space="preserve">
     <value>Fertig</value>
   </data>
+  <data name="QueuePath" xml:space="preserve">
+    <value>Pfad</value>
+  </data>
+  <data name="QueueShowPaths" xml:space="preserve">
+    <value>Pfade anzeigen</value>
+  </data>
+  <data name="QueueSourceSingle" xml:space="preserve">
+    <value>Quelle: {0}</value>
+  </data>
+  <data name="QueueSourceMultiple" xml:space="preserve">
+    <value>Quellen: {0} Ordner</value>
+  </data>
   <data name="ScanCurrentFolder" xml:space="preserve">
     <value>Aktueller Ordner</value>
   </data>
@@ -1289,7 +1447,7 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
     <value>Wählen Sie den Ordner oder die Datei mit den Videos aus.</value>
   </data>
   <data name="LogSelectOutputFolder" xml:space="preserve">
-    <value>Wählen Sie den Ausgabeordner aus.</value>
+    <value>Wählen Sie den Ergebnisordner aus.</value>
   </data>
   <data name="CloseDuringRenderTitle" xml:space="preserve">
     <value>Arbeit stoppen und beenden?</value>
@@ -1355,7 +1513,7 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
     <value>Kodierung abgeschlossen</value>
   </data>
   <data name="LogOutputExists" xml:space="preserve">
-    <value>Die Ausgabe ist schon da, ich überspringe sie</value>
+    <value>Das Ergebnis ist schon da, ich überspringe es</value>
   </data>
   <data name="LogSkippingEncode" xml:space="preserve">
     <value>Kodierung wird übersprungen</value>

@@ -21,6 +21,7 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
     public RenderPreviewWindow(ImageSource? previewSource, RenderPreviewKind kind, string? frameTimestampText = null)
     {
         InitializeComponent();
+        WindowCaptionColorManager.Attach(this);
         DataContext = this;
         PreviewSource = previewSource;
         PreviewLabel = kind == RenderPreviewKind.Original

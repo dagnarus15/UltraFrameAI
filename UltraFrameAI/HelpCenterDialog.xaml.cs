@@ -11,6 +11,7 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
     public HelpCenterDialog(HelpCenterTab initialTab = HelpCenterTab.HowTo)
     {
         InitializeComponent();
+        WindowCaptionColorManager.Attach(this);
         SelectedTab = initialTab;
 
         foreach (var entry in BuildFaqEntries())
@@ -38,6 +39,16 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
             SourceLinks.Add(entry);
         }
 
+        foreach (var entry in BuildHardwareAssessmentLines())
+        {
+            HardwareLines.Add(entry);
+        }
+
+        foreach (var entry in BuildHardwareDevices())
+        {
+            HardwareDevices.Add(entry);
+        }
+
         DataContext = this;
     }
 
@@ -46,6 +57,8 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
     public bool IsHowToVisible => SelectedTab == HelpCenterTab.HowTo;
 
     public bool IsFaqVisible => SelectedTab == HelpCenterTab.Faq;
+
+    public bool IsHardwareVisible => SelectedTab == HelpCenterTab.Hardware;
 
     public bool IsLinksVisible => SelectedTab == HelpCenterTab.Links;
 
@@ -57,6 +70,10 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
 
     public ObservableCollection<HelpVersionEntry> Versions { get; } = new();
 
+    public ObservableCollection<HardwareAssessmentLine> HardwareLines { get; } = new();
+
+    public ObservableCollection<HardwareDeviceEntry> HardwareDevices { get; } = new();
+
     public ObservableCollection<HelpLinkEntry> ContactLinks { get; } = new();
 
     public ObservableCollection<HelpLinkEntry> SourceLinks { get; } = new();
@@ -66,6 +83,8 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
     private void HowTo_Click(object sender, RoutedEventArgs e) => SetTab(HelpCenterTab.HowTo);
 
     private void Faq_Click(object sender, RoutedEventArgs e) => SetTab(HelpCenterTab.Faq);
+
+    private void Hardware_Click(object sender, RoutedEventArgs e) => SetTab(HelpCenterTab.Hardware);
 
     private void Links_Click(object sender, RoutedEventArgs e) => SetTab(HelpCenterTab.Links);
 
@@ -82,6 +101,7 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedTab));
         OnPropertyChanged(nameof(IsHowToVisible));
         OnPropertyChanged(nameof(IsFaqVisible));
+        OnPropertyChanged(nameof(IsHardwareVisible));
         OnPropertyChanged(nameof(IsLinksVisible));
         OnPropertyChanged(nameof(IsSupportVisible));
     }
@@ -101,5 +121,44 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion4"), LocalizedStrings.Get("HelpFaqAnswer4")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion5"), LocalizedStrings.Get("HelpFaqAnswer5"))
         };
+    }
+
+    private IReadOnlyList<HardwareAssessmentLine> BuildHardwareAssessmentLines()
+    {
+        var gpuCandidates = Owner is FrameworkElement { DataContext: MainViewModel vm }
+            ? vm.GetStartupBenchmarkGpuCandidates()
+            : GpuDeviceDetector.DetectDevices()
+                .Select(device => new StartupBenchmarkGpuCandidate(device.DeviceId, device.Name, device.MemoryMb))
+                .ToArray();
+
+        return HardwareAssessmentBuilder.BuildStatic(gpuCandidates).Lines;
+    }
+
+    private IReadOnlyList<HardwareDeviceEntry> BuildHardwareDevices()
+    {
+        var gpuCandidates = Owner is FrameworkElement { DataContext: MainViewModel vm }
+            ? vm.GetStartupBenchmarkGpuCandidates()
+            : GpuDeviceDetector.DetectDevices()
+                .Select(device => new StartupBenchmarkGpuCandidate(device.DeviceId, device.Name, device.MemoryMb))
+                .ToArray();
+
+        if (gpuCandidates.Count == 0)
+        {
+            return new[]
+            {
+                new HardwareDeviceEntry(
+                    LocalizedStrings.HardwareNoDevicesFound,
+                    LocalizedStrings.HardwareNoDevicesFoundDetail)
+            };
+        }
+
+        return gpuCandidates
+            .OrderBy(candidate => candidate.GpuId)
+            .Select(candidate => new HardwareDeviceEntry(
+                candidate.Label,
+                candidate.MemoryMb is > 0
+                    ? LocalizedStrings.HardwareDeviceMemoryDetail(candidate.MemoryMb.Value / 1024d)
+                    : LocalizedStrings.HardwareDeviceMemoryUnknown))
+            .ToArray();
     }
 }

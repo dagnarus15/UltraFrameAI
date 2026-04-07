@@ -104,23 +104,37 @@
                 <StackPanel Grid.Column="1"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
-                    <Button x:Name="TopHelpButton"
-                            Width="42"
-                            Height="32"
-                            HorizontalAlignment="Right"
-                            Padding="0"
-                            Margin="0,0,0,6"
-                            Background="#13203A"
-                            BorderBrush="{StaticResource CardBorderBrush}"
-                            BorderThickness="1"
-                            ToolTip="{local:Loc GeneralHelpTitle}"
-                            Click="TopHelpButton_Click">
-                        <TextBlock Text="?"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center" />
-                    </Button>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,0,0,6">
+                        <Button x:Name="BackgroundColorButton"
+                                Width="30"
+                                Height="30"
+                                Padding="0"
+                                Margin="0,0,8,0"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                ToolTip="{local:Loc BackgroundColor}"
+                                Click="BackgroundColorButton_Click">
+                            <Image Source="{Binding BackgroundColorWheelImage}" Width="22" Height="22" />
+                        </Button>
+                        <Button x:Name="TopHelpButton"
+                                Width="42"
+                                Height="32"
+                                HorizontalAlignment="Right"
+                                Padding="0"
+                                Background="#13203A"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                ToolTip="{local:Loc GeneralHelpTitle}"
+                                Click="TopHelpButton_Click">
+                            <TextBlock Text="?"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center" />
+                        </Button>
+                    </StackPanel>
                     <Grid HorizontalAlignment="Right">
                         <Button x:Name="LanguageButton"
                                 Width="42"
@@ -562,6 +576,8 @@
                 <ColumnDefinition Width="18" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="18" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="18" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -650,7 +666,16 @@
                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
             </Button>
 
-            <Grid Grid.Column="4">
+            <Button Grid.Column="4"
+                    Content="{Binding RenderFinishAfterCurrentText}"
+                    Command="{Binding FinishAfterCurrentCommand}"
+                    Height="54"
+                    MinWidth="240"
+                    Background="#1B2740"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    Foreground="{StaticResource TextPrimaryBrush}" />
+
+            <Grid Grid.Column="6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="16" />
@@ -730,16 +755,48 @@
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </Border.Style>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Title}"
-                                                           FontWeight="SemiBold"
-                                                           TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Text="{Binding StatusLabel}"
-                                                           Margin="0,3,0,0"
-                                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                                           FontSize="11" />
-                                            </StackPanel>
+                                        </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="16" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding StatusLabel}"
+                                                               Margin="0,3,0,0"
+                                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                                               FontSize="11" />
+                                                </StackPanel>
+                                                <CheckBox Grid.Column="2"
+                                                          Content="{local:Loc RenderSkipFile}"
+                                                          VerticalAlignment="Center"
+                                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                                          IsChecked="{Binding SkipInRender, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                                    <CheckBox.Style>
+                                                        <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                                                            <Setter Property="Opacity" Value="0.95" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                                    <Setter Property="IsEnabled" Value="False" />
+                                                                    <Setter Property="Opacity" Value="0.55" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="IsEnabled" Value="False" />
+                                                                    <Setter Property="Opacity" Value="0.55" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                                                    <Setter Property="IsEnabled" Value="False" />
+                                                                    <Setter Property="Opacity" Value="0.55" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </CheckBox.Style>
+                                                </CheckBox>
+                                            </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

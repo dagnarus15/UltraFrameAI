@@ -4,18 +4,32 @@
         xmlns:local="clr-namespace:UltraFrameAI"
         Title="{local:Loc StartupBenchmarkResultsTitle}"
         Width="760"
-        Height="560"
         MinWidth="700"
-        MinHeight="500"
+        MinHeight="520"
+        MaxHeight="900"
+        SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
-    <Grid Margin="18">
-        <Border Background="{StaticResource CardBrush}"
-                BorderBrush="{StaticResource CardBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="18"
-                Padding="18">
-            <Grid>
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        Background="Transparent">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Window.Resources>
+    <Border Background="{DynamicResource AppBgBrush}"
+            BorderBrush="{StaticResource CardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="18"
+            ClipToBounds="True">
+        <Grid Margin="18"
+              Background="{DynamicResource AppBgBrush}">
+            <Border Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Padding="18">
+                <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="10" />
@@ -23,7 +37,9 @@
                     <RowDefinition Height="16" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="16" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="18" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -72,27 +88,46 @@
                 </Border>
 
                 <StackPanel Grid.Row="6">
-                    <TextBlock Text="{local:Loc HardwareAssessmentTitle}"
-                               FontSize="18"
-                               FontWeight="SemiBold" />
-                    <ItemsControl ItemsSource="{Binding AssessmentLines}" Margin="0,10,0,14">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="#0E1628"
-                                        BorderBrush="#223552"
-                                        BorderThickness="1"
-                                        CornerRadius="12"
-                                        Padding="10"
-                                        Margin="0,0,0,8">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Verdict}" Margin="0,4,0,0" Foreground="#F0B35E" />
-                                        <TextBlock Text="{Binding Detail}" Margin="0,6,0,0" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <Border Background="#0E1628"
+                            BorderBrush="#223552"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="12"
+                            Visibility="{Binding HasWeakAssessment, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding WeakAssessmentSummaryText}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{local:Loc StartupBenchmarkResultsRecommendationsTitle}"
+                                       Margin="0,10,0,8"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <ItemsControl ItemsSource="{Binding WeakAssessmentLines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#101A2B"
+                                                BorderBrush="#223552"
+                                                BorderThickness="1"
+                                                CornerRadius="12"
+                                                Padding="10"
+                                                Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Detail}"
+                                                           Margin="0,6,0,0"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="8">
                     <TextBlock Text="{local:Loc StartupBenchmarkResultsTopCases}"
                                FontSize="18"
                                FontWeight="SemiBold" />
@@ -112,7 +147,7 @@
                     </ItemsControl>
                 </StackPanel>
 
-                <Grid Grid.Row="8">
+                <Grid Grid.Row="10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -127,11 +162,12 @@
                     <Button Grid.Column="3"
                             Content="{local:Loc StartupBenchmarkResultsApply}"
                             IsDefault="True"
-                            MinWidth="150"
-                            Padding="14,8"
+                            MinWidth="250"
+                            Padding="18,8"
                             Click="Apply_Click" />
                 </Grid>
-            </Grid>
-        </Border>
-    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </Window>

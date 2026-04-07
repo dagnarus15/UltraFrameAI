@@ -9,14 +9,24 @@
         MinHeight="360"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        Background="Transparent"
         Closing="Window_Closing">
-    <Grid Margin="18">
-        <Border Background="{StaticResource CardBrush}"
-                BorderBrush="{StaticResource CardBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="18"
-                Padding="18">
-            <Grid>
+    <Border Background="{DynamicResource AppBgBrush}"
+            BorderBrush="{StaticResource CardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="18"
+            ClipToBounds="True">
+        <Grid Margin="18"
+              Background="{DynamicResource AppBgBrush}">
+            <Border Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Padding="18">
+                <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
@@ -69,7 +79,7 @@
                                  Margin="0,12,0,0"
                                  Minimum="0"
                                  Maximum="100"
-                                 Value="{Binding CurrentProgress}" />
+                                 Value="{Binding CurrentProgress, Mode=OneWay}" />
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -93,7 +103,8 @@
                         MinWidth="110"
                         Padding="14,8"
                         Click="Cancel_Click" />
-            </Grid>
-        </Border>
-    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </Window>

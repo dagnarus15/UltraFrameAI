@@ -15,12 +15,15 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     private string _etaText = "--:--:--";
     private string _outputState = string.Empty;
     private string _detail = string.Empty;
+    private string _outputPath = string.Empty;
     private bool _isChecked;
     private bool _isBusy;
+    private bool _showPathInQueue;
     private bool _forceOverwrite;
     private bool _resumeRequested;
     private int _resumeProcessedFrames;
     private string _resumeSourceOutputPath = string.Empty;
+    private bool _skipInRender;
     private bool _skipRequested;
     private bool _isSkipped;
     private bool _isInterrupted;
@@ -33,7 +36,11 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
 
     public string SourcePath { get; init; } = string.Empty;
 
-    public string OutputPath { get; init; } = string.Empty;
+    public string OutputPath
+    {
+        get => _outputPath;
+        set => SetField(ref _outputPath, value);
+    }
 
     public string Stage
     {
@@ -96,6 +103,20 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
         set => SetField(ref _isBusy, value);
     }
 
+    public bool ShowPathInQueue
+    {
+        get => _showPathInQueue;
+        set
+        {
+            if (SetField(ref _showPathInQueue, value))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QueuePrimaryText)));
+            }
+        }
+    }
+
+    public string QueuePrimaryText => ShowPathInQueue ? SourcePath : Title;
+
     public bool IsCompleted => Progress >= 100 && !IsSkipped && !IsInterrupted;
 
     public string StatusLabel => IsSkipped || IsInterrupted
@@ -132,6 +153,18 @@ public sealed class QueueItemViewModel : INotifyPropertyChanged
     {
         get => _skipRequested;
         set => SetField(ref _skipRequested, value);
+    }
+
+    public bool SkipInRender
+    {
+        get => _skipInRender;
+        set
+        {
+            if (SetField(ref _skipInRender, value) && !IsBusy)
+            {
+                SkipRequested = value;
+            }
+        }
     }
 
     public bool IsSkipped
@@ -221,7 +254,8 @@ public sealed record RenderPreviewFrameUpdate(
 public sealed record RenderSessionItemResult(
     string Title,
     string ElapsedText,
-    string AverageFpsText);
+    string AverageFpsText,
+    string OutputPath);
 
 public sealed record RenderSessionResults(
     string TotalElapsedText,
@@ -245,12 +279,24 @@ public sealed record HelpVersionEntry(
     string Title,
     string Value);
 
+public sealed record HardwareDeviceEntry(
+    string Label,
+    string MemoryText);
+
 public enum HelpCenterTab
 {
     HowTo,
     Faq,
+    Hardware,
     Links,
     Support
+}
+
+public enum StartupBenchmarkPromptKind
+{
+    None,
+    Welcome,
+    NewHardware
 }
 
 public sealed class RenderPreviewFramePayload : IDisposable
@@ -381,6 +427,8 @@ public sealed record AntiFlickerModeOption(AntiFlickerMode Value, string Label)
 public sealed class AntiFlickerPresetState
 {
     public bool Enabled { get; set; }
+
+    public AntiFlickerMode Mode { get; set; } = AntiFlickerMode.FlowGuided;
 
     public double Strength { get; set; }
 }

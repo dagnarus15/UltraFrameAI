@@ -63,7 +63,7 @@
                     <Setter Property="BorderBrush" Value="Transparent" />
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#0E1628" />
+                    <Setter Property="Background" Value="#142136" />
                 </Trigger>
                 <Trigger Property="IsKeyboardFocusWithin" Value="True">
                     <Setter Property="Background" Value="#0E1628" />
@@ -80,6 +80,27 @@
                     <Setter Property="Background" Value="#1A2534" />
                     <Setter Property="BorderBrush" Value="#3C4F67" />
                 </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsCompleted}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#184430" />
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsSkipped}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#273244" />
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsInterrupted}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#243346" />
+                </MultiDataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -112,10 +133,14 @@
         </Style>
 
         <Style x:Key="QueueSelectGlyphStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0" />
             <Setter Property="Width" Value="18" />
             <Setter Property="Height" Value="18" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="QueueSelectGlyphVisualStyle" TargetType="CheckBox" BasedOn="{StaticResource QueueSelectGlyphStyle}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Background" Value="#0E1628" />
             <Setter Property="BorderBrush" Value="#35517A" />
@@ -140,6 +165,15 @@
                                       StrokeEndLineCap="Round"
                                       StrokeLineJoin="Round"
                                       Visibility="Collapsed" />
+                                <Rectangle x:Name="IndeterminateMark"
+                                           Width="8"
+                                           Height="2"
+                                           RadiusX="1"
+                                           RadiusY="1"
+                                           Fill="{StaticResource TextPrimaryBrush}"
+                                           Visibility="Collapsed"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -151,6 +185,11 @@
                                 <Setter TargetName="Root" Property="Background" Value="#17324F" />
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                 <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Root" Property="Background" Value="#17324F" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="IndeterminateMark" Property="Visibility" Value="Visible" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Root" Property="Opacity" Value="0.45" />
@@ -179,6 +218,27 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid KeyboardNavigation.TabNavigation="Local"
+                              SnapsToDevicePixels="True">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <WrapPanel Grid.Row="0"
+                                       Margin="0,0,0,12"
+                                       IsItemsHost="True" />
+
+                            <ContentPresenter Grid.Row="1"
+                                              x:Name="PART_SelectedContentHost"
+                                              ContentSource="SelectedContent" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="SettingsTabItemStyle" TargetType="TabItem">
@@ -186,8 +246,8 @@
             <Setter Property="Background" Value="#0F1728" />
             <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="14,8" />
-            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0,0,18,10" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
@@ -738,11 +798,44 @@
                                         Padding="0"
                                         ToolTip="{local:Loc RecentFolders}"
                                         Click="RecentFoldersButton_Click">
-                                    <TextBlock FontFamily="Segoe MDL2 Assets"
-                                               Text="&#xE72C;"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Center" />
+                                    <Viewbox Width="28"
+                                             Height="28"
+                                             Stretch="Uniform">
+                                        <Canvas Width="64" Height="64">
+                                            <Path Data="M35 14H29C27.9 14 27 14.9 27 16V27.6C27 28.7 27.9 29.6 29 29.6H42C43.1 29.6 44 28.7 44 27.6V22.2L35 14Z"
+                                                  Fill="#E6EEF9" />
+                                            <Path Data="M35 14V21C35 21.88 35.72 22.6 36.6 22.6H44"
+                                                  Fill="#BFD0E7"
+                                                  Stroke="#BFD0E7"
+                                                  StrokeLineJoin="Round" />
+                                            <Rectangle Width="4.1"
+                                                       Height="1.25"
+                                                       RadiusX="0.62"
+                                                       RadiusY="0.62"
+                                                       Fill="#17324F"
+                                                       Canvas.Left="30"
+                                                       Canvas.Top="20.4" />
+                                            <Rectangle Width="7.9"
+                                                       Height="1.25"
+                                                       RadiusX="0.62"
+                                                       RadiusY="0.62"
+                                                       Fill="#17324F"
+                                                       Canvas.Left="30"
+                                                       Canvas.Top="23.1" />
+
+                                            <Path Data="M15 32L23.5 23.5M15 32L23.5 40.5M15 32H37"
+                                                  Stroke="White"
+                                                  StrokeThickness="4.2"
+                                                  StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round"
+                                                  StrokeLineJoin="Round" />
+
+                                            <Path Data="M30 36H36.8L38.5 37.7H44.5C45.6 37.7 46.5 38.6 46.5 39.7V43.8C46.5 44.9 45.6 45.8 44.5 45.8H30C28.9 45.8 28 44.9 28 43.8V38C28 36.9 28.9 36 30 36Z"
+                                                  Fill="#F0B35E"
+                                                  Stroke="#C58A3A"
+                                                  StrokeLineJoin="Round" />
+                                        </Canvas>
+                                    </Viewbox>
                                 </Button>
                                 <Popup x:Name="RecentFoldersPopup"
                                        PlacementTarget="{Binding ElementName=RecentFoldersButton}"
@@ -898,6 +991,7 @@
                                 <RowDefinition Height="48" />
                                 <RowDefinition Height="8" />
                                 <RowDefinition Height="48" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Button Content="{local:Loc StartBatch}"
                                     Command="{Binding StartCommand}"
@@ -919,7 +1013,6 @@
                                     </Style>
                                 </Button.Style>
                             </Button>
-
                             <Button Content="{local:Loc StartSelected}"
                                     Command="{Binding StartSelectedCommand}"
                                     Background="#16243D"
@@ -943,6 +1036,31 @@
                                     </Style>
                                 </Button.Style>
                             </Button>
+                            <Grid Grid.Row="3"
+                                  Margin="0,12,0,0">
+                                <Border Padding="16,14,16,16"
+                                        Background="#101A2C"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="10">
+                                    <StackPanel>
+                                        <TextBlock Text="{local:Loc OutputFolderNearFileLabel}"
+                                                   Style="{StaticResource CaptionStyle}"
+                                                   FontSize="11"
+                                                   HorizontalAlignment="Left"
+                                                   Margin="0,0,0,10" />
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding ComputedOutputFolderName}"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   FontSize="16"
+                                                   FontWeight="Normal"
+                                                   Opacity="0.92"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
                             <Button Content="{local:Loc Stop}"
                                     Command="{Binding CancelCommand}"
@@ -951,7 +1069,7 @@
                                     Foreground="{StaticResource TextPrimaryBrush}"
                                     Height="104"
                                     FontSize="18"
-                                    Grid.RowSpan="3"
+                                    Grid.RowSpan="4"
                                     Visibility="Collapsed">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
@@ -1041,6 +1159,20 @@
                             <StackPanel>
                                 <TextBlock Text="{local:Loc Queue}" FontSize="18" FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding QueueSummary}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                                <TextBlock Text="{Binding QueueSourceSummary}"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,4,0,0"
+                                           HorizontalAlignment="Left"
+                                           TextWrapping="Wrap"
+                                           MaxWidth="560">
+                                    <TextBlock.ToolTip>
+                                        <ToolTip DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                            <TextBlock Text="{Binding QueueSourceTooltip}"
+                                                       TextWrapping="Wrap"
+                                                       MaxWidth="640" />
+                                        </ToolTip>
+                                    </TextBlock.ToolTip>
+                                </TextBlock>
                             </StackPanel>
                             <StackPanel Grid.Column="1"
                                         Grid.Row="0"
@@ -1049,21 +1181,8 @@
                                 <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="8" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="8" />
-                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Button Content="{local:Loc DeleteSelected}"
-                                            Click="DeleteSelected_Click"
-                                            Padding="14,7"
-                                            MinWidth="132"
-                                            HorizontalAlignment="Right"
-                                            Background="#2A1B21"
-                                            BorderBrush="#5A2B34"
-                                            Foreground="{StaticResource DangerBrush}"
-                                            IsEnabled="{Binding CanDeleteSelected}" />
-                                    <Button Grid.Column="2"
+                                    <Button
                                             Content="{local:Loc DeleteAll}"
                                             Click="DeleteAll_Click"
                                             Padding="14,7"
@@ -1075,8 +1194,16 @@
                                             IsEnabled="{Binding CanDeleteAll}" />
                                 </Grid>
                             </StackPanel>
+                            <CheckBox Grid.Row="1"
+                                      Grid.Column="0"
+                                      Content="{local:Loc QueueShowPaths}"
+                                      IsChecked="{Binding ShowQueuePaths, Mode=TwoWay}"
+                                      Margin="0,8,0,0"
+                                      HorizontalAlignment="Left"
+                                      VerticalAlignment="Center"
+                                      Foreground="{StaticResource TextPrimaryBrush}" />
                             <TextBlock Grid.Row="1"
-                                       Grid.ColumnSpan="2"
+                                       Grid.Column="1"
                                        Text="{Binding CurrentFileName}"
                                        HorizontalAlignment="Right"
                                        MaxWidth="520"
@@ -1092,11 +1219,75 @@
                               ItemsSource="{Binding Items}"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
-                              RowHeight="28"
+                              MinRowHeight="28"
                               RowStyle="{StaticResource {x:Type DataGridRow}}"
                               CellStyle="{StaticResource {x:Type DataGridCell}}">
+                        <DataGrid.Resources>
+                            <Style x:Key="QueueTableThumbStyle" TargetType="Thumb">
+                                <Setter Property="OverridesDefaultStyle" Value="True" />
+                                <Setter Property="Focusable" Value="False" />
+                                <Setter Property="Background" Value="#467FBE" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border x:Name="ThumbRoot"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="5" />
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="ThumbRoot" Property="Background" Value="#66B0FF" />
+                                                </Trigger>
+                                                <Trigger Property="IsDragging" Value="True">
+                                                    <Setter TargetName="ThumbRoot" Property="Background" Value="#7BBEFF" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                            <Style TargetType="ScrollBar">
+                                <Setter Property="Width" Value="14" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ScrollBar">
+                                            <Border Background="Transparent" Padding="2,0">
+                                                <Border Background="#12213B"
+                                                        BorderBrush="#223552"
+                                                        BorderThickness="1"
+                                                        CornerRadius="7">
+                                                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                                        <Track.DecreaseRepeatButton>
+                                                            <RepeatButton Style="{StaticResource AppScrollBarPageButtonStyle}" Command="ScrollBar.PageUpCommand" />
+                                                        </Track.DecreaseRepeatButton>
+                                                        <Track.Thumb>
+                                                            <Thumb Style="{StaticResource QueueTableThumbStyle}" Margin="1" />
+                                                        </Track.Thumb>
+                                                        <Track.IncreaseRepeatButton>
+                                                            <RepeatButton Style="{StaticResource AppScrollBarPageButtonStyle}" Command="ScrollBar.PageDownCommand" />
+                                                        </Track.IncreaseRepeatButton>
+                                                    </Track>
+                                                </Border>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.Resources>
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="" Width="40" IsReadOnly="True">
+                            <DataGridTemplateColumn Width="40" IsReadOnly="True">
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsThreeState="True"
+                                                  IsChecked="{Binding DataContext.QueueSelectAllState, RelativeSource={RelativeSource AncestorType=DataGrid}, Mode=OneWay}"
+                                                  Click="QueueSelectAll_Click"
+                                                  ToolTip="{local:Loc StartSelected}">
+                                            <CheckBox.Style>
+                                                <Style TargetType="CheckBox" BasedOn="{StaticResource QueueSelectGlyphVisualStyle}" />
+                                            </CheckBox.Style>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -1104,22 +1295,36 @@
                                                       Checked="QueueItemCheckChanged"
                                                       Unchecked="QueueItemCheckChanged">
                                                 <CheckBox.Style>
-                                                    <Style TargetType="CheckBox" BasedOn="{StaticResource QueueSelectGlyphStyle}" />
+                                                    <Style TargetType="CheckBox" BasedOn="{StaticResource QueueSelectGlyphVisualStyle}" />
                                                 </CheckBox.Style>
                                             </CheckBox>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="{local:Loc QueueItem}" Binding="{Binding Title}" Width="2*">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="TextWrapping" Value="Wrap" />
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="{local:Loc QueueItem}" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding QueuePrimaryText}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   LineHeight="18"
+                                                   LineStackingStrategy="BlockLineHeight">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ShowPathInQueue}" Value="True">
+                                                            <Setter Property="TextWrapping" Value="NoWrap" />
+                                                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="{local:Loc QueueStatus}" Binding="{Binding StatusLabel}" Width="150">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -1129,6 +1334,29 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="" Width="44" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Button Width="28"
+                                                    Height="28"
+                                                    Padding="0"
+                                                    Background="Transparent"
+                                                    BorderBrush="Transparent"
+                                                    Foreground="{StaticResource DangerBrush}"
+                                                    ToolTip="{local:Loc DeleteItem}"
+                                                    Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}">
+                                                <TextBlock FontFamily="Segoe MDL2 Assets"
+                                                           Text="&#xE74D;"
+                                                           FontSize="14"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -1230,18 +1458,20 @@
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button Style="{StaticResource RoundHelpButtonStyle}"
-                                Content="?"
-                                Click="GeneralHelp_Click" />
-                        <TextBlock Grid.Column="2"
+                        <TextBlock Grid.Column="0"
                                    Text="{local:Loc Additional}"
                                     FontSize="20"
                                     FontWeight="SemiBold" />
+                        <Button x:Name="SettingsOverlayHelpButton"
+                                Grid.Column="1"
+                                Style="{StaticResource RoundHelpButtonStyle}"
+                                Content="?"
+                                Click="SettingsOverlayHelp_Click" />
                         <Button Grid.Column="3"
                                 Width="34"
                                 Height="34"
@@ -1259,6 +1489,7 @@
                     </Grid>
 
                     <TabControl Grid.Row="1"
+                                Margin="0,10,0,0"
                                 Style="{StaticResource SettingsTabControlStyle}"
                                 ItemContainerStyle="{StaticResource SettingsTabItemStyle}">
                         <TabItem Header="{local:Loc SettingsTabGeneral}">
@@ -1266,24 +1497,6 @@
                                           HorizontalScrollBarVisibility="Disabled"
                                           Padding="8,10,8,0">
                                 <StackPanel>
-                            <TextBlock Text="{local:Loc OutputFolderLabel}"
-                                       Style="{StaticResource CaptionStyle}"
-                                       Margin="0,0,0,6" />
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" />
-                                <Button Grid.Column="1"
-                                        Content="{local:Loc Browse}"
-                                        Margin="10,0,0,0"
-                                        Width="92"
-                                        Command="{Binding BrowseOutputCommand}" />
-                            </Grid>
-
-    
-
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1293,24 +1506,62 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="{local:Loc Codec}" Style="{StaticResource CaptionStyle}" />
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{local:Loc Codec}"
+                                                   Style="{StaticResource SettingsFieldTitleStyle}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                x:Name="SettingsCodecHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="CodecHelp_Click" />
+                                    </Grid>
                                     <ComboBox ItemsSource="{Binding CodecOptions}"
                                               SelectedItem="{Binding SelectedCodec}"
                                               HorizontalAlignment="Stretch" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Style="{StaticResource CaptionStyle}">
-                                        <Run Text="{local:Loc Target}" />
-                                        <Run Text=" (" />
-                                        <Run Text="{local:Loc Resolution}" />
-                                        <Run Text=")" />
-                                    </TextBlock>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource SettingsFieldTitleStyle}"
+                                                   VerticalAlignment="Center">
+                                            <Run Text="{local:Loc Target}" />
+                                            <Run Text=" (" />
+                                            <Run Text="{local:Loc Resolution}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="Normal" />
+                                            <Run Text=")" />
+                                        </TextBlock>
+                                        <Button Grid.Column="1"
+                                                x:Name="SettingsFormatHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="FormatHelp_Click" />
+                                    </Grid>
                                     <ComboBox ItemsSource="{Binding TargetOptions}"
                                               SelectedItem="{Binding SelectedTarget}"
                                               HorizontalAlignment="Stretch" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">
-                                    <TextBlock Text="{local:Loc Container}" Style="{StaticResource CaptionStyle}" />
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{local:Loc ContainerFutureLabel}"
+                                                   Style="{StaticResource SettingsFieldTitleStyle}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                x:Name="SettingsContainerHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="ContainerHelp_Click" />
+                                    </Grid>
                                     <ComboBox ItemsSource="{Binding ContainerOptions}"
                                               SelectedItem="{Binding SelectedContainer}"
                                               HorizontalAlignment="Stretch" />
@@ -1319,27 +1570,67 @@
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="{local:Loc GpuSelection}" Style="{StaticResource CaptionStyle}" />
+                                    <TextBlock Style="{StaticResource SettingsFieldTitleStyle}">
+                                        <Run Text="{local:Loc GpuSelection}" />
+                                        <Run Text=" (" />
+                                        <Run Text="{local:Loc GpuSelectionHint}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="Normal" />
+                                        <Run Text=")" />
+                                    </TextBlock>
                                     <ComboBox ItemsSource="{Binding GpuOptions}"
                                               SelectedItem="{Binding SelectedGpuOption}"
                                               HorizontalAlignment="Stretch"
                                               ToolTip="{local:Loc GpuSelectionHint}" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2"
-                                           Text="{local:Loc GpuSelectionHint}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           Margin="0,20,0,0"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Top" />
                             </Grid>
+
+                            <WrapPanel Margin="0,2,0,12">
+                                <CheckBox Content="{local:Loc OverwriteExistingOutput}"
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding Overwrite}" />
+                                <Button x:Name="OverwriteExistingOutputHelpButton"
+                                        Style="{StaticResource RoundHelpButtonStyle}"
+                                        Content="?"
+                                        Margin="8,-2,0,0"
+                                        VerticalAlignment="Top"
+                                        Click="OverwriteExistingOutputHelp_Click" />
+                            </WrapPanel>
+
+                            <WrapPanel Margin="0,0,0,12">
+                                <CheckBox Content="{local:Loc PreserveIncompleteOutput}"
+                                          ToolTip="{local:Loc PreserveIncompleteOutputHint}"
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding PreserveIncompleteOutput}" />
+                                <Button x:Name="PreserveIncompleteOutputHelpButton"
+                                        Style="{StaticResource RoundHelpButtonStyle}"
+                                        Content="?"
+                                        Margin="8,-2,0,0"
+                                        VerticalAlignment="Top"
+                                        Click="PreserveIncompleteOutputHelp_Click" />
+                            </WrapPanel>
+
+                            <WrapPanel Margin="0,0,0,4"
+                                       VerticalAlignment="Center">
+                                <CheckBox Content="{local:Loc RepairBrokenTimestamps}"
+                                          ToolTip="{local:Loc RepairBrokenTimestampsHint}"
+                                          IsChecked="{Binding RepairBrokenTimestamps}"
+                                          VerticalAlignment="Center" />
+                                <Button x:Name="RepairBrokenTimestampsHelpButton"
+                                        Style="{StaticResource RoundHelpButtonStyle}"
+                                        Content="?"
+                                        Margin="8,-2,0,0"
+                                        VerticalAlignment="Top"
+                                        Click="RepairBrokenTimestampsHelp_Click" />
+                            </WrapPanel>
+                            <TextBlock Text="{local:Loc RepairBrokenTimestampsHint}"
+                                       Margin="0,-2,0,12"
+                                       Style="{StaticResource CaptionStyle}"
+                                       TextWrapping="Wrap" />
 
                             <Button Click="BackgroundColorButton_Click"
                                     ToolTip="{local:Loc BackgroundColor}"
-                                    Margin="0,0,0,10"
+                                    Margin="0,2,0,10"
                                     MinWidth="220"
                                     Padding="14,11"
                                     HorizontalAlignment="Left"
@@ -1369,136 +1660,6 @@
                             </ScrollViewer>
                         </TabItem>
 
-                        <TabItem Header="{local:Loc SettingsTabBackends}">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                          HorizontalScrollBarVisibility="Disabled"
-                                          Padding="8,10,8,0">
-                                <StackPanel>
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <Grid Margin="0,0,0,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{local:Loc UpscalerBackend}"
-                                                   Style="{StaticResource CaptionStyle}"
-                                                   VerticalAlignment="Center" />
-                                        <Button Grid.Column="1"
-                                                Style="{StaticResource RoundHelpButtonStyle}"
-                                                Content="?"
-                                                Click="ExternalUpscalerHelp_Click" />
-                                    </Grid>
-                                    <ComboBox ItemsSource="{Binding UpscalerBackendOptions}"
-                                              DisplayMemberPath="Label"
-                                              SelectedValuePath="Value"
-                                              SelectedValue="{Binding SelectedUpscalerBackend}"
-                                              HorizontalAlignment="Stretch"
-                                              ToolTip="{local:Loc UpscalerBackendHint}" />
-                                    <TextBlock Text="{local:Loc UpscalerBackendHint}"
-                                               Margin="0,4,0,0"
-                                               Style="{StaticResource CaptionStyle}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Grid>
-
-                            <StackPanel Margin="0,0,0,10">
-                                <CheckBox Content="{local:Loc EnableStableSr}"
-                                          IsChecked="{Binding EnableStableSr}"
-                                          Margin="0,0,0,8" />
-                                <CheckBox Content="{local:Loc EnableSupir}"
-                                          IsChecked="{Binding EnableSupir}" />
-                            </StackPanel>
-
-                            <StackPanel Margin="0,0,0,10"
-                                        Visibility="{Binding IsExternalUpscalerSelected, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="{Binding SelectedExternalUpscalerSetupHint}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,10" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerPath}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalUpscalerPath, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerWorkingDirectory}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalUpscalerWorkingDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerModelDir}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalUpscalerModelDir, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerArgumentsTemplate}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalUpscalerArgumentsTemplate, UpdateSourceTrigger=PropertyChanged}"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         VerticalScrollBarVisibility="Auto"
-                                         MinHeight="88" />
-                            </StackPanel>
-
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="{local:Loc RefinerBackend}"
-                                               Style="{StaticResource CaptionStyle}" />
-                                    <ComboBox ItemsSource="{Binding RefinerBackendOptions}"
-                                              DisplayMemberPath="Label"
-                                              SelectedValuePath="Value"
-                                              SelectedValue="{Binding SelectedRefinerBackend}"
-                                              HorizontalAlignment="Stretch"
-                                              ToolTip="{local:Loc RefinerBackendHint}" />
-                                    <TextBlock Text="{local:Loc RefinerBackendHint}"
-                                               Margin="0,4,0,0"
-                                               Style="{StaticResource CaptionStyle}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Grid>
-
-                            <StackPanel Margin="0,0,0,10"
-                                        Visibility="{Binding IsExternalRefinerSelected, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="{Binding SelectedExternalRefinerSetupHint}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,10" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerPath}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalRefinerPath, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerWorkingDirectory}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalRefinerWorkingDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerModelDir}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalRefinerModelDir, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8" />
-                                <TextBlock Text="{local:Loc ExternalUpscalerArgumentsTemplate}"
-                                           Style="{StaticResource CaptionStyle}" />
-                                <TextBox Text="{Binding SelectedExternalRefinerArgumentsTemplate, UpdateSourceTrigger=PropertyChanged}"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         VerticalScrollBarVisibility="Auto"
-                                         MinHeight="88" />
-                            </StackPanel>
-
-                                </StackPanel>
-                            </ScrollViewer>
-                        </TabItem>
-
                         <TabItem Header="{local:Loc SettingsTabPerformance}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
@@ -1506,10 +1667,6 @@
                                 <StackPanel>
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
@@ -1519,65 +1676,81 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{local:Loc EncoderPreset}"
-                                                   Style="{StaticResource CaptionStyle}"
+                                                   Style="{StaticResource SettingsFieldTitleStyle}"
                                                    VerticalAlignment="Center" />
                                         <Button Grid.Column="1"
                                                 x:Name="EncoderPresetHelpButton"
                                                 Style="{StaticResource RoundHelpButtonStyle}"
                                                 Content="?"
-                                                Click="EncoderPresetHelp_Click"
-                                                />
+                                                Click="EncoderPresetHelp_Click" />
                                     </Grid>
                                     <ComboBox ItemsSource="{Binding EncoderPresetOptions}"
                                               SelectedItem="{Binding EncoderPreset}"
                                               HorizontalAlignment="Stretch"
                                               ToolTip="{local:Loc EncoderPresetHint}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="{local:Loc FFmpegThreads}" Style="{StaticResource CaptionStyle}" />
-                                    <TextBox Text="{Binding FfmpegThreadsText, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="4">
-                                    <TextBlock Text="{local:Loc UpscalerJobs}" Style="{StaticResource CaptionStyle}" />
-                                    <TextBox Text="{Binding UpscalerThreadsText, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
                             </Grid>
+
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="{local:Loc TileSize}" Style="{StaticResource CaptionStyle}" />
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{local:Loc FFmpegThreads}"
+                                                Style="{StaticResource SettingsFieldTitleStyle}"
+                                                VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                x:Name="FfmpegThreadsHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="FfmpegThreadsHelp_Click" />
+                                    </Grid>
+                                    <TextBox Text="{Binding FfmpegThreadsText, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{local:Loc UpscalerJobs}"
+                                                   Style="{StaticResource SettingsFieldTitleStyle}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                x:Name="UpscalerJobsHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="UpscalerJobsHelp_Click" />
+                                    </Grid>
+                                    <TextBox Text="{Binding UpscalerThreadsText, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{local:Loc TileSize}"
+                                                   Style="{StaticResource SettingsFieldTitleStyle}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1"
+                                                x:Name="TileSizeHelpButton"
+                                                Style="{StaticResource RoundHelpButtonStyle}"
+                                                Content="?"
+                                                Click="TileSizeHelp_Click" />
+                                    </Grid>
                                     <TextBox Text="{Binding TileSizeText, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
-
-                            <WrapPanel Margin="0,0,0,12">
-                                <CheckBox Content="{local:Loc OverwriteExistingOutput}" IsChecked="{Binding Overwrite}" />
-                            </WrapPanel>
-
-                            <WrapPanel Margin="0,0,0,12">
-                                <CheckBox Content="{local:Loc PreserveIncompleteOutput}"
-                                          ToolTip="{local:Loc PreserveIncompleteOutputHint}"
-                                          IsChecked="{Binding PreserveIncompleteOutput}" />
-                            </WrapPanel>
-
-                            <WrapPanel Margin="0,0,0,4"
-                                       VerticalAlignment="Center">
-                                <CheckBox Content="{local:Loc RepairBrokenTimestamps}"
-                                          ToolTip="{local:Loc RepairBrokenTimestampsHint}"
-                                          IsChecked="{Binding RepairBrokenTimestamps}"
-                                          VerticalAlignment="Center" />
-                                <Button x:Name="RepairBrokenTimestampsHelpButton"
-                                        Style="{StaticResource RoundHelpButtonStyle}"
-                                        Content="?"
-                                        Margin="8,0,0,0"
-                                        Click="RepairBrokenTimestampsHelp_Click" />
-                            </WrapPanel>
-                            <TextBlock Text="{local:Loc RepairBrokenTimestampsHint}"
-                                       Margin="0,-2,0,12"
-                                       Style="{StaticResource CaptionStyle}"
-                                       TextWrapping="Wrap" />
 
                             <Button Content="{local:Loc Benchmark}"
                                     Click="BenchmarkButton_Click"
@@ -1614,31 +1787,38 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{local:Loc AntiFlickerMode}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           VerticalAlignment="Center" />
+                                <TextBlock Style="{StaticResource SettingsFieldTitleStyle}"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center">
+                                    <Run Text="{local:Loc AntiFlickerMode}" />
+                                    <Run Text=" (" />
+                                    <Run Text="{local:Loc AntiFlickerModeHint}"
+                                         Foreground="{StaticResource TextSecondaryBrush}"
+                                         FontWeight="Normal" />
+                                    <Run Text=")" />
+                                </TextBlock>
                                 <Button Grid.Column="1"
                                         x:Name="AntiFlickerModeHelpButton"
                                         Style="{StaticResource RoundHelpButtonStyle}"
                                         Content="?"
                                         Click="AntiFlickerModeHelp_Click" />
                             </Grid>
-                            <TextBlock Text="{local:Loc AntiFlickerModeHint}"
-                                       Style="{StaticResource CaptionStyle}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,4,0,10" />
                             <ComboBox ItemsSource="{Binding AntiFlickerModeOptions}"
                                       DisplayMemberPath="Label"
                                       SelectedValuePath="Value"
                                       SelectedValue="{Binding SelectedAntiFlickerMode}"
                                       Margin="0,0,0,12" />
 
-                            <TextBlock Text="{local:Loc AntiFlickerPreset}"
-                                       Style="{StaticResource CaptionStyle}" />
-                            <TextBlock Text="{local:Loc AntiFlickerPresetHint}"
-                                       Style="{StaticResource CaptionStyle}"
+                            <TextBlock Style="{StaticResource SettingsFieldTitleStyle}"
                                        TextWrapping="Wrap"
-                                       Margin="0,4,0,10" />
+                                       Margin="0,0,0,10">
+                                <Run Text="{local:Loc AntiFlickerPreset}" />
+                                <Run Text=" (" />
+                                <Run Text="{local:Loc AntiFlickerPresetHint}"
+                                     Foreground="{StaticResource TextSecondaryBrush}"
+                                     FontWeight="Normal" />
+                                <Run Text=")" />
+                            </TextBlock>
 
                             <StackPanel>
                                 <Button Command="{Binding SetContentModeCommand}"
@@ -1788,10 +1968,11 @@
 
                             <DockPanel Margin="0,12,0,0">
                                 <TextBlock Text="{local:Loc AntiFlickerStrength}"
-                                           Style="{StaticResource CaptionStyle}" />
+                                           Style="{StaticResource SettingsFieldTitleStyle}" />
                                 <TextBlock DockPanel.Dock="Right"
                                            Text="{Binding AntiFlickerStrength, StringFormat={}{0:0}%}"
-                                           Style="{StaticResource CaptionStyle}" />
+                                           Style="{StaticResource CaptionStyle}"
+                                           Margin="12,0,0,0" />
                             </DockPanel>
                             <Slider Minimum="0"
                                     Maximum="100"
@@ -1812,7 +1993,7 @@
               x:Name="ScanOverlayRoot"
               Background="#9E0F172A"
               Visibility="Collapsed"
-              Panel.ZIndex="20">
+              Panel.ZIndex="80">
             <Border x:Name="ScanPopupBorder"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"

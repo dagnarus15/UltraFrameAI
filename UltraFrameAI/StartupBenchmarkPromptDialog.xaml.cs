@@ -12,16 +12,19 @@ namespace UltraFrameAI;
 public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChanged
 {
     private bool _allowClose;
+    private readonly StartupBenchmarkPromptKind _promptKind;
 
-    public StartupBenchmarkPromptDialog(HardwareAssessment assessment)
+    public StartupBenchmarkPromptDialog(HardwareAssessment assessment, StartupBenchmarkPromptKind promptKind)
     {
         InitializeComponent();
+        _promptKind = promptKind;
         foreach (var line in assessment.Lines)
         {
             AssessmentLines.Add(line);
         }
 
         DataContext = this;
+        UpdateLocalizedText();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -29,6 +32,14 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
     public ObservableCollection<HardwareAssessmentLine> AssessmentLines { get; } = new();
 
     public bool ShouldRunBenchmark { get; private set; }
+
+    public string PromptTitle { get; private set; } = string.Empty;
+
+    public string PromptGreeting { get; private set; } = string.Empty;
+
+    public string PromptDetails { get; private set; } = string.Empty;
+
+    public string PromptBody { get; private set; } = string.Empty;
 
     public UiLanguage CurrentLanguage => LocalizedStrings.CurrentLanguage;
 
@@ -122,7 +133,32 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguage)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguageFlagPath)));
-        Title = LocalizedStrings.StartupBenchmarkPromptTitle;
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        switch (_promptKind)
+        {
+            case StartupBenchmarkPromptKind.NewHardware:
+                PromptTitle = LocalizedStrings.StartupBenchmarkNewHardwareTitle;
+                PromptGreeting = LocalizedStrings.StartupBenchmarkNewHardwareGreeting;
+                PromptDetails = string.Empty;
+                PromptBody = LocalizedStrings.StartupBenchmarkNewHardwareBody;
+                break;
+            default:
+                PromptTitle = LocalizedStrings.StartupBenchmarkPromptTitle;
+                PromptGreeting = LocalizedStrings.StartupBenchmarkPromptGreeting;
+                PromptDetails = LocalizedStrings.StartupBenchmarkPromptThanks;
+                PromptBody = LocalizedStrings.StartupBenchmarkPromptBody;
+                break;
+        }
+
+        Title = PromptTitle;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptTitle)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptGreeting)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptDetails)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptBody)));
     }
 
     private static void OpenPopup(Popup popup, FrameworkElement content, ScaleTransform scale, TranslateTransform translate)

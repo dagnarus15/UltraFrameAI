@@ -83,13 +83,14 @@ public partial class App : Application
 
         try
         {
-            await Dispatcher.InvokeAsync(() =>
-            {
-                var window = new MainWindow();
-                MainWindow = window;
-                window.ContentRendered += (_, _) => splash.Close();
-                window.Show();
-            });
+            var window = new MainWindow();
+            await window.InitializeStartupAsync().ConfigureAwait(true);
+
+            MainWindow = window;
+            window.Show();
+            splash.Close();
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            await window.ShowStartupBenchmarkPromptIfNeededAsync().ConfigureAwait(true);
         }
         catch
         {

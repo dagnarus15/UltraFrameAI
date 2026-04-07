@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using UltraFrameAI.Resources;
 using Brush = System.Windows.Media.Brush;
@@ -29,6 +30,22 @@ public partial class StartupBenchmarkResultsDialog : Window
             ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F0B35E"))
             : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#78D09A"));
 
+        var assessment = HardwareAssessmentBuilder.Build(report);
+        var weakLines = assessment.Lines
+            .Where(line => !string.Equals(line.Verdict, LocalizedStrings.HardwareEnough, StringComparison.Ordinal))
+            .ToArray();
+
+        foreach (var line in weakLines)
+        {
+            WeakAssessmentLines.Add(line);
+        }
+
+        if (weakLines.Length > 0)
+        {
+            WeakAssessmentSummaryText = LocalizedStrings.StartupBenchmarkResultsWeakSummary(
+                string.Join(", ", weakLines.Select(line => line.Title)));
+        }
+
         foreach (var entry in report.Results
                      .Where(result => result.Success)
                      .OrderBy(result => result.Elapsed)
@@ -42,12 +59,6 @@ public partial class StartupBenchmarkResultsDialog : Window
                 $"{entry.UpscalerThreads} / {entry.EncoderPreset}",
                 entry.TileSize,
                 entry.Elapsed.TotalSeconds));
-        }
-
-        var assessment = HardwareAssessmentBuilder.Build(report);
-        foreach (var line in assessment.Lines)
-        {
-            AssessmentLines.Add(line);
         }
 
         DataContext = this;
@@ -69,7 +80,11 @@ public partial class StartupBenchmarkResultsDialog : Window
 
     public Brush WarningBrush { get; }
 
-    public ObservableCollection<HardwareAssessmentLine> AssessmentLines { get; } = new();
+    public bool HasWeakAssessment => WeakAssessmentLines.Count > 0;
+
+    public string WeakAssessmentSummaryText { get; } = string.Empty;
+
+    public ObservableCollection<HardwareAssessmentLine> WeakAssessmentLines { get; } = new();
 
     public ObservableCollection<string> TopCases { get; } = new();
 
@@ -88,4 +103,5 @@ public partial class StartupBenchmarkResultsDialog : Window
         DialogResult = true;
         Close();
     }
+
 }
