@@ -485,7 +485,7 @@ public sealed class PipelineService
             var itemWatch = Stopwatch.StartNew();
             var resumeStatePath = GetResumeStatePath(item.OutputPath);
             var resumeCodec = options.UseX265 ? "libx265" : "libx264";
-            var resumeTargetHeight = options.UseX265 ? 2160 : 1080;
+            var resumeTargetHeight = options.TargetHeight;
             var resumeTotalFrames = 0;
             var resumeProcessedFrames = 0;
             var resumeSourceSegmentPath = string.IsNullOrWhiteSpace(item.ResumeSourceOutputPath) ? item.OutputPath : item.ResumeSourceOutputPath;
@@ -1932,6 +1932,7 @@ public sealed class PipelineService
         var payload = new
         {
             options.UseX265,
+            options.TargetHeight,
             options.OutputContainer,
             options.EncoderPreset,
             options.UpscalerBackend,

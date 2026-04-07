@@ -1642,6 +1642,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             OutputFolder = GetScanRoot(RootFolder),
             Overwrite = Overwrite,
             UseX265 = SelectedCodec == "x265",
+            TargetHeight = ParseTargetHeight(SelectedTarget),
             OutputContainer = SelectedContainer,
             FfmpegThreads = ParseInt(FfmpegThreadsText, 0),
             UpscalerThreads = string.IsNullOrWhiteSpace(UpscalerThreadsText) ? "4:4:4" : UpscalerThreadsText,
@@ -2411,7 +2412,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var complete = root.TryGetProperty("Complete", out var completeNode) && completeNode.GetBoolean();
             var canResume = root.TryGetProperty("CanResume", out var canResumeNode) && canResumeNode.GetBoolean();
             var expectedCodec = options.UseX265 ? "libx265" : "libx264";
-            var expectedTargetHeight = options.UseX265 ? 2160 : 1080;
+            var expectedTargetHeight = options.TargetHeight;
             var isValid = canResume
                 && !complete
                 && totalFrames > parsedProcessedFrames
@@ -4656,6 +4657,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string GetOutputFolderName()
     {
         return $"_{SelectedCodec}_{SelectedTarget}_output";
+    }
+
+    private static int ParseTargetHeight(string? target)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            return 1080;
+        }
+
+        var digits = new string(target.Where(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var parsed) && parsed > 0
+            ? parsed
+            : 1080;
     }
 
     private string GetOutputSuffix()

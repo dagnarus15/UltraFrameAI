@@ -353,6 +353,7 @@ public sealed class PipelineOptions
     public required string OutputFolder { get; init; }
     public required bool Overwrite { get; init; }
     public required bool UseX265 { get; init; }
+    public required int TargetHeight { get; init; }
     public required int FfmpegThreads { get; init; }
     public required string UpscalerThreads { get; init; }
     public required int TileSize { get; init; }
