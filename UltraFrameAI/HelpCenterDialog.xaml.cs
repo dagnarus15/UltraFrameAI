@@ -24,9 +24,9 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
             DonationEntries.Add(entry);
         }
 
-        foreach (var entry in HelpCenterInfo.GetVersions())
+        foreach (var entry in HelpCenterInfo.GetLibraryVersions())
         {
-            Versions.Add(entry);
+            LibraryVersions.Add(entry);
         }
 
         foreach (var entry in HelpCenterInfo.GetContactLinks())
@@ -68,7 +68,9 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
 
     public ObservableCollection<DonationSupportEntry> DonationEntries { get; } = new();
 
-    public ObservableCollection<HelpVersionEntry> Versions { get; } = new();
+    public string AppVersionText => HelpCenterInfo.GetApplicationVersion();
+
+    public ObservableCollection<HelpVersionEntry> LibraryVersions { get; } = new();
 
     public ObservableCollection<HardwareAssessmentLine> HardwareLines { get; } = new();
 
@@ -89,6 +91,15 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
     private void Links_Click(object sender, RoutedEventArgs e) => SetTab(HelpCenterTab.Links);
 
     private void Donate_Click(object sender, RoutedEventArgs e) => SetTab(HelpCenterTab.Support);
+
+    private void LibraryVersions_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new LibraryVersionsDialog(LibraryVersions)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+    }
 
     private void SetTab(HelpCenterTab tab)
     {

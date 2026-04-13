@@ -876,6 +876,15 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   <data name="HelpCenterIntro" xml:space="preserve">
     <value>Hier finden Sie eine kurze Anleitung, Antworten auf häufige Fragen und Informationen zur Unterstützung des Projekts.</value>
   </data>
+  <data name="HelpCenterAppVersionLabel" xml:space="preserve">
+    <value>App-Version:</value>
+  </data>
+  <data name="HelpCenterLibraryVersions" xml:space="preserve">
+    <value>Bibliotheksversionen</value>
+  </data>
+  <data name="HelpCenterLibraryVersionsBody" xml:space="preserve">
+    <value>Hier sehen Sie die wichtigsten Bibliotheken und eingebundenen Komponenten, die von der App verwendet werden.</value>
+  </data>
   <data name="HelpCenterHowToTab" xml:space="preserve">
     <value>Verwendung</value>
   </data>
@@ -954,7 +963,7 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
     <value>Unten finden Sie die vorgeschlagenen Unterstützungsmöglichkeiten. Wählen Sie einfach den für Sie angenehmsten Weg.</value>
   </data>
   <data name="RenderSessionResultsTitle" xml:space="preserve">
-    <value>Render-Ergebnisse</value>
+    <value>Ergebnisse der Verbesserung</value>
   </data>
   <data name="RenderSessionResultsSummary" xml:space="preserve">
     <value>Die Konvertierung wurde in {0} abgeschlossen.</value>

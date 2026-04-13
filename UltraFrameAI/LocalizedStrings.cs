@@ -274,6 +274,9 @@ public static class LocalizedStrings
     public static string HelpCenterLinksTitle => GetText(nameof(HelpCenterLinksTitle));
     public static string HelpCenterLinksContacts => GetText(nameof(HelpCenterLinksContacts));
     public static string HelpCenterLinksSources => GetText(nameof(HelpCenterLinksSources));
+    public static string HelpCenterAppVersionLabel => GetText(nameof(HelpCenterAppVersionLabel));
+    public static string HelpCenterLibraryVersions => GetText(nameof(HelpCenterLibraryVersions));
+    public static string HelpCenterLibraryVersionsBody => GetText(nameof(HelpCenterLibraryVersionsBody));
     public static string DonationDialogTitle => GetText(nameof(DonationDialogTitle));
     public static string DonationDialogThanks => GetText(nameof(DonationDialogThanks));
     public static string DonationDialogBody => GetText(nameof(DonationDialogBody));

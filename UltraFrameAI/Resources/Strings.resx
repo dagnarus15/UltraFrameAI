@@ -873,6 +873,15 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   <data name="HelpCenterIntro" xml:space="preserve">
     <value>This window combines a quick usage guide, answers to common questions, and support information for the project.</value>
   </data>
+  <data name="HelpCenterAppVersionLabel" xml:space="preserve">
+    <value>App version:</value>
+  </data>
+  <data name="HelpCenterLibraryVersions" xml:space="preserve">
+    <value>Library versions</value>
+  </data>
+  <data name="HelpCenterLibraryVersionsBody" xml:space="preserve">
+    <value>This list shows the main libraries and bundled components used by the app.</value>
+  </data>
   <data name="HelpCenterHowToTab" xml:space="preserve">
     <value>How to use</value>
   </data>
@@ -951,7 +960,7 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
     <value>Below are the suggested support methods. Feel free to use whichever one is most convenient for you.</value>
   </data>
   <data name="RenderSessionResultsTitle" xml:space="preserve">
-    <value>Render results</value>
+    <value>Enhancement results</value>
   </data>
   <data name="RenderSessionResultsSummary" xml:space="preserve">
     <value>Conversion finished in {0}.</value>

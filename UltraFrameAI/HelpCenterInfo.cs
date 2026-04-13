@@ -1,20 +1,215 @@
+using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 
 namespace UltraFrameAI;
 
 internal static class HelpCenterInfo
 {
-    public static IReadOnlyList<HelpVersionEntry> GetVersions()
+    private const string AntiFlickerNativeVersion = "0.1.0";
+    private const string ModelsFallbackVersion = "20220424 (Real-ESRGAN-ncnn-vulkan v0.2.0)";
+
+    public static string GetApplicationVersion()
     {
-        var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "dev";
+        return Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "dev";
+    }
+
+    public static IReadOnlyList<HelpVersionEntry> GetLibraryVersions()
+    {
         return new[]
         {
-            new HelpVersionEntry("UltraFrame AI", assemblyVersion),
-            new HelpVersionEntry("UltraFrameAI-Realesrgan-Pipe", "bundled local fork"),
+            new HelpVersionEntry("UltraFrameAI-Realesrgan-Pipe", GetRealesrganForkVersion()),
             new HelpVersionEntry("FFmpeg.AutoGen", "8.0.0"),
+            new HelpVersionEntry("FFmpeg", GetFfmpegVersion()),
             new HelpVersionEntry("System.Management", "9.0.4"),
-            new HelpVersionEntry("AntiFlicker.Native", "bundled local module")
+            new HelpVersionEntry("AntiFlicker.Native", GetAntiFlickerNativeVersion()),
+            new HelpVersionEntry("RealESRGAN models", GetModelBundleVersion())
         };
+    }
+
+    private static string GetRealesrganForkVersion()
+    {
+        var repoRoot = FindRepoRoot();
+        if (repoRoot is null)
+        {
+            return "unknown";
+        }
+
+        var forkPath = Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-fork");
+        if (!Directory.Exists(forkPath))
+        {
+            return "unknown";
+        }
+
+        return RunProcess("git", "-C \"" + forkPath + "\" describe --tags --always --dirty")
+            ?? RunProcess("git", "-C \"" + forkPath + "\" rev-parse --short HEAD")
+            ?? "unknown";
+    }
+
+    private static string GetAntiFlickerNativeVersion()
+    {
+        foreach (var dllPath in EnumeratePossibleAntiFlickerDllPaths())
+        {
+            if (!File.Exists(dllPath))
+            {
+                continue;
+            }
+
+            var versionInfo = FileVersionInfo.GetVersionInfo(dllPath);
+            if (!string.IsNullOrWhiteSpace(versionInfo.FileVersion))
+            {
+                return versionInfo.FileVersion;
+            }
+
+            if (!string.IsNullOrWhiteSpace(versionInfo.ProductVersion))
+            {
+                return versionInfo.ProductVersion;
+            }
+        }
+
+        return AntiFlickerNativeVersion;
+    }
+
+    private static IEnumerable<string> EnumeratePossibleAntiFlickerDllPaths()
+    {
+        yield return Path.Combine(AppContext.BaseDirectory, "UltraFrameAI.AntiFlicker.Native.dll");
+
+        var repoRoot = FindRepoRoot();
+        if (repoRoot is null)
+        {
+            yield break;
+        }
+
+        yield return Path.Combine(
+            repoRoot,
+            "UltraFrameAI.Native",
+            "AntiFlicker",
+            "build",
+            "Release",
+            "UltraFrameAI.AntiFlicker.Native.dll");
+    }
+
+    private static string GetModelBundleVersion()
+    {
+        var repoRoot = FindRepoRoot();
+        if (repoRoot is null)
+        {
+            return ModelsFallbackVersion;
+        }
+
+        var metadataPath = Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "VERSION.json");
+        if (!File.Exists(metadataPath))
+        {
+            return ModelsFallbackVersion;
+        }
+
+        try
+        {
+            var metadata = JsonSerializer.Deserialize<ModelBundleVersionInfo>(File.ReadAllText(metadataPath));
+            if (metadata is null ||
+                string.IsNullOrWhiteSpace(metadata.BundleVersion) ||
+                string.IsNullOrWhiteSpace(metadata.UpstreamProject) ||
+                string.IsNullOrWhiteSpace(metadata.UpstreamVersion))
+            {
+                return ModelsFallbackVersion;
+            }
+
+            return $"{metadata.BundleVersion} ({metadata.UpstreamProject} {metadata.UpstreamVersion})";
+        }
+        catch
+        {
+            return ModelsFallbackVersion;
+        }
+    }
+
+    private static string GetFfmpegVersion()
+    {
+        var output = RunProcess("ffmpeg", "-version");
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            return "not found";
+        }
+
+        var firstLine = output
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        if (string.IsNullOrWhiteSpace(firstLine))
+        {
+            return "unknown";
+        }
+
+        var prefix = "ffmpeg version ";
+        if (firstLine.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var version = firstLine[prefix.Length..].Trim();
+            var firstSpace = version.IndexOf(' ');
+            return firstSpace > 0 ? version[..firstSpace] : version;
+        }
+
+        return firstLine.Trim();
+    }
+
+    private static string? FindRepoRoot()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            if (Directory.Exists(Path.Combine(current.FullName, ".git")))
+            {
+                return current.FullName;
+            }
+
+            if (Directory.Exists(Path.Combine(current.FullName, "UltraFrameAI")) &&
+                Directory.Exists(Path.Combine(current.FullName, "realesrgan-ncnn-vulkan-20220424")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+
+    private static string? RunProcess(string fileName, string arguments)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+
+            if (process is null)
+            {
+                return null;
+            }
+
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit(3000);
+            return process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output)
+                ? output.Trim()
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private sealed class ModelBundleVersionInfo
+    {
+        public string BundleVersion { get; set; } = string.Empty;
+
+        public string UpstreamProject { get; set; } = string.Empty;
+
+        public string UpstreamVersion { get; set; } = string.Empty;
     }
 
     public static IReadOnlyList<HelpLinkEntry> GetContactLinks()

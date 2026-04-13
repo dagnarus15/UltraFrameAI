@@ -1,0 +1,33 @@
+#include <winver.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION @UFAF_VERSION_MAJOR@,@UFAF_VERSION_MINOR@,@UFAF_VERSION_PATCH@,0
+ PRODUCTVERSION @UFAF_VERSION_MAJOR@,@UFAF_VERSION_MINOR@,@UFAF_VERSION_PATCH@,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "UltraFrame AI\0"
+            VALUE "FileDescription", "UltraFrameAI AntiFlicker Native Module\0"
+            VALUE "FileVersion", "@UFAF_VERSION_STRING@\0"
+            VALUE "InternalName", "UltraFrameAI.AntiFlicker.Native.dll\0"
+            VALUE "OriginalFilename", "UltraFrameAI.AntiFlicker.Native.dll\0"
+            VALUE "ProductName", "UltraFrameAI AntiFlicker Native\0"
+            VALUE "ProductVersion", "@UFAF_VERSION_STRING@\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END

@@ -1,0 +1,87 @@
+<Window x:Class="UltraFrameAI.LibraryVersionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:UltraFrameAI"
+        Title="{local:Loc HelpCenterLibraryVersions}"
+        Width="620"
+        MinWidth="560"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        Background="Transparent">
+    <Border Background="{DynamicResource AppBgBrush}"
+            BorderBrush="{StaticResource CardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="18"
+            ClipToBounds="True">
+        <Grid Margin="18">
+            <Border Style="{StaticResource CardStyle}"
+                    Padding="18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="{local:Loc HelpCenterLibraryVersions}"
+                               FontSize="22"
+                               FontWeight="SemiBold" />
+
+                    <TextBlock Grid.Row="2"
+                               Text="{local:Loc HelpCenterLibraryVersionsBody}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" />
+
+                    <ScrollViewer Grid.Row="4"
+                                  MaxHeight="420"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Versions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#101A2B"
+                                            BorderBrush="#223552"
+                                            BorderThickness="1"
+                                            CornerRadius="12"
+                                            Padding="12"
+                                            Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="16" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Value}"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Button Grid.Row="6"
+                            Content="{local:Loc Ok}"
+                            IsDefault="True"
+                            IsCancel="True"
+                            MinWidth="120"
+                            HorizontalAlignment="Right"
+                            Background="{StaticResource AccentBrush}"
+                            Click="Ok_Click" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
