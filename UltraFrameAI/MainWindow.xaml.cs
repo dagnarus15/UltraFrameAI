@@ -3,6 +3,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.IO.Compression;
+using System.Net.Http;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -18,6 +20,7 @@ public partial class MainWindow : Window
     private RenderWindow? _renderWindow;
     private bool _suppressClosePrompt;
     private bool _startupBenchmarkChecked;
+    private const string FfmpegDownloadUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip";
 
     public MainWindow()
     {
@@ -45,6 +48,43 @@ public partial class MainWindow : Window
     public Task ShowStartupBenchmarkPromptIfNeededAsync()
     {
         return MaybeOfferStartupBenchmarkAsync();
+    }
+
+    public async Task<bool> EnsureFfmpegAvailableAsync()
+    {
+        if (_viewModel.HasConfiguredFfmpegTools())
+        {
+            return true;
+        }
+
+        while (!_viewModel.HasConfiguredFfmpegTools())
+        {
+            var dialog = new FfmpegSetupDialog
+            {
+                Owner = this
+            };
+
+            _ = dialog.ShowDialog();
+            switch (dialog.Choice)
+            {
+                case FfmpegSetupChoice.Download:
+                    if (await DownloadAndInstallFfmpegAsync().ConfigureAwait(true))
+                    {
+                        return true;
+                    }
+                    break;
+                case FfmpegSetupChoice.ChooseFolder:
+                    if (PromptForFfmpegFolder())
+                    {
+                        return true;
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private void UpdateCardClips()
@@ -887,6 +927,11 @@ public partial class MainWindow : Window
         }
 
         _startupBenchmarkChecked = true;
+        if (!_viewModel.HasConfiguredFfmpegTools())
+        {
+            return;
+        }
+
         if (!_viewModel.ShouldOfferStartupBenchmark)
         {
             return;
@@ -918,6 +963,120 @@ public partial class MainWindow : Window
 
         await Dispatcher.Yield(DispatcherPriority.Background);
         await RunStartupBenchmarkAsync(markCompletedOnSuccess: true).ConfigureAwait(true);
+    }
+
+    private bool PromptForFfmpegFolder()
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = LocalizedStrings.Get("FfmpegSetupBrowseDialogTitle"),
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = false
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK || string.IsNullOrWhiteSpace(dialog.SelectedPath))
+        {
+            return false;
+        }
+
+        if (_viewModel.TrySetFfmpegDirectory(dialog.SelectedPath, out var error))
+        {
+            return true;
+        }
+
+        var popup = new PopupMessageDialog(
+            LocalizedStrings.Get("FfmpegSetupTitle"),
+            string.IsNullOrWhiteSpace(error) ? LocalizedStrings.Get("FfmpegSetupMissingTools") : error)
+        {
+            Owner = this
+        };
+        popup.ShowDialog();
+        return false;
+    }
+
+    private async Task<bool> DownloadAndInstallFfmpegAsync()
+    {
+        try
+        {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            var targetDirectory = AppContext.BaseDirectory;
+            Directory.CreateDirectory(targetDirectory);
+
+            var tempRoot = Path.Combine(Path.GetTempPath(), "UltraFrameAI", "ffmpeg-download", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var zipPath = Path.Combine(tempRoot, "ffmpeg-release-essentials.zip");
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromMinutes(5);
+                    using var response = await client.GetAsync(FfmpegDownloadUrl).ConfigureAwait(true);
+                    response.EnsureSuccessStatusCode();
+                    await using var input = await response.Content.ReadAsStreamAsync().ConfigureAwait(true);
+                    await using var output = File.Create(zipPath);
+                    await input.CopyToAsync(output).ConfigureAwait(true);
+                }
+
+                var extractDirectory = Path.Combine(tempRoot, "extract");
+                ZipFile.ExtractToDirectory(zipPath, extractDirectory, true);
+
+                var ffmpegPath = Directory.EnumerateFiles(extractDirectory, "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+                var ffprobePath = Directory.EnumerateFiles(extractDirectory, "ffprobe.exe", SearchOption.AllDirectories).FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(ffmpegPath) || string.IsNullOrWhiteSpace(ffprobePath))
+                {
+                    throw new InvalidOperationException(LocalizedStrings.Get("FfmpegSetupMissingTools"));
+                }
+
+                File.Copy(ffmpegPath, Path.Combine(targetDirectory, "ffmpeg.exe"), true);
+                File.Copy(ffprobePath, Path.Combine(targetDirectory, "ffprobe.exe"), true);
+
+                if (!_viewModel.TrySetFfmpegDirectory(targetDirectory, out var error))
+                {
+                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? LocalizedStrings.Get("FfmpegSetupMissingTools") : error);
+                }
+
+                return true;
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(tempRoot))
+                    {
+                        Directory.Delete(tempRoot, true);
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            var popup = new PopupMessageDialog(
+                LocalizedStrings.Get("FfmpegSetupCannotWriteTitle"),
+                LocalizedStrings.Get("FfmpegSetupCannotWriteBody"))
+            {
+                Owner = this
+            };
+            popup.ShowDialog();
+            return false;
+        }
+        catch (Exception ex)
+        {
+            var popup = new PopupMessageDialog(
+                LocalizedStrings.Get("FfmpegSetupDownloadFailedTitle"),
+                LocalizedStrings.Get("FfmpegSetupDownloadFailedBody") + Environment.NewLine + Environment.NewLine + ex.Message)
+            {
+                Owner = this
+            };
+            popup.ShowDialog();
+            return false;
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
     }
 
     private async Task RunStartupBenchmarkAsync(bool markCompletedOnSuccess)

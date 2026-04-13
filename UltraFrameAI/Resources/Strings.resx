@@ -39,6 +39,42 @@
   <data name="BrowseFile" xml:space="preserve">
     <value>File</value>
   </data>
+  <data name="FfmpegSetupTitle" xml:space="preserve">
+    <value>FFmpeg not found</value>
+  </data>
+  <data name="FfmpegSetupBody" xml:space="preserve">
+    <value>An external FFmpeg is required for video scanning, benchmarking, and rendering. We can download it into the app folder or you can point the app to a folder that already contains ffmpeg.exe and ffprobe.exe.</value>
+  </data>
+  <data name="FfmpegSetupDownload" xml:space="preserve">
+    <value>Download FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupChooseFolder" xml:space="preserve">
+    <value>Choose folder</value>
+  </data>
+  <data name="FfmpegSetupContinueWithout" xml:space="preserve">
+    <value>Continue without FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupBrowseDialogTitle" xml:space="preserve">
+    <value>Select the folder that contains ffmpeg.exe and ffprobe.exe</value>
+  </data>
+  <data name="FfmpegSetupInvalidFolder" xml:space="preserve">
+    <value>The selected folder was not found.</value>
+  </data>
+  <data name="FfmpegSetupMissingTools" xml:space="preserve">
+    <value>The selected folder does not contain ffmpeg.exe and ffprobe.exe.</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteTitle" xml:space="preserve">
+    <value>Unable to save FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteBody" xml:space="preserve">
+    <value>FFmpeg could not be written into the app folder. Choose a folder manually or run the app from a writable location.</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedTitle" xml:space="preserve">
+    <value>Unable to download FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedBody" xml:space="preserve">
+    <value>Automatic FFmpeg download failed.</value>
+  </data>
   <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
     <value>Choose a video file</value>
   </data>

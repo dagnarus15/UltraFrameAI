@@ -55,6 +55,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private sealed record AppSettingsCacheEntry(
         string RootFolder,
         string OutputFolder,
+        string? FfmpegDirectory,
         string SelectedCodec,
         string SelectedTarget,
         string SelectedContainer,
@@ -214,6 +215,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _showQueuePaths;
     private bool _isDeleteConfirmVisible;
     private double _overallProgress;
+    private string _configuredFfmpegDirectory = string.Empty;
     private QueueItemViewModel? _selectedItem;
     private UiLanguage _currentLanguage;
     private readonly Dictionary<int, (int current, int total)> _sessionFrameProgress = new();
@@ -621,6 +623,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     public bool ShouldOfferStartupBenchmark => IsStartupBenchmarkForced() || _startupBenchmarkPromptKind != StartupBenchmarkPromptKind.None;
+
+    public bool HasConfiguredFfmpegTools()
+        => File.Exists(ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"))
+           && File.Exists(ResolveToolPath("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe"));
+
+    public bool TrySetFfmpegDirectory(string directory, out string error)
+    {
+        error = string.Empty;
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        {
+            error = LocalizedStrings.Get("FfmpegSetupInvalidFolder");
+            return false;
+        }
+
+        var fullPath = Path.GetFullPath(directory);
+        if (!File.Exists(Path.Combine(fullPath, "ffmpeg.exe")) || !File.Exists(Path.Combine(fullPath, "ffprobe.exe")))
+        {
+            error = LocalizedStrings.Get("FfmpegSetupMissingTools");
+            return false;
+        }
+
+        _configuredFfmpegDirectory = fullPath;
+        PersistAppSettings();
+        return true;
+    }
 
     public StartupBenchmarkPromptKind CurrentStartupBenchmarkPromptKind => IsStartupBenchmarkForced()
         ? StartupBenchmarkPromptKind.Welcome
@@ -1434,7 +1461,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private async Task<string[]> FindVideoFilesAsync(string inputPath, Action<int, int, int, string?>? progress, CancellationToken ct)
     {
-        var ffprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
+        var ffprobePath = ResolveToolPath("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
         var candidates = await Task.Run(() =>
         {
             if (File.Exists(inputPath))
@@ -1645,8 +1672,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             UpscalerThreads = string.IsNullOrWhiteSpace(UpscalerThreadsText) ? "4:4:4" : UpscalerThreadsText,
             TileSize = ParseInt(TileSizeText, 1024),
             GpuId = SelectedGpuOption?.ResolvedGpuId,
-            FfmpegPath = FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"),
-            FfprobePath = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe"),
+            FfmpegPath = ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"),
+            FfprobePath = ResolveToolPath("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe"),
             UpscalerBackend = upscalerBackend,
             UpscalerPath = upscalerPath,
             UpscalerWorkingDirectory = upscalerWorkingDirectory,
@@ -2810,7 +2837,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             : 0;
     }
 
-    private static bool IsResumeOutputUsable(string outputPath)
+    private bool IsResumeOutputUsable(string outputPath)
     {
         var ffprobePath = ResolveFfprobePath();
         return !string.IsNullOrWhiteSpace(ffprobePath)
@@ -2840,31 +2867,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private static string ResolveFfprobePath()
+    private string ResolveFfprobePath()
     {
-        var candidate = Path.Combine(@"C:\ffmpeg\bin", "ffprobe.exe");
-        if (File.Exists(candidate))
-        {
-            return candidate;
-        }
-
-        return "ffprobe";
+        return ResolveToolPath("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
     }
 
-    private static string ResolveExistingFfmpegPath(string configuredPath)
+    private string ResolveExistingFfmpegPath(string configuredPath)
     {
         if (!string.IsNullOrWhiteSpace(configuredPath) && File.Exists(configuredPath))
         {
             return configuredPath;
         }
 
-        var candidate = Path.Combine(@"C:\ffmpeg\bin", "ffmpeg.exe");
-        if (File.Exists(candidate))
-        {
-            return candidate;
-        }
-
-        return configuredPath;
+        return ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe");
     }
 
     private static double ProbeMediaDurationSeconds(string ffprobePath, string mediaPath)
@@ -4109,10 +4124,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         };
     }
 
-    private static string FindFile(string fileName, string fallback)
+    private string ResolveToolPath(string fileName, string fallback)
+        => FindFile(fileName, fallback, _configuredFfmpegDirectory);
+
+    private static string FindFile(string fileName, string fallback, string? preferredDirectory = null)
     {
         var candidates = new[]
         {
+            string.IsNullOrWhiteSpace(preferredDirectory) ? string.Empty : Path.Combine(preferredDirectory, fileName),
             Path.Combine(AppContext.BaseDirectory, fileName),
             Path.Combine(Directory.GetCurrentDirectory(), fileName),
             fileName,
@@ -4217,6 +4236,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (loaded is null || !loaded.Complete)
             {
                 return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loaded.FfmpegDirectory))
+            {
+                _configuredFfmpegDirectory = loaded.FfmpegDirectory;
             }
 
             if (!string.IsNullOrWhiteSpace(loaded.RootFolder) && (Directory.Exists(loaded.RootFolder) || File.Exists(loaded.RootFolder)))
@@ -4573,6 +4597,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var entry = new AppSettingsCacheEntry(
                 RootFolder,
                 OutputFolder,
+                _configuredFfmpegDirectory,
                 SelectedCodec,
                 SelectedTarget,
                 SelectedContainer,

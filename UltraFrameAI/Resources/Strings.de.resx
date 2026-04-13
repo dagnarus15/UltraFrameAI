@@ -39,6 +39,42 @@
   <data name="BrowseFile" xml:space="preserve">
     <value>Datei</value>
   </data>
+  <data name="FfmpegSetupTitle" xml:space="preserve">
+    <value>FFmpeg wurde nicht gefunden</value>
+  </data>
+  <data name="FfmpegSetupBody" xml:space="preserve">
+    <value>Ein externes FFmpeg wird zum Scannen von Videos, für Benchmarks und für das Rendern benötigt. Wir können es in den Programmordner herunterladen oder du wählst einen Ordner, der bereits ffmpeg.exe und ffprobe.exe enthält.</value>
+  </data>
+  <data name="FfmpegSetupDownload" xml:space="preserve">
+    <value>FFmpeg herunterladen</value>
+  </data>
+  <data name="FfmpegSetupChooseFolder" xml:space="preserve">
+    <value>Ordner wählen</value>
+  </data>
+  <data name="FfmpegSetupContinueWithout" xml:space="preserve">
+    <value>Ohne FFmpeg fortfahren</value>
+  </data>
+  <data name="FfmpegSetupBrowseDialogTitle" xml:space="preserve">
+    <value>Wähle den Ordner mit ffmpeg.exe und ffprobe.exe</value>
+  </data>
+  <data name="FfmpegSetupInvalidFolder" xml:space="preserve">
+    <value>Der ausgewählte Ordner wurde nicht gefunden.</value>
+  </data>
+  <data name="FfmpegSetupMissingTools" xml:space="preserve">
+    <value>Im ausgewählten Ordner wurden ffmpeg.exe und ffprobe.exe nicht gefunden.</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteTitle" xml:space="preserve">
+    <value>FFmpeg konnte nicht gespeichert werden</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteBody" xml:space="preserve">
+    <value>FFmpeg konnte nicht in den Programmordner geschrieben werden. Wähle den Ordner manuell aus oder starte das Programm an einem Ort mit Schreibrechten.</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedTitle" xml:space="preserve">
+    <value>FFmpeg konnte nicht heruntergeladen werden</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedBody" xml:space="preserve">
+    <value>Der automatische FFmpeg-Download ist fehlgeschlagen.</value>
+  </data>
   <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
     <value>Wählen Sie eine Videodatei</value>
   </data>

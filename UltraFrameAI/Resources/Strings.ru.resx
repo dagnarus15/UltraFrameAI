@@ -39,6 +39,42 @@
   <data name="BrowseFile" xml:space="preserve">
     <value>Файл</value>
   </data>
+  <data name="FfmpegSetupTitle" xml:space="preserve">
+    <value>FFmpeg не найден</value>
+  </data>
+  <data name="FfmpegSetupBody" xml:space="preserve">
+    <value>Для сканирования видео, бенчмарка и рендера нужен внешний FFmpeg. Мы можем скачать его в папку программы или вы можете указать папку, где уже лежат ffmpeg.exe и ffprobe.exe.</value>
+  </data>
+  <data name="FfmpegSetupDownload" xml:space="preserve">
+    <value>Скачать FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupChooseFolder" xml:space="preserve">
+    <value>Указать папку</value>
+  </data>
+  <data name="FfmpegSetupContinueWithout" xml:space="preserve">
+    <value>Продолжить без FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupBrowseDialogTitle" xml:space="preserve">
+    <value>Выберите папку, где лежат ffmpeg.exe и ffprobe.exe</value>
+  </data>
+  <data name="FfmpegSetupInvalidFolder" xml:space="preserve">
+    <value>Указанная папка не найдена.</value>
+  </data>
+  <data name="FfmpegSetupMissingTools" xml:space="preserve">
+    <value>В выбранной папке не найдены ffmpeg.exe и ffprobe.exe.</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteTitle" xml:space="preserve">
+    <value>Не удалось сохранить FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteBody" xml:space="preserve">
+    <value>Не получилось записать FFmpeg в папку программы. Выберите папку вручную или запустите приложение из папки, куда можно записывать файлы.</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedTitle" xml:space="preserve">
+    <value>Не удалось скачать FFmpeg</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedBody" xml:space="preserve">
+    <value>Автоматическая загрузка FFmpeg не удалась.</value>
+  </data>
   <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
     <value>Выберите видеофайл</value>
   </data>
