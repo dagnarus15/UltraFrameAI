@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using UltraFrameAI.Resources;
@@ -101,6 +102,33 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
         dialog.ShowDialog();
     }
 
+    private void HelpLink_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string url } || string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            var dialog = new PopupMessageDialog(
+                LocalizedStrings.HelpCenterLinksTitle,
+                url)
+            {
+                Owner = this
+            };
+            dialog.ShowDialog();
+        }
+    }
+
     private void SetTab(HelpCenterTab tab)
     {
         if (SelectedTab == tab)
@@ -136,11 +164,16 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
 
     private IReadOnlyList<HardwareAssessmentLine> BuildHardwareAssessmentLines()
     {
-        var gpuCandidates = Owner is FrameworkElement { DataContext: MainViewModel vm }
-            ? vm.GetStartupBenchmarkGpuCandidates()
-            : GpuDeviceDetector.DetectDevices()
-                .Select(device => new StartupBenchmarkGpuCandidate(device.DeviceId, device.Name, device.MemoryMb))
-                .ToArray();
+        if (Owner is FrameworkElement { DataContext: MainViewModel vm })
+        {
+            return HardwareAssessmentBuilder.BuildStatic(
+                vm.GetStartupBenchmarkGpuCandidates(),
+                vm.GetStoredStartupBenchmarkPracticalRequirements()).Lines;
+        }
+
+        var gpuCandidates = GpuDeviceDetector.DetectDevices()
+            .Select(device => new StartupBenchmarkGpuCandidate(device.DeviceId, device.Name, device.MemoryMb))
+            .ToArray();
 
         return HardwareAssessmentBuilder.BuildStatic(gpuCandidates).Lines;
     }

@@ -1053,10 +1053,10 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
     <value>{0} looks weak for this app, so conversion may fail or run very poorly. The benchmark is strongly recommended.</value>
   </data>
   <data name="HardwareGpuEnoughDetail" xml:space="preserve">
-    <value>{0} looks usable for this app. Benchmark throughput was about {1:0.0} FPS. Comfortable target: {2}.</value>
+    <value>{0} looks usable for UltraFrame AI. The startup benchmark reached about {1:0.0} FPS on a practical in-app scenario. Comfortable target: {2}.</value>
   </data>
   <data name="HardwareGpuWeakDetail" xml:space="preserve">
-    <value>{0} works, but the benchmark only reached about {1:0.0} FPS. That is below the practical minimum. Minimum: at least {2:0.0}+ FPS and something like {3}. Comfortable target: {4}.</value>
+    <value>{0} can run UltraFrame AI, but the startup benchmark only reached about {1:0.0} FPS on a practical in-app scenario. That is below the practical minimum. Minimum: at least {2:0.0}+ FPS and something like {3}. Comfortable target: {4}.</value>
   </data>
   <data name="HardwareGpuMinimumNvidia" xml:space="preserve">
     <value>GeForce GTX 1050 Ti or similar</value>
@@ -1091,14 +1091,23 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   <data name="HardwareVramLowDetail" xml:space="preserve">
     <value>Detected about {0:0.#} GB VRAM. That is below the minimum. Minimum: {1:0.#} GB. A comfortable target is {2:0.#}+ GB.</value>
   </data>
+  <data name="HardwareVramBenchmarkMinimumDetail" xml:space="preserve">
+    <value>The startup benchmark showed about {1:0.#} GB of additional peak VRAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB VRAM. That should be enough for this app. Practical minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramBenchmarkEnoughDetail" xml:space="preserve">
+    <value>The startup benchmark showed about {1:0.#} GB of additional peak VRAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB VRAM. That is enough for this app. A comfortable target is {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramBenchmarkLowDetail" xml:space="preserve">
+    <value>The startup benchmark showed about {1:0.#} GB of additional peak VRAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB VRAM. That is below the practical minimum for this app. Minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+  </data>
   <data name="HardwareCpuMinimumDetail" xml:space="preserve">
-    <value>Detected {0} logical CPU threads. That should be enough for the minimum. Minimum: 4 threads. A comfortable target is {1}+ threads.</value>
+    <value>Detected {0} logical CPU threads. That should be enough for basic UltraFrame AI work. Practical minimum: 4 threads. A comfortable target is {1}+ threads.</value>
   </data>
   <data name="HardwareCpuEnoughDetail" xml:space="preserve">
-    <value>Detected {0} logical CPU threads. That is enough. A comfortable target is {1}+ threads.</value>
+    <value>Detected {0} logical CPU threads. That is enough for UltraFrame AI. A comfortable target is {1}+ threads.</value>
   </data>
   <data name="HardwareCpuLowDetail" xml:space="preserve">
-    <value>Detected {0} logical CPU threads. That is below the minimum. Minimum: {1} threads. A comfortable target is {2}+ threads.</value>
+    <value>Detected {0} logical CPU threads. That is below the practical minimum for UltraFrame AI. Minimum: {1} threads. A comfortable target is {2}+ threads.</value>
   </data>
   <data name="HardwareRamMinimumDetail" xml:space="preserve">
     <value>Detected about {0:0.#} GB RAM. That should be enough for the minimum. Minimum: 8 GB. A comfortable target is {1:0.#}+ GB.</value>
@@ -1108,6 +1117,15 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   </data>
   <data name="HardwareRamLowDetail" xml:space="preserve">
     <value>Detected about {0:0.#} GB RAM. That is below the minimum. Minimum: {1:0.#} GB. A comfortable target is {2:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamBenchmarkMinimumDetail" xml:space="preserve">
+    <value>The startup benchmark showed about {1:0.#} GB of additional peak RAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB RAM. That should be enough for this app. Practical minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamBenchmarkEnoughDetail" xml:space="preserve">
+    <value>The startup benchmark showed about {1:0.#} GB of additional peak RAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB RAM. That is enough for this app. A comfortable target is {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamBenchmarkLowDetail" xml:space="preserve">
+    <value>The startup benchmark showed about {1:0.#} GB of additional peak RAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB RAM. That is below the practical minimum for this app. Minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
   </data>
   <data name="UpscalerBackend" xml:space="preserve">
     <value>Upscaler</value>

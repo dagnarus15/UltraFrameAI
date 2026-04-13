@@ -88,6 +88,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool StartupBenchmarkPromptShown,
         bool StartupBenchmarkCompleted,
         string? BenchmarkedHardwareSignature,
+        double? StartupBenchmarkMinimumRamGb,
+        double? StartupBenchmarkComfortableRamGb,
+        double? StartupBenchmarkPeakRamGb,
+        double? StartupBenchmarkMinimumVramGb,
+        double? StartupBenchmarkComfortableVramGb,
+        double? StartupBenchmarkPeakVramGb,
         bool ShowQueuePaths,
         List<PersistedQueueItemCacheEntry>? QueueItems,
         string? SelectedItemSourcePath,
@@ -159,6 +165,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _startupBenchmarkPromptShown;
     private bool _startupBenchmarkCompleted;
     private string _benchmarkedHardwareSignature = string.Empty;
+    private StartupBenchmarkPracticalRequirements? _startupBenchmarkPracticalRequirements;
     private StartupBenchmarkPromptKind _startupBenchmarkPromptKind;
     private bool _useAntiFlicker = true;
     private bool _useNativeEncoderBackend;
@@ -1709,6 +1716,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _benchmarkedHardwareSignature = _currentHardwareSignature;
         EvaluateStartupBenchmarkPromptState();
         PersistAppSettings();
+    }
+
+    public void StoreStartupBenchmarkAssessment(StartupBenchmarkReport report)
+    {
+        _startupBenchmarkPracticalRequirements = HardwareAssessmentBuilder.DerivePracticalRequirements(report);
+        PersistAppSettings();
+    }
+
+    public StartupBenchmarkPracticalRequirements? GetStoredStartupBenchmarkPracticalRequirements()
+    {
+        if (_startupBenchmarkPracticalRequirements is null)
+        {
+            return null;
+        }
+
+        if (!string.Equals(_benchmarkedHardwareSignature, _currentHardwareSignature, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return _startupBenchmarkPracticalRequirements;
     }
 
     public string? GetStartupBenchmarkSourcePath()
@@ -4334,6 +4362,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
             _startupBenchmarkPromptShown = loaded.StartupBenchmarkPromptShown;
             _startupBenchmarkCompleted = loaded.StartupBenchmarkCompleted;
             _benchmarkedHardwareSignature = loaded.BenchmarkedHardwareSignature ?? string.Empty;
+            if (loaded.StartupBenchmarkMinimumRamGb is > 0
+                && loaded.StartupBenchmarkComfortableRamGb is > 0
+                && loaded.StartupBenchmarkPeakRamGb is > 0
+                && loaded.StartupBenchmarkMinimumVramGb is > 0
+                && loaded.StartupBenchmarkComfortableVramGb is > 0
+                && loaded.StartupBenchmarkPeakVramGb is > 0)
+            {
+                _startupBenchmarkPracticalRequirements = new StartupBenchmarkPracticalRequirements(
+                    loaded.StartupBenchmarkMinimumRamGb.Value,
+                    loaded.StartupBenchmarkComfortableRamGb.Value,
+                    loaded.StartupBenchmarkMinimumVramGb.Value,
+                    loaded.StartupBenchmarkComfortableVramGb.Value,
+                    loaded.StartupBenchmarkPeakRamGb.Value,
+                    loaded.StartupBenchmarkPeakVramGb.Value);
+            }
             EvaluateStartupBenchmarkPromptState();
 
             RestorePersistedQueueItems(loaded.QueueItems, loaded.SelectedItemSourcePath);
@@ -4583,6 +4626,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _startupBenchmarkPromptShown,
                 _startupBenchmarkCompleted,
                 _benchmarkedHardwareSignature,
+                _startupBenchmarkPracticalRequirements?.MinimumRamGb,
+                _startupBenchmarkPracticalRequirements?.ComfortableRamGb,
+                _startupBenchmarkPracticalRequirements?.PeakRamGb,
+                _startupBenchmarkPracticalRequirements?.MinimumVramGb,
+                _startupBenchmarkPracticalRequirements?.ComfortableVramGb,
+                _startupBenchmarkPracticalRequirements?.PeakVramGb,
                 ShowQueuePaths,
                 BuildPersistedQueueItems(),
                 SelectedItem?.SourcePath,

@@ -722,7 +722,7 @@ public static class BenchmarkRunner
         var gpuCandidates = request.GpuCandidates.Count > 0
             ? request.GpuCandidates
             : new[] { new StartupBenchmarkGpuCandidate(0, "GPU 0", null) };
-        var totalSteps = gpuCandidates.Count + 4;
+        var totalSteps = gpuCandidates.Count + 6 + 4;
         var currentStep = 0;
 
         StartupBenchmarkCaseResult? bestGpuResult = null;
@@ -757,12 +757,51 @@ public static class BenchmarkRunner
         var selectedGpuId = bestGpuResult?.GpuId ?? gpuCandidates[0].GpuId;
         var selectedGpuLabel = bestGpuResult?.GpuLabel ?? gpuCandidates[0].Label;
         var selectedGpuMemoryMb = gpuCandidates.FirstOrDefault(candidate => candidate.GpuId == selectedGpuId)?.MemoryMb;
+        var threadCandidates = new[] { "4:4:4", "6:6:6", "8:8:8" };
+        var threadSummaries = new List<(string Threads, TimeSpan MedianElapsed)>();
+        foreach (var threads in threadCandidates)
+        {
+            var threadRuns = new List<StartupBenchmarkCaseResult>(2);
+            for (var run = 1; run <= 2; run++)
+            {
+                currentStep++;
+                var caseResult = await RunStartupCaseAsync(
+                    pipeline,
+                    sampleFile,
+                    outputRoot,
+                    ffmpeg,
+                    ffprobe,
+                    upscaler,
+                    modelDir,
+                    $"Threads {threads} run {run}",
+                    selectedGpuId,
+                    selectedGpuLabel,
+                    threads,
+                    "medium",
+                    1536,
+                    currentStep,
+                    totalSteps,
+                    progress,
+                    cancellationToken).ConfigureAwait(false);
+                results.Add(caseResult);
+                threadRuns.Add(caseResult);
+            }
+
+            var successfulRuns = threadRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
+            if (successfulRuns.Length > 0)
+            {
+                var medianElapsed = successfulRuns[successfulRuns.Length / 2].Elapsed;
+                threadSummaries.Add((threads, medianElapsed));
+            }
+        }
+
+        var bestThreads = threadSummaries.OrderBy(summary => summary.MedianElapsed).FirstOrDefault().Threads ?? "6:6:6";
         var tuningCases = new (string Profile, string Threads, string EncoderPreset, int TileSize)[]
         {
-            ("Balanced", "6:6:6", "medium", 1536),
-            ("Fast", "8:8:8", "fast", 2048),
-            ("Safe", "4:4:4", "medium", 1024),
-            ("Quality", "4:4:4", "slower", 1024),
+            ("Balanced", bestThreads, "medium", 1536),
+            ("Fast", bestThreads, "fast", 2048),
+            ("Safe", bestThreads, "medium", 1024),
+            ("Quality", bestThreads, "slower", 1024),
         };
 
         foreach (var tuningCase in tuningCases)

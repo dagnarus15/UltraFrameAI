@@ -1056,10 +1056,10 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
     <value>{0} wirkt für dieses Programm eher schwach, daher kann die Konvertierung fehlschlagen oder sehr schlecht laufen. Der Benchmark wird dringend empfohlen.</value>
   </data>
   <data name="HardwareGpuEnoughDetail" xml:space="preserve">
-    <value>{0} wirkt für dieses Programm nutzbar. Der Benchmark lag bei etwa {1:0.0} FPS. Komfortziel: {2}.</value>
+    <value>{0} wirkt fuer UltraFrame AI nutzbar. Der Startbenchmark lag bei etwa {1:0.0} FPS in einem praktischen Programmszenario. Komfortziel: {2}.</value>
   </data>
   <data name="HardwareGpuWeakDetail" xml:space="preserve">
-    <value>{0} funktioniert, aber der Benchmark erreichte nur etwa {1:0.0} FPS. Das liegt unter dem praktischen Minimum. Minimum: mindestens {2:0.0}+ FPS und etwa {3}. Komfortziel: {4}.</value>
+    <value>{0} kann UltraFrame AI starten, aber der Startbenchmark erreichte nur etwa {1:0.0} FPS in einem praktischen Programmszenario. Das liegt unter dem praktischen Minimum. Minimum: mindestens {2:0.0}+ FPS und etwa {3}. Komfortziel: {4}.</value>
   </data>
   <data name="HardwareGpuMinimumNvidia" xml:space="preserve">
     <value>GeForce GTX 1050 Ti oder ähnlich</value>
@@ -1094,14 +1094,23 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   <data name="HardwareVramLowDetail" xml:space="preserve">
     <value>Erkannt wurden etwa {0:0.#} GB VRAM. Das liegt unter dem Minimum. Minimum: {1:0.#} GB. Das Komfortziel liegt bei {2:0.#}+ GB.</value>
   </data>
+  <data name="HardwareVramBenchmarkMinimumDetail" xml:space="preserve">
+    <value>Der Startbenchmark zeigte bei den empfohlenen Einstellungen etwa {1:0.#} GB zusaetzliche VRAM-Spitzenauslastung durch UltraFrame AI selbst. Erkannt wurden etwa {0:0.#} GB VRAM. Das sollte fuer dieses Programm reichen. Das praktische Minimum fuer UltraFrame AI liegt bei {2:0.#} GB. Das Komfortziel liegt bei {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramBenchmarkEnoughDetail" xml:space="preserve">
+    <value>Der Startbenchmark zeigte bei den empfohlenen Einstellungen etwa {1:0.#} GB zusaetzliche VRAM-Spitzenauslastung durch UltraFrame AI selbst. Erkannt wurden etwa {0:0.#} GB VRAM. Das reicht fuer dieses Programm aus. Das Komfortziel liegt bei {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareVramBenchmarkLowDetail" xml:space="preserve">
+    <value>Der Startbenchmark zeigte bei den empfohlenen Einstellungen etwa {1:0.#} GB zusaetzliche VRAM-Spitzenauslastung durch UltraFrame AI selbst. Erkannt wurden etwa {0:0.#} GB VRAM. Das liegt unter dem praktischen Minimum fuer dieses Programm. Das Minimum fuer UltraFrame AI liegt bei {2:0.#} GB. Das Komfortziel liegt bei {3:0.#}+ GB.</value>
+  </data>
   <data name="HardwareCpuMinimumDetail" xml:space="preserve">
-    <value>Erkannt wurden {0} logische CPU-Threads. Das sollte fuer das Minimum ausreichen. Minimum: 4 Threads. Das Komfortziel liegt bei {1}+ Threads.</value>
+    <value>Erkannt wurden {0} logische CPU-Threads. Das sollte fuer die grundlegende Arbeit mit UltraFrame AI reichen. Praktisches Minimum: 4 Threads. Das Komfortziel liegt bei {1}+ Threads.</value>
   </data>
   <data name="HardwareCpuEnoughDetail" xml:space="preserve">
-    <value>Erkannt wurden {0} logische CPU-Threads. Das reicht aus. Das Komfortziel liegt bei {1}+ Threads.</value>
+    <value>Erkannt wurden {0} logische CPU-Threads. Das reicht fuer UltraFrame AI aus. Das Komfortziel liegt bei {1}+ Threads.</value>
   </data>
   <data name="HardwareCpuLowDetail" xml:space="preserve">
-    <value>Erkannt wurden {0} logische CPU-Threads. Das liegt unter dem Minimum. Minimum: {1} Threads. Das Komfortziel liegt bei {2}+ Threads.</value>
+    <value>Erkannt wurden {0} logische CPU-Threads. Das liegt unter dem praktischen Minimum fuer UltraFrame AI. Minimum: {1} Threads. Das Komfortziel liegt bei {2}+ Threads.</value>
   </data>
   <data name="HardwareRamMinimumDetail" xml:space="preserve">
     <value>Erkannt wurden etwa {0:0.#} GB RAM. Das sollte fuer das Minimum ausreichen. Minimum: 8 GB. Das Komfortziel liegt bei {1:0.#}+ GB.</value>
@@ -1111,6 +1120,15 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   </data>
   <data name="HardwareRamLowDetail" xml:space="preserve">
     <value>Erkannt wurden etwa {0:0.#} GB RAM. Das liegt unter dem Minimum. Minimum: {1:0.#} GB. Das Komfortziel liegt bei {2:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamBenchmarkMinimumDetail" xml:space="preserve">
+    <value>Der Startbenchmark zeigte bei den empfohlenen Einstellungen etwa {1:0.#} GB zusaetzliche RAM-Spitzenauslastung durch UltraFrame AI selbst. Erkannt wurden etwa {0:0.#} GB RAM. Das sollte fuer dieses Programm reichen. Das praktische Minimum fuer UltraFrame AI liegt bei {2:0.#} GB. Das Komfortziel liegt bei {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamBenchmarkEnoughDetail" xml:space="preserve">
+    <value>Der Startbenchmark zeigte bei den empfohlenen Einstellungen etwa {1:0.#} GB zusaetzliche RAM-Spitzenauslastung durch UltraFrame AI selbst. Erkannt wurden etwa {0:0.#} GB RAM. Das reicht fuer dieses Programm aus. Das Komfortziel liegt bei {3:0.#}+ GB.</value>
+  </data>
+  <data name="HardwareRamBenchmarkLowDetail" xml:space="preserve">
+    <value>Der Startbenchmark zeigte bei den empfohlenen Einstellungen etwa {1:0.#} GB zusaetzliche RAM-Spitzenauslastung durch UltraFrame AI selbst. Erkannt wurden etwa {0:0.#} GB RAM. Das liegt unter dem praktischen Minimum fuer dieses Programm. Das Minimum fuer UltraFrame AI liegt bei {2:0.#} GB. Das Komfortziel liegt bei {3:0.#}+ GB.</value>
   </data>
   <data name="UpscalerBackend" xml:space="preserve">
     <value>Upscaler</value>

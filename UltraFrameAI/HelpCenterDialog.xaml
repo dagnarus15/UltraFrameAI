@@ -24,6 +24,32 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="HelpLinkButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,6,0,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#8FC6FF" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Foreground" Value="#B8DAFF" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <Grid Margin="18">
         <Grid.RowDefinitions>
@@ -355,9 +381,13 @@
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Title}"
                                                            FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Url}"
-                                                           Margin="0,6,0,0"
-                                                           TextWrapping="Wrap" />
+                                                <Button Style="{StaticResource HelpLinkButtonStyle}"
+                                                        Click="HelpLink_Click"
+                                                        Tag="{Binding Url}">
+                                                    <TextBlock Text="{Binding Url}"
+                                                               TextWrapping="Wrap"
+                                                               TextDecorations="Underline" />
+                                                </Button>
                                                 <TextBlock Text="{Binding Note}"
                                                            Margin="0,6,0,0"
                                                            Foreground="{StaticResource TextSecondaryBrush}"
@@ -383,9 +413,13 @@
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Title}"
                                                            FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Url}"
-                                                           Margin="0,6,0,0"
-                                                           TextWrapping="Wrap" />
+                                                <Button Style="{StaticResource HelpLinkButtonStyle}"
+                                                        Click="HelpLink_Click"
+                                                        Tag="{Binding Url}">
+                                                    <TextBlock Text="{Binding Url}"
+                                                               TextWrapping="Wrap"
+                                                               TextDecorations="Underline" />
+                                                </Button>
                                                 <TextBlock Text="{Binding Note}"
                                                            Margin="0,6,0,0"
                                                            Foreground="{StaticResource TextSecondaryBrush}"

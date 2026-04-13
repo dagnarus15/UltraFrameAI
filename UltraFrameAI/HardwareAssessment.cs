@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Linq;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -9,6 +10,14 @@ public sealed record HardwareAssessmentLine(string Title, string Verdict, string
 public sealed record HardwareAssessment(
     IReadOnlyList<HardwareAssessmentLine> Lines,
     bool HasBlockingIssue);
+
+public sealed record StartupBenchmarkPracticalRequirements(
+    double MinimumRamGb,
+    double ComfortableRamGb,
+    double MinimumVramGb,
+    double ComfortableVramGb,
+    double PeakRamGb,
+    double PeakVramGb);
 
 internal static class HardwareAssessmentBuilder
 {
@@ -20,7 +29,9 @@ internal static class HardwareAssessmentBuilder
     private const double RecommendedVramGb = 6;
     private const double MinimumPracticalGpuFps = 8;
 
-    public static HardwareAssessment BuildStatic(IReadOnlyList<StartupBenchmarkGpuCandidate> gpuCandidates)
+    public static HardwareAssessment BuildStatic(
+        IReadOnlyList<StartupBenchmarkGpuCandidate> gpuCandidates,
+        StartupBenchmarkPracticalRequirements? practicalRequirements = null)
     {
         var lines = new List<HardwareAssessmentLine>();
         var logicalCores = Environment.ProcessorCount;
@@ -28,6 +39,12 @@ internal static class HardwareAssessmentBuilder
         var strongestGpu = gpuCandidates.OrderByDescending(candidate => candidate.MemoryMb ?? 0).FirstOrDefault();
         var vramGb = ((strongestGpu?.MemoryMb) ?? 0) / 1024d;
         var gpuRecommendations = GetGpuRecommendations(strongestGpu?.Label);
+        var minimumRamGb = practicalRequirements?.MinimumRamGb ?? MinimumRamGb;
+        var comfortableRamGb = practicalRequirements?.ComfortableRamGb ?? RecommendedRamGb;
+        var peakRamGb = practicalRequirements?.PeakRamGb;
+        var minimumVramGb = practicalRequirements?.MinimumVramGb ?? MinimumVramGb;
+        var comfortableVramGb = practicalRequirements?.ComfortableVramGb ?? RecommendedVramGb;
+        var peakVramGb = practicalRequirements?.PeakVramGb;
 
         if (strongestGpu is null)
         {
@@ -52,17 +69,32 @@ internal static class HardwareAssessmentBuilder
                     gpuRecommendations.Comfortable)));
         }
 
-        var vramVerdict = vramGb >= MinimumVramGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow;
         lines.Add(new HardwareAssessmentLine(
             LocalizedStrings.HardwareVramTitle,
-            vramVerdict,
-            vramGb >= MinimumVramGb
-                ? string.Format(
-                    CultureInfo.InvariantCulture,
-                    vramGb >= RecommendedVramGb ? LocalizedStrings.HardwareVramEnoughDetail : LocalizedStrings.HardwareVramMinimumDetail,
-                    vramGb,
-                    RecommendedVramGb)
-                : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareVramLowDetail, vramGb, MinimumVramGb, RecommendedVramGb)));
+            vramGb >= minimumVramGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow,
+            peakVramGb is > 0
+                ? vramGb >= minimumVramGb
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        vramGb >= comfortableVramGb ? LocalizedStrings.HardwareVramBenchmarkEnoughDetail : LocalizedStrings.HardwareVramBenchmarkMinimumDetail,
+                        vramGb,
+                        peakVramGb.Value,
+                        minimumVramGb,
+                        comfortableVramGb)
+                    : string.Format(
+                        CultureInfo.InvariantCulture,
+                        LocalizedStrings.HardwareVramBenchmarkLowDetail,
+                        vramGb,
+                        peakVramGb.Value,
+                        minimumVramGb,
+                        comfortableVramGb)
+                : vramGb >= minimumVramGb
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        vramGb >= comfortableVramGb ? LocalizedStrings.HardwareVramEnoughDetail : LocalizedStrings.HardwareVramMinimumDetail,
+                        vramGb,
+                        comfortableVramGb)
+                    : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareVramLowDetail, vramGb, minimumVramGb, comfortableVramGb)));
 
         var cpuVerdict = logicalCores >= MinimumCpuLogicalCores ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow;
         lines.Add(new HardwareAssessmentLine(
@@ -76,19 +108,34 @@ internal static class HardwareAssessmentBuilder
                     RecommendedCpuLogicalCores)
                 : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareCpuLowDetail, logicalCores, MinimumCpuLogicalCores, RecommendedCpuLogicalCores)));
 
-        var ramVerdict = totalRamGb >= MinimumRamGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow;
         lines.Add(new HardwareAssessmentLine(
             LocalizedStrings.HardwareRamTitle,
-            ramVerdict,
-            totalRamGb >= MinimumRamGb
-                ? string.Format(
-                    CultureInfo.InvariantCulture,
-                    totalRamGb >= RecommendedRamGb ? LocalizedStrings.HardwareRamEnoughDetail : LocalizedStrings.HardwareRamMinimumDetail,
-                    totalRamGb,
-                    RecommendedRamGb)
-                : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareRamLowDetail, totalRamGb, MinimumRamGb, RecommendedRamGb)));
+            totalRamGb >= minimumRamGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow,
+            peakRamGb is > 0
+                ? totalRamGb >= minimumRamGb
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        totalRamGb >= comfortableRamGb ? LocalizedStrings.HardwareRamBenchmarkEnoughDetail : LocalizedStrings.HardwareRamBenchmarkMinimumDetail,
+                        totalRamGb,
+                        peakRamGb.Value,
+                        minimumRamGb,
+                        comfortableRamGb)
+                    : string.Format(
+                        CultureInfo.InvariantCulture,
+                        LocalizedStrings.HardwareRamBenchmarkLowDetail,
+                        totalRamGb,
+                        peakRamGb.Value,
+                        minimumRamGb,
+                        comfortableRamGb)
+                : totalRamGb >= minimumRamGb
+                    ? string.Format(
+                        CultureInfo.InvariantCulture,
+                        totalRamGb >= comfortableRamGb ? LocalizedStrings.HardwareRamEnoughDetail : LocalizedStrings.HardwareRamMinimumDetail,
+                        totalRamGb,
+                        comfortableRamGb)
+                    : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareRamLowDetail, totalRamGb, minimumRamGb, comfortableRamGb)));
 
-        var hasBlockingIssue = strongestGpu is null || vramGb < MinimumVramGb || logicalCores < MinimumCpuLogicalCores || totalRamGb < MinimumRamGb;
+        var hasBlockingIssue = strongestGpu is null || vramGb < minimumVramGb || logicalCores < MinimumCpuLogicalCores || totalRamGb < minimumRamGb;
         return new HardwareAssessment(lines, hasBlockingIssue);
     }
 
@@ -100,6 +147,7 @@ internal static class HardwareAssessmentBuilder
         var vramGb = (report.Recommendation.GpuMemoryMb ?? 0) / 1024d;
         var gpuFps = report.Recommendation.ThroughputFps;
         var gpuRecommendations = GetGpuRecommendations(report.Recommendation.GpuLabel);
+        var requirements = DerivePracticalRequirements(report);
 
         var gpuVerdict = gpuFps >= MinimumPracticalGpuFps ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareWeak;
         lines.Add(new HardwareAssessmentLine(
@@ -124,14 +172,22 @@ internal static class HardwareAssessmentBuilder
         var vramVerdict = vramGb >= MinimumVramGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow;
         lines.Add(new HardwareAssessmentLine(
             LocalizedStrings.HardwareVramTitle,
-            vramVerdict,
-            vramGb >= MinimumVramGb
+            vramGb >= requirements.MinimumVramGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow,
+            vramGb >= requirements.MinimumVramGb
                 ? string.Format(
                     CultureInfo.InvariantCulture,
-                    vramGb >= RecommendedVramGb ? LocalizedStrings.HardwareVramEnoughDetail : LocalizedStrings.HardwareVramMinimumDetail,
+                    vramGb >= requirements.ComfortableVramGb ? LocalizedStrings.HardwareVramBenchmarkEnoughDetail : LocalizedStrings.HardwareVramBenchmarkMinimumDetail,
                     vramGb,
-                    RecommendedVramGb)
-                : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareVramLowDetail, vramGb, MinimumVramGb, RecommendedVramGb)));
+                    requirements.PeakVramGb,
+                    requirements.MinimumVramGb,
+                    requirements.ComfortableVramGb)
+                : string.Format(
+                    CultureInfo.InvariantCulture,
+                    LocalizedStrings.HardwareVramBenchmarkLowDetail,
+                    vramGb,
+                    requirements.PeakVramGb,
+                    requirements.MinimumVramGb,
+                    requirements.ComfortableVramGb)));
 
         var cpuVerdict = logicalCores >= MinimumCpuLogicalCores ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow;
         lines.Add(new HardwareAssessmentLine(
@@ -145,20 +201,83 @@ internal static class HardwareAssessmentBuilder
                     RecommendedCpuLogicalCores)
                 : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareCpuLowDetail, logicalCores, MinimumCpuLogicalCores, RecommendedCpuLogicalCores)));
 
-        var ramVerdict = totalRamGb >= MinimumRamGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow;
         lines.Add(new HardwareAssessmentLine(
             LocalizedStrings.HardwareRamTitle,
-            ramVerdict,
-            totalRamGb >= MinimumRamGb
+            totalRamGb >= requirements.MinimumRamGb ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareTooLow,
+            totalRamGb >= requirements.MinimumRamGb
                 ? string.Format(
                     CultureInfo.InvariantCulture,
-                    totalRamGb >= RecommendedRamGb ? LocalizedStrings.HardwareRamEnoughDetail : LocalizedStrings.HardwareRamMinimumDetail,
+                    totalRamGb >= requirements.ComfortableRamGb ? LocalizedStrings.HardwareRamBenchmarkEnoughDetail : LocalizedStrings.HardwareRamBenchmarkMinimumDetail,
                     totalRamGb,
-                    RecommendedRamGb)
-                : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareRamLowDetail, totalRamGb, MinimumRamGb, RecommendedRamGb)));
+                    requirements.PeakRamGb,
+                    requirements.MinimumRamGb,
+                    requirements.ComfortableRamGb)
+                : string.Format(
+                    CultureInfo.InvariantCulture,
+                    LocalizedStrings.HardwareRamBenchmarkLowDetail,
+                    totalRamGb,
+                    requirements.PeakRamGb,
+                    requirements.MinimumRamGb,
+                    requirements.ComfortableRamGb)));
 
-        var hasBlockingIssue = gpuFps <= 0.1 || vramGb < MinimumVramGb || logicalCores < MinimumCpuLogicalCores || totalRamGb < MinimumRamGb;
+        var hasBlockingIssue = gpuFps <= 0.1
+            || vramGb < requirements.MinimumVramGb
+            || logicalCores < MinimumCpuLogicalCores
+            || totalRamGb < requirements.MinimumRamGb;
         return new HardwareAssessment(lines, hasBlockingIssue);
+    }
+
+    public static StartupBenchmarkPracticalRequirements DerivePracticalRequirements(StartupBenchmarkReport report)
+    {
+        var recommendedCase = report.Results.FirstOrDefault(result =>
+            result.Success
+            && result.GpuId == report.Recommendation.GpuId
+            && string.Equals(result.GpuLabel, report.Recommendation.GpuLabel, StringComparison.Ordinal)
+            && string.Equals(result.UpscalerThreads, report.Recommendation.UpscalerThreads, StringComparison.Ordinal)
+            && string.Equals(result.EncoderPreset, report.Recommendation.EncoderPreset, StringComparison.Ordinal)
+            && result.TileSize == report.Recommendation.TileSize);
+
+        var fallbackCase = recommendedCase
+            ?? report.Results
+                .Where(result => result.Success)
+                .OrderBy(result => result.Elapsed)
+                .FirstOrDefault();
+
+        var peakRamGb = ComputeAdditionalUsageGiB(fallbackCase?.Metrics.StartRam, fallbackCase?.Metrics.PeakRam, 1.5);
+        var peakVramGb = ComputeAdditionalUsageGiB(fallbackCase?.Metrics.StartVram, fallbackCase?.Metrics.PeakVram, 1.0);
+
+        var minimumRamGb = NormalizeHalfGb(Math.Max(2.0, peakRamGb + 0.5));
+        var comfortableRamGb = NormalizeHalfGb(Math.Max(minimumRamGb + 1.0, peakRamGb * 1.6));
+        var minimumVramGb = NormalizeHalfGb(Math.Max(1.5, peakVramGb + 0.5));
+        var comfortableVramGb = NormalizeHalfGb(Math.Max(minimumVramGb + 0.5, peakVramGb * 1.5));
+
+        return new StartupBenchmarkPracticalRequirements(
+            minimumRamGb,
+            comfortableRamGb,
+            minimumVramGb,
+            comfortableVramGb,
+            peakRamGb,
+            peakVramGb);
+    }
+
+    private static double NormalizeHalfGb(double value)
+    {
+        return Math.Ceiling(value * 2.0) / 2.0;
+    }
+
+    private static double ComputeAdditionalUsageGiB(double? startBytes, double? peakBytes, double fallbackGiB)
+    {
+        if (startBytes is > 0 && peakBytes is > 0)
+        {
+            var deltaBytes = Math.Max(0, peakBytes.Value - startBytes.Value);
+            var deltaGiB = deltaBytes / 1024d / 1024d / 1024d;
+            if (deltaGiB > 0.05)
+            {
+                return deltaGiB;
+            }
+        }
+
+        return fallbackGiB;
     }
 
     private static ulong GetInstalledRamBytes()

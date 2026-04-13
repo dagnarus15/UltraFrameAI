@@ -948,7 +948,7 @@ public partial class MainWindow : Window
                     sourcePath,
                     _viewModel.GetStartupBenchmarkGpuCandidates(),
                     outputDir,
-                    4);
+                    5);
 
                 var benchmarkWindow = new StartupBenchmarkWindow(request)
                 {
@@ -958,6 +958,8 @@ public partial class MainWindow : Window
                 var result = benchmarkWindow.ShowDialog();
                 if (result == true && benchmarkWindow.Report is not null)
                 {
+                    _viewModel.StoreStartupBenchmarkAssessment(benchmarkWindow.Report);
+
                     var resultsDialog = new StartupBenchmarkResultsDialog(benchmarkWindow.Report)
                     {
                         Owner = this
