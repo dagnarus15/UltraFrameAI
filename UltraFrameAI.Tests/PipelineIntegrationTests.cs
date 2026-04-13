@@ -53,6 +53,7 @@ public sealed class PipelineIntegrationTests
                 OutputFolder = outputDir,
                 Overwrite = true,
                 UseX265 = false,
+                TargetHeight = 1080,
                 FfmpegThreads = 1,
                 UpscalerThreads = "1:1:1",
                 TileSize = -1,
@@ -70,7 +71,6 @@ public sealed class PipelineIntegrationTests
                 AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = false,
-                UseNativeEncoderBackend = false,
                 RepairBrokenTimestamps = false
             };
 
@@ -140,6 +140,7 @@ public sealed class PipelineIntegrationTests
                 OutputFolder = outputDir,
                 Overwrite = true,
                 UseX265 = false,
+                TargetHeight = 1080,
                 OutputContainer = "mkv",
                 FfmpegThreads = 1,
                 UpscalerThreads = "1:1:1",
@@ -163,7 +164,6 @@ public sealed class PipelineIntegrationTests
                 AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = true,
-                UseNativeEncoderBackend = false,
                 RepairBrokenTimestamps = false
             };
 
@@ -198,10 +198,7 @@ public sealed class PipelineIntegrationTests
             var duration = await TestSupport.GetDurationAsync(ffprobe, outputPath);
             Assert.InRange(duration, 2.0, 12.0);
 
-            var finalResumeState = File.ReadAllText(resumeStatePath);
-            using var finalDoc = JsonDocument.Parse(finalResumeState);
-            Assert.True(finalDoc.RootElement.GetProperty("Complete").GetBoolean());
-            Assert.False(finalDoc.RootElement.GetProperty("CanResume").GetBoolean());
+            Assert.False(File.Exists(resumeStatePath));
         }
         finally
         {
@@ -278,6 +275,7 @@ public sealed class PipelineIntegrationTests
                 OutputFolder = outputDir,
                 Overwrite = false,
                 UseX265 = false,
+                TargetHeight = 1080,
                 OutputContainer = "mkv",
                 FfmpegThreads = 1,
                 UpscalerThreads = "1:1:1",
@@ -301,7 +299,6 @@ public sealed class PipelineIntegrationTests
                 AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = true,
-                UseNativeEncoderBackend = false,
                 RepairBrokenTimestamps = false
             };
 

@@ -19,7 +19,6 @@ internal static class HelpCenterInfo
         return new[]
         {
             new HelpVersionEntry("UltraFrameAI-Realesrgan-Pipe", GetRealesrganForkVersion()),
-            new HelpVersionEntry("FFmpeg.AutoGen", "8.0.0"),
             new HelpVersionEntry("FFmpeg", GetFfmpegVersion()),
             new HelpVersionEntry("System.Management", "9.0.4"),
             new HelpVersionEntry("AntiFlicker.Native", GetAntiFlickerNativeVersion()),
@@ -233,7 +232,6 @@ internal static class HelpCenterInfo
             new HelpLinkEntry("ncnn", "https://github.com/Tencent/ncnn", "Inference backend used by the RealESRGAN fork."),
             new HelpLinkEntry("realsr-ncnn-vulkan", "https://github.com/nihui/realsr-ncnn-vulkan", "Related upstream project referenced by the RealESRGAN fork."),
             new HelpLinkEntry("UltraFrameAI.Native", "https://github.com/your-name/UltraFrameAI/tree/main/UltraFrameAI.Native", "Native anti-flicker module repository path placeholder."),
-            new HelpLinkEntry("FFmpeg.AutoGen", "https://github.com/Ruslan-B/FFmpeg.AutoGen", "Managed FFmpeg binding used by the app."),
             new HelpLinkEntry("FFmpeg", "https://ffmpeg.org/", "Media processing toolkit used by the pipeline.")
         };
     }

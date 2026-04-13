@@ -6,6 +6,3 @@ UltraFrame AI
 4. Click "Start batch".
 
 The app expects ffmpeg.exe, ffprobe.exe, and realesrgan-ncnn-vulkan to stay next to the EXE in the portable package.
-
-If you ship or replace FFmpeg binaries for the native encoder path, use shared LGPL-friendly DLLs only.
-Keep them dynamic, avoid GPL/nonfree builds, and include the matching third-party notices in the release package.

@@ -43,7 +43,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private sealed record RecentRootFoldersCacheEntry(List<string> Folders, bool Complete);
     private sealed record AntiFlickerProfilesCacheEntry(Dictionary<string, AntiFlickerPresetState> Presets, bool Complete);
-    private sealed record NativeEncoderBackendCacheEntry(bool Enabled, bool Complete);
     private sealed record PersistedQueueItemCacheEntry(string SourcePath, string Title, string OutputPath, bool IsChecked, bool SkipInRender);
     private sealed record ResumePreflightTelemetry(string? PhaseText = null, string? DetailText = null, string? EtaText = null, string? FpsText = null);
     private sealed class ResumePreflightUiState
@@ -83,7 +82,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool? UseAntiFlicker,
         string? SelectedAntiFlickerMode,
         bool PreserveIncompleteOutput,
-        bool UseNativeEncoderBackend,
         bool? RepairBrokenTimestamps,
         bool StartupBenchmarkPromptShown,
         bool StartupBenchmarkCompleted,
@@ -128,7 +126,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly string _lastRootFolderPath;
     private readonly string _recentRootFoldersPath;
     private readonly string _antiFlickerProfilesPath;
-    private readonly string _nativeEncoderBackendPath;
     private readonly string _appSettingsPath;
     private const string DefaultTargetValue = "1080p";
     private const string CustomTargetActionValue = "__custom_target__";
@@ -168,7 +165,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private StartupBenchmarkPracticalRequirements? _startupBenchmarkPracticalRequirements;
     private StartupBenchmarkPromptKind _startupBenchmarkPromptKind;
     private bool _useAntiFlicker = true;
-    private bool _useNativeEncoderBackend;
     private bool _preserveIncompleteOutput;
     private bool _repairBrokenTimestamps = true;
     private double _antiFlickerStrength = 65;
@@ -246,7 +242,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _lastRootFolderPath = Path.Combine(settingsRoot, "last-root-folder.txt");
         _recentRootFoldersPath = Path.Combine(settingsRoot, "recent-root-folders.txt");
         _antiFlickerProfilesPath = Path.Combine(settingsRoot, "anti-flicker-presets.json");
-        _nativeEncoderBackendPath = Path.Combine(settingsRoot, "native-encoder-backend.json");
         _appSettingsPath = Path.Combine(settingsRoot, "app-settings.json");
         _pipeline = new PipelineService();
         Items = new ObservableCollection<QueueItemViewModel>();
@@ -285,7 +280,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         };
         _currentLanguage = LocalizedStrings.CurrentLanguage;
         _antiFlickerPresets = LoadAntiFlickerPresets();
-        _useNativeEncoderBackend = LoadNativeEncoderBackendPreference();
         _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
@@ -864,19 +858,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _useAntiFlicker, value))
             {
                 PersistCurrentAntiFlickerPreset();
-                PersistAppSettings();
-            }
-        }
-    }
-
-    public bool UseNativeEncoderBackend
-    {
-        get => _useNativeEncoderBackend;
-        set
-        {
-            if (SetField(ref _useNativeEncoderBackend, value))
-            {
-                PersistNativeEncoderBackendPreference();
                 PersistAppSettings();
             }
         }
@@ -1681,7 +1662,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ContentMode = SelectedContentMode,
             AntiFlickerStrength = AntiFlickerStrength,
             EncoderPreset = EncoderPreset,
-            UseNativeEncoderBackend = UseNativeEncoderBackend && NativeFrameEncoderBridge.IsAvailable(),
             PreserveIncompleteOutput = PreserveIncompleteOutput,
             RepairBrokenTimestamps = RepairBrokenTimestamps
         };
@@ -4356,7 +4336,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
-            UseNativeEncoderBackend = loaded.UseNativeEncoderBackend;
             RepairBrokenTimestamps = loaded.RepairBrokenTimestamps ?? true;
             ShowQueuePaths = loaded.ShowQueuePaths;
             _startupBenchmarkPromptShown = loaded.StartupBenchmarkPromptShown;
@@ -4621,7 +4600,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 UseAntiFlicker,
                 SelectedAntiFlickerMode.ToString(),
                 PreserveIncompleteOutput,
-                UseNativeEncoderBackend,
                 RepairBrokenTimestamps,
                 _startupBenchmarkPromptShown,
                 _startupBenchmarkCompleted,
@@ -4906,44 +4884,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var entry = new AntiFlickerProfilesCacheEntry(new Dictionary<string, AntiFlickerPresetState>(_antiFlickerPresets), true);
             var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
             WriteAtomicText(_antiFlickerProfilesPath, json);
-        }
-        catch
-        {
-        }
-    }
-
-    private bool LoadNativeEncoderBackendPreference()
-    {
-        try
-        {
-            if (!File.Exists(_nativeEncoderBackendPath))
-            {
-                return false;
-            }
-
-            var json = File.ReadAllText(_nativeEncoderBackendPath);
-            var entry = JsonSerializer.Deserialize<NativeEncoderBackendCacheEntry>(json);
-            return entry is not null && entry.Complete && entry.Enabled;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private void PersistNativeEncoderBackendPreference()
-    {
-        try
-        {
-            var directory = Path.GetDirectoryName(_nativeEncoderBackendPath);
-            if (!string.IsNullOrWhiteSpace(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var entry = new NativeEncoderBackendCacheEntry(UseNativeEncoderBackend, true);
-            var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
-            WriteAtomicText(_nativeEncoderBackendPath, json);
         }
         catch
         {

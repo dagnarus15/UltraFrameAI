@@ -136,7 +136,7 @@ public sealed class MainViewModelResumeTests
                     throw new MissingMethodException(nameof(MainViewModel), "TryGetResumeInfo");
                 }
 
-                var args = new object[] { item, BuildOptions(viewModel), 0 };
+                var args = new object?[] { item, BuildOptions(viewModel), 0, null, null };
                 var result = (bool)(method.Invoke(viewModel, args) ?? false);
 
                 Assert.False(result);

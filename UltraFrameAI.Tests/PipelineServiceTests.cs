@@ -148,6 +148,7 @@ public sealed class PipelineServiceTests
             OutputFolder = Path.Combine(root, "output"),
             Overwrite = overwrite,
             UseX265 = false,
+            TargetHeight = 1080,
             FfmpegThreads = 0,
             UpscalerThreads = "4:4:4",
             TileSize = 1024,
@@ -165,7 +166,6 @@ public sealed class PipelineServiceTests
             AntiFlickerStrength = 65,
             EncoderPreset = "slower",
             PreserveIncompleteOutput = false,
-            UseNativeEncoderBackend = false,
             RepairBrokenTimestamps = false
         };
     }

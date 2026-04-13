@@ -798,22 +798,7 @@ public sealed class PipelineService
 
                 var hasSub = File.Exists(subtitle);
                 var outputContainer = "mkv";
-                var encoderBridge = FrameEncoderBridgeFactory.CreateDefault(options.UseNativeEncoderBackend);
-                if (options.UseNativeEncoderBackend && encoderBridge is NativeFrameEncoderBridge)
-                {
-                    if (!NativeFrameEncoderBridge.IsAvailable())
-                    {
-                        WriteStartupLog("Native encoder backend unavailable; using subprocess fallback.");
-                    }
-                    else if (!string.Equals(outputContainer, "mkv", StringComparison.OrdinalIgnoreCase))
-                    {
-                        WriteStartupLog($"Native encoder backend disabled for container '{outputContainer}'; using subprocess fallback.");
-                    }
-                    else
-                    {
-                        WriteStartupLog($"Native encoder backend requested for codec '{codec}'.");
-                    }
-                }
+                var encoderBridge = FrameEncoderBridgeFactory.CreateDefault();
 
                 var encodeWatch = Stopwatch.StartNew();
                 var encodeSessionConfig = new FrameEncoderSessionConfig(
@@ -1941,7 +1926,6 @@ public sealed class PipelineService
             options.AntiFlickerMode,
             AntiFlickerStrength = Math.Round(options.AntiFlickerStrength, 2),
             options.ContentMode,
-            options.UseNativeEncoderBackend,
             options.RepairBrokenTimestamps,
             options.UpscalerPath,
             options.UpscalerWorkingDirectory,

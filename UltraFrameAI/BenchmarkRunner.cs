@@ -405,7 +405,6 @@ public static class BenchmarkRunner
             AntiFlickerStrength = benchCase.AntiFlickerStrength,
             EncoderPreset = benchCase.Preset,
             OutputContainer = "mkv",
-            UseNativeEncoderBackend = false,
             PreserveIncompleteOutput = false,
             RepairBrokenTimestamps = false
         };
@@ -938,7 +937,6 @@ public static class BenchmarkRunner
             AntiFlickerStrength = 0,
             EncoderPreset = encoderPreset,
             OutputContainer = "mkv",
-            UseNativeEncoderBackend = false,
             PreserveIncompleteOutput = false,
             RepairBrokenTimestamps = false
         };

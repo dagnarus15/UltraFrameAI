@@ -376,7 +376,6 @@ public sealed class PipelineOptions
     public required double AntiFlickerStrength { get; init; }
     public required string EncoderPreset { get; init; }
     public string OutputContainer { get; init; } = "mkv";
-    public required bool UseNativeEncoderBackend { get; init; }
     public required bool PreserveIncompleteOutput { get; init; }
     public required bool RepairBrokenTimestamps { get; init; }
 }
