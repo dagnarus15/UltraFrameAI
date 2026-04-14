@@ -90,7 +90,12 @@ public partial class App : Application
             window.Show();
             splash.Close();
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
-            await window.EnsureFfmpegAvailableAsync().ConfigureAwait(true);
+            if (!await window.EnsureFfmpegAvailableAsync().ConfigureAwait(true))
+            {
+                window.Close();
+                Shutdown();
+                return;
+            }
             await window.ShowStartupBenchmarkPromptIfNeededAsync().ConfigureAwait(true);
         }
         catch

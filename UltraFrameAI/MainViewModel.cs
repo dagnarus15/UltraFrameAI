@@ -628,6 +628,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
         => File.Exists(ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"))
            && File.Exists(ResolveToolPath("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe"));
 
+    public string GetResolvedFfmpegExecutablePath()
+        => ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe");
+
+    public string GetResolvedFfprobeExecutablePath()
+        => ResolveToolPath("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe");
+
+    public string FfmpegDirectoryDisplay
+        => GetResolvedFfmpegDirectory() ?? LocalizedStrings.Get("FfmpegDirectoryNotConfigured");
+
     public bool TrySetFfmpegDirectory(string directory, out string error)
     {
         error = string.Empty;
@@ -645,6 +654,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         _configuredFfmpegDirectory = fullPath;
+        OnPropertyChanged(nameof(FfmpegDirectoryDisplay));
         PersistAppSettings();
         return true;
     }
@@ -2415,6 +2425,23 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private async Task<OutputConflictDecision> ResolveResumeFallbackAsync(QueueItemViewModel item, PipelineOptions options)
     {
         await Task.Yield();
+
+        var handler = OutputConflictRequested;
+        if (handler is not null)
+        {
+            var delegates = handler.GetInvocationList();
+            if (delegates.Length > 0)
+            {
+                var request = new OutputConflictRequest(item, item.SourcePath, item.OutputPath);
+                return await ((Func<OutputConflictRequest, Task<OutputConflictDecision>>)delegates[0]).Invoke(request).ConfigureAwait(true);
+            }
+        }
+
+        if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        {
+            return OutputConflictDecision.Skip;
+        }
+
         return ShowResumeUnavailableDialog(item, GetResumeUnavailableReason(item, options));
     }
 
@@ -3001,7 +3028,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private OutputConflictDecision ShowResumeUnavailableDialog(QueueItemViewModel item, string reasonText)
     {
-        var owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
+        var owner = TryGetActiveOwnerWindow();
         var dialog = new ResumeUnavailableDialog(item.OutputPath, reasonText);
         if (owner is not null)
         {
@@ -3013,7 +3040,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void ShowPausedProcessExitedDialog(string fileName, string processName)
     {
-        var owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
+        var owner = TryGetActiveOwnerWindow();
         var dialog = new PausedProcessExitedDialog(fileName, processName);
         if (owner is not null)
         {
@@ -3021,6 +3048,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         _ = dialog.ShowDialog();
+    }
+
+    private static Window? TryGetActiveOwnerWindow()
+    {
+        try
+        {
+            var app = System.Windows.Application.Current;
+            if (app is null)
+            {
+                return null;
+            }
+
+            if (!app.Dispatcher.CheckAccess())
+            {
+                return null;
+            }
+
+            return app.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private void MarkItemSkipped(QueueItemViewModel item)
@@ -3480,6 +3530,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(string.Empty);
         OnPropertyChanged(nameof(CurrentLanguageFlagPath));
+        OnPropertyChanged(nameof(FfmpegDirectoryDisplay));
         OnPropertyChanged(nameof(AntiFlickerModeOptions));
         OnPropertyChanged(nameof(UpscalerBackendOptions));
         OnPropertyChanged(nameof(RefinerBackendOptions));
@@ -4127,16 +4178,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string ResolveToolPath(string fileName, string fallback)
         => FindFile(fileName, fallback, _configuredFfmpegDirectory);
 
+    private string? GetResolvedFfmpegDirectory()
+    {
+        var path = ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe");
+        return File.Exists(path) ? Path.GetDirectoryName(path) : null;
+    }
+
     private static string FindFile(string fileName, string fallback, string? preferredDirectory = null)
     {
+        var pathCandidates = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(path => Path.Combine(path, fileName));
+
         var candidates = new[]
         {
             string.IsNullOrWhiteSpace(preferredDirectory) ? string.Empty : Path.Combine(preferredDirectory, fileName),
             Path.Combine(AppContext.BaseDirectory, fileName),
+            Path.Combine(AppContext.BaseDirectory, "ffmpeg", fileName),
             Path.Combine(Directory.GetCurrentDirectory(), fileName),
-            fileName,
+            Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg", fileName),
             fallback
-        };
+        }.Concat(pathCandidates);
 
         foreach (var candidate in candidates)
         {
@@ -4146,7 +4208,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
         }
 
-        return fileName;
+        return string.IsNullOrWhiteSpace(preferredDirectory) ? fileName : Path.Combine(preferredDirectory, fileName);
     }
 
     private static string FindDirectory(string directoryName, string fallback)
@@ -4242,6 +4304,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 _configuredFfmpegDirectory = loaded.FfmpegDirectory;
             }
+            OnPropertyChanged(nameof(FfmpegDirectoryDisplay));
 
             if (!string.IsNullOrWhiteSpace(loaded.RootFolder) && (Directory.Exists(loaded.RootFolder) || File.Exists(loaded.RootFolder)))
             {

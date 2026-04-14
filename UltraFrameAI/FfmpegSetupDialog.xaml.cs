@@ -6,9 +6,9 @@ namespace UltraFrameAI;
 public enum FfmpegSetupChoice
 {
     None,
+    CloseApp,
     Download,
-    ChooseFolder,
-    ContinueWithout
+    ChooseFolder
 }
 
 public partial class FfmpegSetupDialog : Window
@@ -21,7 +21,7 @@ public partial class FfmpegSetupDialog : Window
         DialogMessage = LocalizedStrings.Get("FfmpegSetupBody");
         DownloadText = LocalizedStrings.Get("FfmpegSetupDownload");
         ChooseFolderText = LocalizedStrings.Get("FfmpegSetupChooseFolder");
-        ContinueWithoutText = LocalizedStrings.Get("FfmpegSetupContinueWithout");
+        CloseAppText = LocalizedStrings.Get("FfmpegSetupCloseApp");
     }
 
     public string DialogTitle { get; }
@@ -32,25 +32,35 @@ public partial class FfmpegSetupDialog : Window
 
     public string ChooseFolderText { get; }
 
-    public string ContinueWithoutText { get; }
+    public string CloseAppText { get; }
 
     public FfmpegSetupChoice Choice { get; private set; }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (Choice == FfmpegSetupChoice.None)
+        {
+            Choice = FfmpegSetupChoice.CloseApp;
+        }
+
+        base.OnClosed(e);
+    }
+
+    private void CloseApp_Click(object sender, RoutedEventArgs e)
+    {
+        Choice = FfmpegSetupChoice.CloseApp;
+        Close();
+    }
 
     private void Download_Click(object sender, RoutedEventArgs e)
     {
         Choice = FfmpegSetupChoice.Download;
-        DialogResult = true;
+        Close();
     }
 
     private void ChooseFolder_Click(object sender, RoutedEventArgs e)
     {
         Choice = FfmpegSetupChoice.ChooseFolder;
-        DialogResult = true;
-    }
-
-    private void ContinueWithout_Click(object sender, RoutedEventArgs e)
-    {
-        Choice = FfmpegSetupChoice.ContinueWithout;
-        DialogResult = false;
+        Close();
     }
 }

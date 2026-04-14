@@ -43,19 +43,43 @@
     <value>FFmpeg not found</value>
   </data>
   <data name="FfmpegSetupBody" xml:space="preserve">
-    <value>An external FFmpeg is required for video scanning, benchmarking, and rendering. We can download it into the app folder or you can point the app to a folder that already contains ffmpeg.exe and ffprobe.exe.</value>
+    <value>An external FFmpeg is required for video scanning, benchmarking, and rendering. We can download it automatically or you can point the app to a folder that already contains ffmpeg.exe and ffprobe.exe.</value>
   </data>
   <data name="FfmpegSetupDownload" xml:space="preserve">
     <value>Download FFmpeg</value>
   </data>
+  <data name="FfmpegSetupCloseApp" xml:space="preserve">
+    <value>Close app</value>
+  </data>
   <data name="FfmpegSetupChooseFolder" xml:space="preserve">
     <value>Choose folder</value>
   </data>
-  <data name="FfmpegSetupContinueWithout" xml:space="preserve">
-    <value>Continue without FFmpeg</value>
+  <data name="FfmpegFolderLabel" xml:space="preserve">
+    <value>FFmpeg folder</value>
+  </data>
+  <data name="FfmpegChangeFolder" xml:space="preserve">
+    <value>Choose folder</value>
+  </data>
+  <data name="FfmpegDirectoryNotConfigured" xml:space="preserve">
+    <value>Not configured</value>
   </data>
   <data name="FfmpegSetupBrowseDialogTitle" xml:space="preserve">
     <value>Select the folder that contains ffmpeg.exe and ffprobe.exe</value>
+  </data>
+  <data name="FfmpegSetupInstallDialogTitle" xml:space="preserve">
+    <value>Select the folder where FFmpeg should be installed</value>
+  </data>
+  <data name="FfmpegInstallLocationTitle" xml:space="preserve">
+    <value>Where should FFmpeg be installed?</value>
+  </data>
+  <data name="FfmpegInstallLocationBody" xml:space="preserve">
+    <value>The archive is available for download. You can install FFmpeg next to the app or choose another folder.</value>
+  </data>
+  <data name="FfmpegInstallLocationHere" xml:space="preserve">
+    <value>Install next to the app</value>
+  </data>
+  <data name="FfmpegInstallLocationChoose" xml:space="preserve">
+    <value>Choose folder</value>
   </data>
   <data name="FfmpegSetupInvalidFolder" xml:space="preserve">
     <value>The selected folder was not found.</value>
@@ -74,6 +98,57 @@
   </data>
   <data name="FfmpegSetupDownloadFailedBody" xml:space="preserve">
     <value>Automatic FFmpeg download failed.</value>
+  </data>
+  <data name="FfmpegDownloadNetworkTitle" xml:space="preserve">
+    <value>Unable to connect</value>
+  </data>
+  <data name="FfmpegDownloadNetworkBody" xml:space="preserve">
+    <value>The app could not connect to the FFmpeg download server. Check your internet connection and try again, or point the app to a folder with already downloaded files.</value>
+  </data>
+  <data name="FfmpegDownloadUnavailableTitle" xml:space="preserve">
+    <value>Automatic download unavailable</value>
+  </data>
+  <data name="FfmpegDownloadUnavailableBody" xml:space="preserve">
+    <value>The automatic FFmpeg download link is currently unavailable. You can open the download page in your browser and then point the app to the folder that contains ffmpeg.exe and ffprobe.exe.</value>
+  </data>
+  <data name="FfmpegDownloadRetry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="FfmpegDownloadOpenPage" xml:space="preserve">
+    <value>Open download page</value>
+  </data>
+  <data name="FfmpegInstallProgressTitle" xml:space="preserve">
+    <value>Installing FFmpeg</value>
+  </data>
+  <data name="FfmpegInstallProgressStarting" xml:space="preserve">
+    <value>Preparing installation...</value>
+  </data>
+  <data name="FfmpegInstallProgressDownloading" xml:space="preserve">
+    <value>Downloading FFmpeg...</value>
+  </data>
+  <data name="FfmpegInstallProgressExtracting" xml:space="preserve">
+    <value>Extracting archive...</value>
+  </data>
+  <data name="FfmpegInstallProgressCopying" xml:space="preserve">
+    <value>Copying ffmpeg.exe and ffprobe.exe...</value>
+  </data>
+  <data name="FfmpegInstallProgressFinalizing" xml:space="preserve">
+    <value>Saving path and finalizing installation...</value>
+  </data>
+  <data name="FfmpegInstallProgressDone" xml:space="preserve">
+    <value>FFmpeg installed.</value>
+  </data>
+  <data name="FfmpegInstallSuccessTitle" xml:space="preserve">
+    <value>FFmpeg installed successfully 🎉</value>
+  </data>
+  <data name="FfmpegInstallSuccessBody" xml:space="preserve">
+    <value>UltraFrame AI is ready to enhance your videos.</value>
+  </data>
+  <data name="FfmpegInstallSuccessLicense" xml:space="preserve">
+    <value>FFmpeg is licensed under GPL/LGPL.</value>
+  </data>
+  <data name="FfmpegInstallSuccessDisclaimer" xml:space="preserve">
+    <value>This software is not affiliated with FFmpeg.</value>
   </data>
   <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
     <value>Choose a video file</value>

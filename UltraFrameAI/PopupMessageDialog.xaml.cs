@@ -18,6 +18,6 @@ public partial class PopupMessageDialog : Window
 
     private void Ok_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = true;
+        Close();
     }
 }

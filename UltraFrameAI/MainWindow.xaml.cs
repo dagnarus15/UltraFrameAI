@@ -5,22 +5,34 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Diagnostics;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
 
 public partial class MainWindow : Window
 {
+    private enum FfmpegDownloadAvailabilityResult
+    {
+        Available,
+        NetworkError,
+        SourceUnavailable
+    }
+
     private readonly MainViewModel _viewModel = new();
     private bool _isAdditionalOverlayAnimating;
     private bool _isHandlingCustomTargetSelection;
     private string _lastConfirmedTarget = "1080p";
     private bool _isScanOverlayAnimating;
     private DateTime _scanOverlayShownAtUtc;
+    private int _ffmpegOverlayDepth;
     private RenderWindow? _renderWindow;
     private bool _suppressClosePrompt;
     private bool _startupBenchmarkChecked;
     private const string FfmpegDownloadUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip";
+    private const string FfmpegDownloadPageUrl = "https://www.gyan.dev/ffmpeg/builds/";
+    private readonly string _ffmpegSetupLogPath = Path.Combine(AppContext.BaseDirectory, "ffmpeg-setup.log");
 
     public MainWindow()
     {
@@ -59,32 +71,83 @@ public partial class MainWindow : Window
 
         while (!_viewModel.HasConfiguredFfmpegTools())
         {
-            var dialog = new FfmpegSetupDialog
-            {
-                Owner = this
-            };
+            var dialog = new FfmpegSetupDialog();
 
-            _ = dialog.ShowDialog();
+            await ShowOverlayDialogAsync(dialog).ConfigureAwait(true);
             switch (dialog.Choice)
             {
+                case FfmpegSetupChoice.CloseApp:
+                    return false;
                 case FfmpegSetupChoice.Download:
-                    if (await DownloadAndInstallFfmpegAsync().ConfigureAwait(true))
+                    if (await HandleFfmpegDownloadAsync().ConfigureAwait(true))
                     {
                         return true;
                     }
                     break;
                 case FfmpegSetupChoice.ChooseFolder:
-                    if (PromptForFfmpegFolder())
+                    if (await PromptForFfmpegFolderAsync().ConfigureAwait(true))
                     {
                         return true;
                     }
                     break;
                 default:
-                    return false;
+                    break;
             }
         }
 
         return true;
+    }
+
+    private void OpenFfmpegOverlay()
+    {
+        _ffmpegOverlayDepth++;
+        FfmpegOverlayRoot.Visibility = Visibility.Visible;
+    }
+
+    private void CloseFfmpegOverlay()
+    {
+        _ffmpegOverlayDepth = Math.Max(0, _ffmpegOverlayDepth - 1);
+        if (_ffmpegOverlayDepth == 0)
+        {
+            FfmpegOverlayRoot.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void CenterOverlayDialog(Window dialog)
+    {
+        dialog.WindowStartupLocation = WindowStartupLocation.Manual;
+
+        var hostWidth = ActualWidth > 0 ? ActualWidth : Width;
+        var hostHeight = ActualHeight > 0 ? ActualHeight : Height;
+        var dialogWidth = dialog.ActualWidth > 0 ? dialog.ActualWidth : (dialog.Width > 0 ? dialog.Width : dialog.MinWidth);
+        var dialogHeight = dialog.ActualHeight > 0 ? dialog.ActualHeight : (dialog.Height > 0 ? dialog.Height : 240);
+
+        dialog.Left = Left + Math.Max(0, (hostWidth - dialogWidth) / 2);
+        dialog.Top = Top + Math.Max(0, (hostHeight - dialogHeight) / 2);
+    }
+
+    private async Task ShowOverlayDialogAsync(Window dialog)
+    {
+        var completion = new TaskCompletionSource<object?>();
+        void OnClosed(object? sender, EventArgs e) => completion.TrySetResult(null);
+        void OnLoaded(object? sender, RoutedEventArgs e) => CenterOverlayDialog(dialog);
+
+        OpenFfmpegOverlay();
+        dialog.Owner = this;
+        dialog.Loaded += OnLoaded;
+        dialog.Closed += OnClosed;
+        dialog.Show();
+
+        try
+        {
+            await completion.Task.ConfigureAwait(true);
+        }
+        finally
+        {
+            dialog.Loaded -= OnLoaded;
+            dialog.Closed -= OnClosed;
+            CloseFfmpegOverlay();
+        }
     }
 
     private void UpdateCardClips()
@@ -247,6 +310,11 @@ public partial class MainWindow : Window
     private void TileSizeHelp_Click(object sender, RoutedEventArgs e)
     {
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("TileSizeHelpTitle"), LocalizedStrings.Get("TileSizeHelpBody"));
+    }
+
+    private async void FfmpegFolderBrowse_Click(object sender, RoutedEventArgs e)
+    {
+        await PromptForFfmpegFolderAsync().ConfigureAwait(true);
     }
 
     private void RepairBrokenTimestampsHelp_Click(object sender, RoutedEventArgs e)
@@ -965,7 +1033,14 @@ public partial class MainWindow : Window
         await RunStartupBenchmarkAsync(markCompletedOnSuccess: true).ConfigureAwait(true);
     }
 
-    private bool PromptForFfmpegFolder()
+    private async Task<bool> ShowFfmpegMessageAsync(string title, string message)
+    {
+        var popup = new PopupMessageDialog(title, message);
+        await ShowOverlayDialogAsync(popup).ConfigureAwait(true);
+        return true;
+    }
+
+    private async Task<bool> PromptForFfmpegFolderAsync()
     {
         using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
@@ -984,57 +1059,228 @@ public partial class MainWindow : Window
             return true;
         }
 
-        var popup = new PopupMessageDialog(
+        await ShowFfmpegMessageAsync(
             LocalizedStrings.Get("FfmpegSetupTitle"),
-            string.IsNullOrWhiteSpace(error) ? LocalizedStrings.Get("FfmpegSetupMissingTools") : error)
-        {
-            Owner = this
-        };
-        popup.ShowDialog();
+            string.IsNullOrWhiteSpace(error) ? LocalizedStrings.Get("FfmpegSetupMissingTools") : error).ConfigureAwait(true);
         return false;
     }
 
-    private async Task<bool> DownloadAndInstallFfmpegAsync()
+    private string? PromptForInstallDirectory()
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = LocalizedStrings.Get("FfmpegSetupInstallDialogTitle"),
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = true
+        };
+
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath)
+            ? Path.Combine(dialog.SelectedPath, "ffmpeg")
+            : null;
+    }
+
+    private async Task<bool> HandleFfmpegDownloadAsync()
+    {
+        while (true)
+        {
+            var availability = await CheckFfmpegDownloadAvailabilityAsync().ConfigureAwait(true);
+            if (availability == FfmpegDownloadAvailabilityResult.Available)
+            {
+                var locationDialog = new FfmpegInstallLocationDialog();
+
+                await ShowOverlayDialogAsync(locationDialog).ConfigureAwait(true);
+                if (locationDialog.Choice is FfmpegInstallLocationChoice.None or FfmpegInstallLocationChoice.CloseApp)
+                {
+                    if (locationDialog.Choice == FfmpegInstallLocationChoice.CloseApp)
+                    {
+                        return false;
+                    }
+
+                    return false;
+                }
+
+                var targetDirectory = locationDialog.Choice switch
+                {
+                    FfmpegInstallLocationChoice.InstallHere => Path.Combine(AppContext.BaseDirectory, "ffmpeg"),
+                    FfmpegInstallLocationChoice.ChooseFolder => PromptForInstallDirectory(),
+                    _ => null
+                };
+
+                if (string.IsNullOrWhiteSpace(targetDirectory))
+                {
+                    return false;
+                }
+
+                return await DownloadAndInstallFfmpegAsync(targetDirectory).ConfigureAwait(true);
+            }
+
+            var failureKind = availability == FfmpegDownloadAvailabilityResult.NetworkError
+                ? FfmpegDownloadFailureKind.NetworkError
+                : FfmpegDownloadFailureKind.SourceUnavailable;
+            var failureDialog = new FfmpegDownloadFailureDialog(failureKind);
+
+            await ShowOverlayDialogAsync(failureDialog).ConfigureAwait(true);
+            if (failureDialog.Action is FfmpegDownloadFailureAction.None or FfmpegDownloadFailureAction.CloseApp)
+            {
+                if (failureDialog.Action == FfmpegDownloadFailureAction.CloseApp)
+                {
+                    return false;
+                }
+
+                return false;
+            }
+
+            switch (failureDialog.Action)
+            {
+                case FfmpegDownloadFailureAction.Retry:
+                    continue;
+                case FfmpegDownloadFailureAction.ChooseFolder:
+                    return await PromptForFfmpegFolderAsync().ConfigureAwait(true);
+                case FfmpegDownloadFailureAction.OpenDownloadPage:
+                    OpenFfmpegDownloadPage();
+                    if (await PromptForFfmpegFolderAsync().ConfigureAwait(true))
+                    {
+                        return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    private async Task<FfmpegDownloadAvailabilityResult> CheckFfmpegDownloadAvailabilityAsync()
     {
         try
         {
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            var targetDirectory = AppContext.BaseDirectory;
+            using var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(15)
+            };
+            using var request = new HttpRequestMessage(HttpMethod.Get, FfmpegDownloadUrl);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(true);
+            return response.IsSuccessStatusCode
+                ? FfmpegDownloadAvailabilityResult.Available
+                : FfmpegDownloadAvailabilityResult.SourceUnavailable;
+        }
+        catch (TaskCanceledException)
+        {
+            return FfmpegDownloadAvailabilityResult.NetworkError;
+        }
+        catch (HttpRequestException ex) when (ex.InnerException is SocketException)
+        {
+            return FfmpegDownloadAvailabilityResult.NetworkError;
+        }
+        catch (HttpRequestException)
+        {
+            return FfmpegDownloadAvailabilityResult.SourceUnavailable;
+        }
+        catch
+        {
+            return FfmpegDownloadAvailabilityResult.NetworkError;
+        }
+    }
+
+    private static void OpenFfmpegDownloadPage()
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = FfmpegDownloadPageUrl,
+            UseShellExecute = true
+        });
+    }
+
+    private async Task<bool> DownloadAndInstallFfmpegAsync(string targetDirectory)
+    {
+        FfmpegInstallProgressDialog? progressDialog = null;
+        try
+        {
+            LogFfmpegSetup($"Install requested. Target directory: {targetDirectory}");
+            progressDialog = new FfmpegInstallProgressDialog
+            {
+                Owner = this
+            };
+            OpenFfmpegOverlay();
+            progressDialog.UpdateProgress(5, LocalizedStrings.Get("FfmpegInstallProgressStarting"));
+            progressDialog.Loaded += (_, _) => CenterOverlayDialog(progressDialog);
+            progressDialog.Show();
+            progressDialog.Activate();
+            await Dispatcher.Yield(DispatcherPriority.Background);
+
             Directory.CreateDirectory(targetDirectory);
+            LogFfmpegSetup($"Target directory ready: {targetDirectory}");
 
             var tempRoot = Path.Combine(Path.GetTempPath(), "UltraFrameAI", "ffmpeg-download", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempRoot);
+            LogFfmpegSetup($"Temp root created: {tempRoot}");
             try
             {
                 var zipPath = Path.Combine(tempRoot, "ffmpeg-release-essentials.zip");
+                progressDialog.UpdateProgress(20, LocalizedStrings.Get("FfmpegInstallProgressDownloading"));
+                LogFfmpegSetup($"Downloading archive to: {zipPath}");
                 using (var client = new HttpClient())
                 {
                     client.Timeout = TimeSpan.FromMinutes(5);
-                    using var response = await client.GetAsync(FfmpegDownloadUrl).ConfigureAwait(true);
+                    using var response = await client.GetAsync(FfmpegDownloadUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(true);
                     response.EnsureSuccessStatusCode();
+                    var totalBytes = response.Content.Headers.ContentLength;
                     await using var input = await response.Content.ReadAsStreamAsync().ConfigureAwait(true);
                     await using var output = File.Create(zipPath);
-                    await input.CopyToAsync(output).ConfigureAwait(true);
+                    await CopyHttpContentWithProgressAsync(
+                        input,
+                        output,
+                        totalBytes,
+                        progressDialog,
+                        20,
+                        65).ConfigureAwait(true);
                 }
 
                 var extractDirectory = Path.Combine(tempRoot, "extract");
+                progressDialog.UpdateProgress(72, LocalizedStrings.Get("FfmpegInstallProgressExtracting"), isIndeterminate: true);
+                LogFfmpegSetup($"Extracting archive to: {extractDirectory}");
                 ZipFile.ExtractToDirectory(zipPath, extractDirectory, true);
 
                 var ffmpegPath = Directory.EnumerateFiles(extractDirectory, "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
                 var ffprobePath = Directory.EnumerateFiles(extractDirectory, "ffprobe.exe", SearchOption.AllDirectories).FirstOrDefault();
                 if (string.IsNullOrWhiteSpace(ffmpegPath) || string.IsNullOrWhiteSpace(ffprobePath))
                 {
+                    LogFfmpegSetup("Archive extraction completed, but ffmpeg.exe or ffprobe.exe was not found.");
                     throw new InvalidOperationException(LocalizedStrings.Get("FfmpegSetupMissingTools"));
                 }
 
+                progressDialog.UpdateProgress(84, LocalizedStrings.Get("FfmpegInstallProgressCopying"));
+                LogFfmpegSetup($"Copying tools from '{ffmpegPath}' and '{ffprobePath}'");
                 File.Copy(ffmpegPath, Path.Combine(targetDirectory, "ffmpeg.exe"), true);
                 File.Copy(ffprobePath, Path.Combine(targetDirectory, "ffprobe.exe"), true);
 
+                progressDialog.UpdateProgress(94, LocalizedStrings.Get("FfmpegInstallProgressFinalizing"), isIndeterminate: true);
                 if (!_viewModel.TrySetFfmpegDirectory(targetDirectory, out var error))
                 {
+                    LogFfmpegSetup($"TrySetFfmpegDirectory failed for '{targetDirectory}'. Error: {error}");
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? LocalizedStrings.Get("FfmpegSetupMissingTools") : error);
                 }
+                LogFfmpegSetup($"FFmpeg directory configured successfully: {targetDirectory}");
 
+                progressDialog.UpdateProgress(100, LocalizedStrings.Get("FfmpegInstallProgressDone"));
+                await Task.Delay(180).ConfigureAwait(true);
+                progressDialog.Close();
+                progressDialog = null;
+
+                var successMessage = string.Join(
+                    Environment.NewLine,
+                    [
+                        LocalizedStrings.Get("FfmpegInstallSuccessTitle"),
+                        string.Empty,
+                        LocalizedStrings.Get("FfmpegInstallSuccessBody"),
+                        string.Empty,
+                        LocalizedStrings.Get("FfmpegInstallSuccessLicense"),
+                        LocalizedStrings.Get("FfmpegInstallSuccessDisclaimer")
+                    ]);
+
+                await ShowFfmpegMessageAsync(
+                    LocalizedStrings.Get("FfmpegInstallSuccessTitle"),
+                    successMessage).ConfigureAwait(true);
+                LogFfmpegSetup("Install flow completed successfully.");
                 return true;
             }
             finally
@@ -1053,29 +1299,96 @@ public partial class MainWindow : Window
         }
         catch (UnauthorizedAccessException)
         {
-            var popup = new PopupMessageDialog(
+            LogFfmpegSetup("UnauthorizedAccessException during install.");
+            await ShowFfmpegMessageAsync(
                 LocalizedStrings.Get("FfmpegSetupCannotWriteTitle"),
-                LocalizedStrings.Get("FfmpegSetupCannotWriteBody"))
-            {
-                Owner = this
-            };
-            popup.ShowDialog();
+                LocalizedStrings.Get("FfmpegSetupCannotWriteBody")).ConfigureAwait(true);
             return false;
         }
         catch (Exception ex)
         {
-            var popup = new PopupMessageDialog(
+            LogFfmpegSetup($"Install failed with exception: {ex}");
+            await ShowFfmpegMessageAsync(
                 LocalizedStrings.Get("FfmpegSetupDownloadFailedTitle"),
-                LocalizedStrings.Get("FfmpegSetupDownloadFailedBody") + Environment.NewLine + Environment.NewLine + ex.Message)
-            {
-                Owner = this
-            };
-            popup.ShowDialog();
+                LocalizedStrings.Get("FfmpegSetupDownloadFailedBody") + Environment.NewLine + Environment.NewLine + ex.Message).ConfigureAwait(true);
             return false;
         }
         finally
         {
-            Mouse.OverrideCursor = null;
+            try
+            {
+                if (progressDialog is not null)
+                {
+                    progressDialog.Close();
+                }
+            }
+            catch
+            {
+            }
+            CloseFfmpegOverlay();
+        }
+    }
+
+    private static async Task CopyHttpContentWithProgressAsync(
+        Stream input,
+        Stream output,
+        long? totalBytes,
+        FfmpegInstallProgressDialog progressDialog,
+        double progressStart,
+        double progressEnd)
+    {
+        var buffer = new byte[81920];
+        long totalRead = 0;
+        var lastUiUpdate = DateTime.UtcNow;
+
+        while (true)
+        {
+            var bytesRead = await input.ReadAsync(buffer.AsMemory(0, buffer.Length)).ConfigureAwait(true);
+            if (bytesRead <= 0)
+            {
+                break;
+            }
+
+            await output.WriteAsync(buffer.AsMemory(0, bytesRead)).ConfigureAwait(true);
+            totalRead += bytesRead;
+
+            var shouldUpdate = DateTime.UtcNow - lastUiUpdate >= TimeSpan.FromMilliseconds(80);
+            if (!shouldUpdate && totalBytes.HasValue && totalRead < totalBytes.Value)
+            {
+                continue;
+            }
+
+            if (totalBytes.HasValue && totalBytes.Value > 0)
+            {
+                var fraction = Math.Clamp((double)totalRead / totalBytes.Value, 0d, 1d);
+                var progress = progressStart + ((progressEnd - progressStart) * fraction);
+                progressDialog.UpdateProgress(
+                    progress,
+                    $"{LocalizedStrings.Get("FfmpegInstallProgressDownloading")} {Math.Round(fraction * 100):0}%",
+                    isIndeterminate: false);
+            }
+            else
+            {
+                progressDialog.UpdateProgress(
+                    progressStart,
+                    LocalizedStrings.Get("FfmpegInstallProgressDownloading"),
+                    isIndeterminate: true);
+            }
+
+            lastUiUpdate = DateTime.UtcNow;
+        }
+
+        progressDialog.UpdateProgress(progressEnd, LocalizedStrings.Get("FfmpegInstallProgressDownloading"));
+    }
+
+    private void LogFfmpegSetup(string message)
+    {
+        try
+        {
+            File.AppendAllText(_ffmpegSetupLogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {message}{Environment.NewLine}");
+        }
+        catch
+        {
         }
     }
 
@@ -1106,6 +1419,8 @@ public partial class MainWindow : Window
                 var request = new StartupBenchmarkRequest(
                     sourcePath,
                     _viewModel.GetStartupBenchmarkGpuCandidates(),
+                    _viewModel.GetResolvedFfmpegExecutablePath(),
+                    _viewModel.GetResolvedFfprobeExecutablePath(),
                     outputDir,
                     5);
 

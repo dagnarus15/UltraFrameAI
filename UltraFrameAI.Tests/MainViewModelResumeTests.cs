@@ -85,6 +85,7 @@ public sealed class MainViewModelResumeTests
                     TileSizeText = "-1",
                     UseAntiFlicker = false
                 };
+                Assert.True(viewModel.TrySetFfmpegDirectory(Path.GetDirectoryName(ffmpeg)!, out _));
 
                 viewModel.OutputConflictRequested += _ => Task.FromResult(OutputConflictDecision.Resume);
                 viewModel.Items.Add(item);
@@ -122,6 +123,11 @@ public sealed class MainViewModelResumeTests
                 await File.WriteAllTextAsync(outputPath, "not-a-real-video");
 
                 var viewModel = new MainViewModel(persistUserState: false);
+                var repoRoot = TestSupport.RepoRoot;
+                var ffmpeg = TestSupport.ResolveExistingFile(
+                    @"C:\ffmpeg\bin\ffmpeg.exe",
+                    Path.Combine(repoRoot, @"dist\UltraFrameAI\ffmpeg.exe"));
+                Assert.True(viewModel.TrySetFfmpegDirectory(Path.GetDirectoryName(ffmpeg)!, out _));
                 var item = new QueueItemViewModel
                 {
                     Index = 1,
@@ -221,6 +227,7 @@ public sealed class MainViewModelResumeTests
                     TileSizeText = "-1",
                     UseAntiFlicker = false
                 };
+                Assert.True(viewModel.TrySetFfmpegDirectory(Path.GetDirectoryName(ffmpeg)!, out _));
 
                 viewModel.OutputConflictRequested += _ => Task.FromResult(OutputConflictDecision.Resume);
                 viewModel.Items.Add(item);

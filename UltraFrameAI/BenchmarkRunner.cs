@@ -36,6 +36,8 @@ public sealed record BenchmarkRequest(
 public sealed record StartupBenchmarkRequest(
     string SourcePath,
     IReadOnlyList<StartupBenchmarkGpuCandidate> GpuCandidates,
+    string? FfmpegPath = null,
+    string? FfprobePath = null,
     string? OutputDir = null,
     int SampleSeconds = 6);
 
@@ -697,8 +699,12 @@ public static class BenchmarkRunner
         CancellationToken cancellationToken = default)
     {
         var repoRoot = FindRepoRoot();
-        var ffmpeg = FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe", repoRoot);
-        var ffprobe = FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe", repoRoot);
+        var ffmpeg = !string.IsNullOrWhiteSpace(request.FfmpegPath) && File.Exists(request.FfmpegPath)
+            ? request.FfmpegPath
+            : FindFile("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe", repoRoot);
+        var ffprobe = !string.IsNullOrWhiteSpace(request.FfprobePath) && File.Exists(request.FfprobePath)
+            ? request.FfprobePath
+            : FindFile("ffprobe.exe", @"C:\ffmpeg\bin\ffprobe.exe", repoRoot);
         var upscaler = FindFile("realesrgan-ncnn-vulkan.exe", Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "realesrgan-ncnn-vulkan.exe"), repoRoot);
         var modelDir = FindDirectory("models", Path.Combine(repoRoot, "realesrgan-ncnn-vulkan-20220424", "models"), repoRoot);
 
