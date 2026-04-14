@@ -1458,7 +1458,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             Log(LocalizedStrings.LogScanFailed(ex.Message));
-            PostToUi(() => System.Windows.MessageBox.Show(ex.Message, LocalizedStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error));
+            PostToUi(() => ShowPopupMessage(LocalizedStrings.AppTitle, ex.Message));
         }
         finally
         {
@@ -1618,7 +1618,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             Log(LocalizedStrings.LogBatchFailed(ex.Message));
-            PostToUi(() => System.Windows.MessageBox.Show(LocalizedStrings.LogBatchFailed(ex.Message), LocalizedStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error));
+            PostToUi(() => ShowPopupMessage(LocalizedStrings.AppTitle, LocalizedStrings.LogBatchFailed(ex.Message)));
             _pendingRenderSessionResults = null;
         }
         finally
@@ -3904,6 +3904,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
         dispatcher.BeginInvoke(action);
     }
 
+    private static void ShowPopupMessage(string title, string message)
+    {
+        var popup = new PopupMessageDialog(title, message);
+        var owner = System.Windows.Application.Current?.Windows
+            .OfType<System.Windows.Window>()
+            .FirstOrDefault(window => window.IsActive)
+            ?? System.Windows.Application.Current?.MainWindow;
+
+        if (owner is not null && owner != popup)
+        {
+            popup.Owner = owner;
+        }
+
+        popup.ShowDialog();
+    }
+
     private static int ParseInt(string? text, int fallback) => int.TryParse(text, out var value) ? value : fallback;
 
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
@@ -4511,7 +4527,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             Log(LocalizedStrings.LogScanFailed(ex.Message));
-            PostToUi(() => System.Windows.MessageBox.Show(ex.Message, LocalizedStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error));
+            PostToUi(() => ShowPopupMessage(LocalizedStrings.AppTitle, ex.Message));
         }
         finally
         {

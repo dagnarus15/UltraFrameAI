@@ -1010,11 +1010,9 @@ public partial class MainWindow : Window
 
         if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
         {
-            System.Windows.MessageBox.Show(
+            ShowStyledMessage(
                 LocalizedStrings.StartupBenchmarkUnavailableBody,
-                LocalizedStrings.StartupBenchmarkUnavailableTitle,
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                LocalizedStrings.StartupBenchmarkUnavailableTitle);
             return;
         }
 
@@ -1398,11 +1396,9 @@ public partial class MainWindow : Window
         {
             if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
             {
-                System.Windows.MessageBox.Show(
+                ShowStyledMessage(
                     LocalizedStrings.StartupBenchmarkUnavailableBody,
-                    LocalizedStrings.StartupBenchmarkUnavailableTitle,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    LocalizedStrings.StartupBenchmarkUnavailableTitle);
                 return;
             }
 
@@ -1466,12 +1462,19 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(
+            ShowStyledMessage(
                 ex.ToString(),
-                LocalizedStrings.StartupBenchmarkProgressTitle,
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+                LocalizedStrings.StartupBenchmarkProgressTitle);
         }
+    }
+
+    private void ShowStyledMessage(string message, string title)
+    {
+        var popup = new PopupMessageDialog(title, message)
+        {
+            Owner = this
+        };
+        popup.ShowDialog();
     }
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)

@@ -101,7 +101,13 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.Message, UltraFrameAI.Resources.LocalizedStrings.StartupBenchmarkProgressTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            var popup = new PopupMessageDialog(
+                UltraFrameAI.Resources.LocalizedStrings.StartupBenchmarkProgressTitle,
+                ex.Message)
+            {
+                Owner = this
+            };
+            popup.ShowDialog();
             DialogResult = false;
         }
         finally
