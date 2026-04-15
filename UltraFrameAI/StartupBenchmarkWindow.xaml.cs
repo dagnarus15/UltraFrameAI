@@ -118,7 +118,7 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
 
     private void HandleProgress(StartupBenchmarkProgressUpdate update)
     {
-        CurrentPhase = update.Phase;
+        CurrentPhase = BenchmarkRunner.LocalizeStartupBenchmarkPhase(update.Phase);
         CurrentCase = update.CaseName;
         CurrentDetail = update.Detail;
         CurrentStepText = $"{update.StepIndex}/{update.TotalSteps}";

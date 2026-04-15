@@ -1112,6 +1112,9 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
     <value>Beste Testfälle</value>
   </data>
+  <data name="StartupBenchmarkResultsTopCaseFormat" xml:space="preserve">
+    <value>{0}: {1} / {2} / {3} / Kachel {4} - {5:0.##} s</value>
+  </data>
   <data name="StartupBenchmarkResultsRecommendationsTitle" xml:space="preserve">
     <value>Empfehlungen</value>
   </data>
@@ -1120,6 +1123,30 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   </data>
   <data name="StartupBenchmarkResultsOkay" xml:space="preserve">
     <value>Ihre GPU wirkt für diese Aufgabe ausreichend stark.</value>
+  </data>
+  <data name="StartupBenchmarkPhaseGpu" xml:space="preserve">
+    <value>GPU-Prüfung</value>
+  </data>
+  <data name="StartupBenchmarkPhaseBalanced" xml:space="preserve">
+    <value>Ausgewogen</value>
+  </data>
+  <data name="StartupBenchmarkPhaseFast" xml:space="preserve">
+    <value>Schnell</value>
+  </data>
+  <data name="StartupBenchmarkPhaseSafe" xml:space="preserve">
+    <value>Sicher</value>
+  </data>
+  <data name="StartupBenchmarkPhaseQuality" xml:space="preserve">
+    <value>Qualität</value>
+  </data>
+  <data name="StartupBenchmarkPhaseThreadsRun" xml:space="preserve">
+    <value>Threads {0}, Durchlauf {1}</value>
+  </data>
+  <data name="StartupBenchmarkPhaseTile" xml:space="preserve">
+    <value>Kachel {0}</value>
+  </data>
+  <data name="StartupBenchmarkPhasePreset" xml:space="preserve">
+    <value>Preset {0}</value>
   </data>
   <data name="HardwareAssessmentTitle" xml:space="preserve">
     <value>Hardware-Prüfung</value>

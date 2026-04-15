@@ -138,6 +138,13 @@ public sealed record BenchmarkReport(
 
 public static class BenchmarkRunner
 {
+    private sealed record StartupCaseAbortGuard(
+        TimeSpan MaxElapsed,
+        TimeSpan MinElapsed,
+        double MinGpuLoadPercent,
+        double? MaxVramBytes,
+        string Reason);
+
     private const string GroupCodecPreset = "Codec/Preset";
     private const string GroupAntiFlicker = "Anti-flicker";
     private const string GroupUpscalerThreads = "Upscaler threads";
@@ -180,6 +187,15 @@ public static class BenchmarkRunner
     private static string CaseAntiFlickerLuma => LocalizedStrings.BenchmarkCaseAntiFlickerLuma;
     private static string CaseAntiFlickerFlow => LocalizedStrings.BenchmarkCaseAntiFlickerFlow;
 
+    internal static string LocalizeStartupBenchmarkPhase(string phase) => phase switch
+    {
+        "GPU" => LocalizedStrings.Get("StartupBenchmarkPhaseGpu"),
+        _ when phase.StartsWith("Tile ", StringComparison.OrdinalIgnoreCase) => LocalizeTilePhase(phase),
+        _ when phase.StartsWith("Preset ", StringComparison.OrdinalIgnoreCase) => LocalizePresetPhase(phase),
+        _ when phase.StartsWith("Threads ", StringComparison.OrdinalIgnoreCase) => LocalizeThreadRunPhase(phase),
+        _ => phase
+    };
+
     internal static string LocalizedPresetForCase(string preset) => preset switch
     {
         "slower" => LocalizedStrings.BenchmarkShortCodecSlow,
@@ -200,6 +216,113 @@ public static class BenchmarkRunner
         "animeultra" => LocalizedStrings.ContentModeAnimeUltra,
         _ => contentMode
     };
+
+    private static string LocalizeThreadRunPhase(string phase)
+    {
+        const string prefix = "Threads ";
+        const string runToken = " run ";
+        if (!phase.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return phase;
+        }
+
+        var payload = phase[prefix.Length..];
+        var runIndex = payload.LastIndexOf(runToken, StringComparison.OrdinalIgnoreCase);
+        if (runIndex <= 0)
+        {
+            return phase;
+        }
+
+        var threads = payload[..runIndex].Trim();
+        var runText = payload[(runIndex + runToken.Length)..].Trim();
+        return LocalizedStrings.Format("StartupBenchmarkPhaseThreadsRun", threads, runText);
+    }
+
+    private static string LocalizeTilePhase(string phase)
+    {
+        const string prefix = "Tile ";
+        var tile = phase[prefix.Length..].Trim();
+        return LocalizedStrings.Format("StartupBenchmarkPhaseTile", tile);
+    }
+
+    private static string LocalizePresetPhase(string phase)
+    {
+        const string prefix = "Preset ";
+        var preset = phase[prefix.Length..].Trim();
+        return LocalizedStrings.Format("StartupBenchmarkPhasePreset", LocalizedPresetForCase(preset));
+    }
+
+    private static string[] BuildStartupThreadCandidates(long? memoryMb)
+    {
+        var values = memoryMb switch
+        {
+            >= 65536 => new[] { 1, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96 },
+            >= 49152 => new[] { 1, 2, 4, 8, 12, 16, 24, 32, 48, 64 },
+            >= 32768 => new[] { 1, 2, 4, 6, 8, 12, 16, 24, 32, 48 },
+            >= 24576 => new[] { 1, 2, 4, 6, 8, 12, 16, 24, 32 },
+            >= 16384 => new[] { 1, 2, 4, 6, 8, 12, 16, 24 },
+            >= 12288 => new[] { 1, 2, 4, 6, 8, 12, 16 },
+            >= 8192 => new[] { 1, 2, 4, 6, 8, 12 },
+            >= 6144 => new[] { 1, 2, 4, 6, 8 },
+            >= 4096 => new[] { 1, 2, 4, 6 },
+            _ => new[] { 1, 2, 4 }
+        };
+
+        return values
+            .Distinct()
+            .Select(value => $"{value}:{value}:{value}")
+            .ToArray();
+    }
+
+    private static int ParseThreadScore(string threads)
+    {
+        var first = threads.Split(':', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        return int.TryParse(first, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0;
+    }
+
+    private static string FormatSymmetricThreads(int value) => $"{value}:{value}:{value}";
+
+    private static bool IsThreadCandidateOverloaded(StartupBenchmarkCaseResult result, long? gpuMemoryMb)
+    {
+        if (!result.Success)
+        {
+            return true;
+        }
+
+        if (gpuMemoryMb is not > 0 || result.Metrics.PeakVram is not double peakVramBytes || peakVramBytes <= 0)
+        {
+            return false;
+        }
+
+        var gpuMemoryBytes = gpuMemoryMb.Value * 1024d * 1024d;
+        return peakVramBytes >= gpuMemoryBytes * 0.92d;
+    }
+
+    private static StartupCaseAbortGuard? BuildThreadProbeAbortGuard(
+        string threads,
+        TimeSpan bestStableElapsed,
+        long? gpuMemoryMb)
+    {
+        var threadScore = ParseThreadScore(threads);
+        if (threadScore <= 2 || bestStableElapsed <= TimeSpan.Zero)
+        {
+            return null;
+        }
+
+        var maxElapsed = TimeSpan.FromMilliseconds(Math.Max(bestStableElapsed.TotalMilliseconds * 1.22d, 2500d));
+        double? maxVramBytes = gpuMemoryMb is > 0
+            ? gpuMemoryMb.Value * 1024d * 1024d * 0.92d
+            : null;
+
+        return new StartupCaseAbortGuard(
+            maxElapsed,
+            TimeSpan.FromMilliseconds(1500),
+            97d,
+            maxVramBytes,
+            "Auto-stopped due to GPU saturation.");
+    }
 
     public static async Task<int> RunAsync(string[] args, CancellationToken cancellationToken = default)
     {
@@ -727,7 +850,13 @@ public static class BenchmarkRunner
         var gpuCandidates = request.GpuCandidates.Count > 0
             ? request.GpuCandidates
             : new[] { new StartupBenchmarkGpuCandidate(0, "GPU 0", null) };
-        var totalSteps = gpuCandidates.Count + 6 + 4;
+        var maxGpuMemoryMb = gpuCandidates
+            .Where(candidate => candidate.MemoryMb.HasValue)
+            .Select(candidate => candidate.MemoryMb!.Value)
+            .DefaultIfEmpty()
+            .Max();
+        var plannedThreadCandidates = BuildStartupThreadCandidates(maxGpuMemoryMb > 0 ? maxGpuMemoryMb : null);
+        var totalSteps = gpuCandidates.Count + 2 + ((plannedThreadCandidates.Length - 1) * 2) + 4 + 3;
         var currentStep = 0;
 
         StartupBenchmarkCaseResult? bestGpuResult = null;
@@ -745,7 +874,7 @@ public static class BenchmarkRunner
                 "GPU",
                 candidate.GpuId,
                 candidate.Label,
-                "4:4:4",
+                "2:2:2",
                 "medium",
                 1024,
                 currentStep,
@@ -762,11 +891,12 @@ public static class BenchmarkRunner
         var selectedGpuId = bestGpuResult?.GpuId ?? gpuCandidates[0].GpuId;
         var selectedGpuLabel = bestGpuResult?.GpuLabel ?? gpuCandidates[0].Label;
         var selectedGpuMemoryMb = gpuCandidates.FirstOrDefault(candidate => candidate.GpuId == selectedGpuId)?.MemoryMb;
-        var threadCandidates = new[] { "4:4:4", "6:6:6", "8:8:8" };
-        var threadSummaries = new List<(string Threads, TimeSpan MedianElapsed)>();
-        foreach (var threads in threadCandidates)
+        var threadCandidates = BuildStartupThreadCandidates(selectedGpuMemoryMb);
+        var threadSummaries = new List<(string Threads, TimeSpan MedianElapsed, bool Stable)>();
+
+        async Task<StartupBenchmarkCaseResult[]> RunThreadProbeAsync(string threads, int tile, StartupCaseAbortGuard? abortGuard = null)
         {
-            var threadRuns = new List<StartupBenchmarkCaseResult>(2);
+            var runs = new List<StartupBenchmarkCaseResult>(2);
             for (var run = 1; run <= 2; run++)
             {
                 currentStep++;
@@ -783,33 +913,139 @@ public static class BenchmarkRunner
                     selectedGpuLabel,
                     threads,
                     "medium",
-                    1536,
+                    tile,
                     currentStep,
                     totalSteps,
                     progress,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken,
+                    abortGuard).ConfigureAwait(false);
                 results.Add(caseResult);
-                threadRuns.Add(caseResult);
+                runs.Add(caseResult);
             }
 
-            var successfulRuns = threadRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
-            if (successfulRuns.Length > 0)
+            return runs.ToArray();
+        }
+
+        var baseRuns = await RunThreadProbeAsync("2:2:2", 1536).ConfigureAwait(false);
+        var baseSuccessfulRuns = baseRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
+        if (baseSuccessfulRuns.Length == 0)
+        {
+            var fallbackRuns = await RunThreadProbeAsync("1:1:1", 1024).ConfigureAwait(false);
+            var fallbackSuccessfulRuns = fallbackRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
+            if (fallbackSuccessfulRuns.Length == 0)
             {
-                var medianElapsed = successfulRuns[successfulRuns.Length / 2].Elapsed;
-                threadSummaries.Add((threads, medianElapsed));
+                return new StartupBenchmarkReport(
+                    source,
+                    sampleFile,
+                    sampleDuration,
+                    outputRoot,
+                    results,
+                    new StartupBenchmarkRecommendation(
+                        selectedGpuId,
+                        selectedGpuLabel,
+                        selectedGpuMemoryMb,
+                        "1:1:1",
+                        "medium",
+                        1024,
+                        true,
+                        0d));
+            }
+
+            var fallbackMedian = fallbackSuccessfulRuns[fallbackSuccessfulRuns.Length / 2];
+            threadSummaries.Add(("1:1:1", fallbackMedian.Elapsed, !IsThreadCandidateOverloaded(fallbackMedian, selectedGpuMemoryMb)));
+        }
+        else
+        {
+            var baseMedian = baseSuccessfulRuns[baseSuccessfulRuns.Length / 2];
+            threadSummaries.Add(("2:2:2", baseMedian.Elapsed, !IsThreadCandidateOverloaded(baseMedian, selectedGpuMemoryMb)));
+
+            var memoryMaxScore = threadCandidates.Select(ParseThreadScore).DefaultIfEmpty(2).Max();
+            var baseGpuLoad = baseMedian.Metrics.AvgGpu ?? baseMedian.Metrics.PeakGpu ?? 0d;
+            var estimatedPeakScore = baseGpuLoad > 1d
+                ? (int)Math.Ceiling(2d * (92d / baseGpuLoad))
+                : memoryMaxScore;
+            estimatedPeakScore = Math.Clamp(estimatedPeakScore, 2, memoryMaxScore);
+
+            var adaptiveCandidates = threadCandidates
+                .Where(candidate => ParseThreadScore(candidate) > 2)
+                .Where(candidate => ParseThreadScore(candidate) <= Math.Max(estimatedPeakScore * 2, 8))
+                .ToArray();
+
+            var bestStableElapsed = baseMedian.Elapsed;
+            var diminishingCount = 0;
+            foreach (var threads in adaptiveCandidates)
+            {
+                var abortGuard = BuildThreadProbeAbortGuard(threads, bestStableElapsed, selectedGpuMemoryMb);
+                var threadRuns = await RunThreadProbeAsync(threads, 1536, abortGuard).ConfigureAwait(false);
+                var successfulRuns = threadRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
+                if (successfulRuns.Length == 0)
+                {
+                    break;
+                }
+
+                var medianRun = successfulRuns[successfulRuns.Length / 2];
+                var stable = successfulRuns.All(result => !IsThreadCandidateOverloaded(result, selectedGpuMemoryMb));
+                threadSummaries.Add((threads, medianRun.Elapsed, stable));
+                if (!stable)
+                {
+                    break;
+                }
+
+                var improvement = bestStableElapsed.TotalSeconds > 0.01
+                    ? (bestStableElapsed.TotalSeconds - medianRun.Elapsed.TotalSeconds) / bestStableElapsed.TotalSeconds
+                    : 0d;
+                var avgGpuLoad = medianRun.Metrics.AvgGpu ?? medianRun.Metrics.PeakGpu ?? 0d;
+
+                if (medianRun.Elapsed < bestStableElapsed)
+                {
+                    bestStableElapsed = medianRun.Elapsed;
+                }
+
+                if (improvement >= 0.02d)
+                {
+                    diminishingCount = 0;
+                }
+                else
+                {
+                    diminishingCount++;
+                }
+
+                if (diminishingCount >= 2 || (avgGpuLoad >= 97d && improvement < 0.02d))
+                {
+                    break;
+                }
             }
         }
 
-        var bestThreads = threadSummaries.OrderBy(summary => summary.MedianElapsed).FirstOrDefault().Threads ?? "6:6:6";
-        var tuningCases = new (string Profile, string Threads, string EncoderPreset, int TileSize)[]
+        var stableThreadSummaries = threadSummaries.Where(summary => summary.Stable).ToArray();
+        var fastestStableThreads = stableThreadSummaries.OrderBy(summary => summary.MedianElapsed).FirstOrDefault();
+        var bestThreads = fastestStableThreads.Threads;
+        if (fastestStableThreads != default)
         {
-            ("Balanced", bestThreads, "medium", 1536),
-            ("Fast", bestThreads, "fast", 2048),
-            ("Safe", bestThreads, "medium", 1024),
-            ("Quality", bestThreads, "slower", 1024),
-        };
+            var nearFastestBudget = fastestStableThreads.MedianElapsed.TotalSeconds * 1.05d;
+            var strongestNearFastest = stableThreadSummaries
+                .Where(summary => summary.MedianElapsed.TotalSeconds <= nearFastestBudget)
+                .OrderByDescending(summary => ParseThreadScore(summary.Threads))
+                .ThenBy(summary => summary.MedianElapsed)
+                .FirstOrDefault();
 
-        foreach (var tuningCase in tuningCases)
+            if (strongestNearFastest != default)
+            {
+                bestThreads = strongestNearFastest.Threads;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(bestThreads))
+        {
+            bestThreads = threadSummaries
+                .OrderBy(summary => summary.MedianElapsed)
+                .Select(summary => summary.Threads)
+                .FirstOrDefault()
+                ?? "2:2:2";
+        }
+
+        var tileCases = new[] { 1024, 1536, 2048, 4096 };
+        foreach (var tile in tileCases)
         {
             currentStep++;
             var caseResult = await RunStartupCaseAsync(
@@ -820,12 +1056,43 @@ public static class BenchmarkRunner
                 ffprobe,
                 upscaler,
                 modelDir,
-                tuningCase.Profile,
+                $"Tile {tile}",
                 selectedGpuId,
                 selectedGpuLabel,
-                tuningCase.Threads,
-                tuningCase.EncoderPreset,
-                tuningCase.TileSize,
+                bestThreads,
+                "medium",
+                tile,
+                currentStep,
+                totalSteps,
+                progress,
+                cancellationToken).ConfigureAwait(false);
+            results.Add(caseResult);
+        }
+
+        var successfulTileCases = results
+            .Where(result => result.Success && result.Phase.StartsWith("Tile ", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(result => result.Elapsed)
+            .ToArray();
+        var bestTile = successfulTileCases.FirstOrDefault()?.TileSize ?? 1536;
+
+        var presetCases = new[] { "fast", "medium", "slower" };
+        foreach (var preset in presetCases)
+        {
+            currentStep++;
+            var caseResult = await RunStartupCaseAsync(
+                pipeline,
+                sampleFile,
+                outputRoot,
+                ffmpeg,
+                ffprobe,
+                upscaler,
+                modelDir,
+                $"Preset {preset}",
+                selectedGpuId,
+                selectedGpuLabel,
+                bestThreads,
+                preset,
+                bestTile,
                 currentStep,
                 totalSteps,
                 progress,
@@ -835,21 +1102,25 @@ public static class BenchmarkRunner
 
         var successfulGpuCases = results.Where(result => result.Success && string.Equals(result.Phase, "GPU", StringComparison.OrdinalIgnoreCase)).ToList();
         var strongestGpu = successfulGpuCases.OrderBy(result => result.Elapsed).FirstOrDefault() ?? bestGpuResult;
-        var successfulTuningCases = results.Where(result => result.Success && !string.Equals(result.Phase, "GPU", StringComparison.OrdinalIgnoreCase)).ToList();
-        var balancedTuning = successfulTuningCases.FirstOrDefault(result => string.Equals(result.Phase, "Balanced", StringComparison.OrdinalIgnoreCase));
-        var fastestTuning = successfulTuningCases.OrderBy(result => result.Elapsed).FirstOrDefault();
-        var bestTuning = fastestTuning is not null && balancedTuning is not null && fastestTuning.Elapsed.TotalSeconds > balancedTuning.Elapsed.TotalSeconds * 0.93
-            ? balancedTuning
-            : fastestTuning ?? balancedTuning;
+        var successfulPresetCases = results
+            .Where(result => result.Success && result.Phase.StartsWith("Preset ", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(result => result.Elapsed)
+            .ToArray();
+        var fastestPreset = successfulPresetCases.FirstOrDefault();
+        var mediumPreset = successfulPresetCases.FirstOrDefault(result => string.Equals(result.EncoderPreset, "medium", StringComparison.OrdinalIgnoreCase));
+        var bestPreset = fastestPreset is not null && mediumPreset is not null && fastestPreset.Elapsed.TotalSeconds > mediumPreset.Elapsed.TotalSeconds * 0.95
+            ? mediumPreset
+            : fastestPreset ?? mediumPreset;
         var recommendedGpuId = strongestGpu?.GpuId ?? selectedGpuId;
         var recommendedGpuLabel = strongestGpu?.GpuLabel ?? selectedGpuLabel;
-        var recommendedThreads = bestTuning?.UpscalerThreads ?? "4:4:4";
-        var recommendedPreset = bestTuning?.EncoderPreset ?? "medium";
-        var recommendedTile = bestTuning?.TileSize ?? 1024;
-        var bestElapsed = (bestTuning ?? strongestGpu)?.Elapsed ?? TimeSpan.FromSeconds(Math.Max(1, sampleDuration));
+        var recommendedThreads = bestThreads;
+        var recommendedPreset = bestPreset?.EncoderPreset ?? "medium";
+        var recommendedTile = bestPreset?.TileSize ?? bestTile;
+        var bestElapsed = (bestPreset ?? strongestGpu)?.Elapsed ?? TimeSpan.FromSeconds(Math.Max(1, sampleDuration));
         var sourceFps = sampleDuration > 0.01 ? 24d : 0d;
         var throughputFps = bestElapsed.TotalSeconds > 0.01 ? (sampleDuration * sourceFps) / bestElapsed.TotalSeconds : 0d;
-        var isWeakGpu = sampleDuration > 0.01 && bestElapsed.TotalSeconds > sampleDuration * 3.0;
+        var isWeakGpu = string.Equals(recommendedThreads, "1:1:1", StringComparison.Ordinal)
+            || (sampleDuration > 0.01 && bestElapsed.TotalSeconds > sampleDuration * 3.0);
 
         return new StartupBenchmarkReport(
             source,
@@ -885,7 +1156,8 @@ public static class BenchmarkRunner
         int stepIndex,
         int totalSteps,
         IProgress<StartupBenchmarkProgressUpdate>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        StartupCaseAbortGuard? abortGuard = null)
     {
         var caseDir = Path.Combine(
             outputRoot,
@@ -951,10 +1223,27 @@ public static class BenchmarkRunner
         var metricsSampler = new BenchmarkMetricsSampler();
         metricsSampler.Start();
         BenchmarkMetricsSummary metrics = BenchmarkMetricsSummary.Empty;
+        using var caseCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var autoAborted = false;
         try
         {
             await pipeline.RunAsync(new[] { item }, options, pipelineProgress =>
             {
+                if (!autoAborted && abortGuard is not null)
+                {
+                    var latestMetrics = metricsSampler.GetLatestSnapshot();
+                    var elapsed = started.Elapsed;
+                    var gpuLoad = latestMetrics?.Gpu ?? 0d;
+                    var vram = latestMetrics?.Vram;
+                    var vramExceeded = abortGuard.MaxVramBytes.HasValue && vram.HasValue && vram.Value >= abortGuard.MaxVramBytes.Value;
+                    var saturated = gpuLoad >= abortGuard.MinGpuLoadPercent || vramExceeded;
+                    if (elapsed >= abortGuard.MinElapsed && elapsed >= abortGuard.MaxElapsed && saturated)
+                    {
+                        autoAborted = true;
+                        caseCts.Cancel();
+                    }
+                }
+
                 progress?.Report(new StartupBenchmarkProgressUpdate(
                     stepIndex,
                     totalSteps,
@@ -965,11 +1254,17 @@ public static class BenchmarkRunner
                     pipelineProgress.ElapsedText,
                     pipelineProgress.EtaText,
                     string.IsNullOrWhiteSpace(pipelineProgress.CurrentStatus) ? pipelineProgress.CurrentDetail : pipelineProgress.CurrentStatus));
-            }, cancellationToken).ConfigureAwait(false);
+            }, caseCts.Token).ConfigureAwait(false);
 
             started.Stop();
             metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
             return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, true, null, metrics);
+        }
+        catch (OperationCanceledException) when (autoAborted)
+        {
+            started.Stop();
+            metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
+            return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, false, abortGuard?.Reason ?? "Auto-stopped.", metrics);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

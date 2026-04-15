@@ -1109,6 +1109,9 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
     <value>Best benchmark cases</value>
   </data>
+  <data name="StartupBenchmarkResultsTopCaseFormat" xml:space="preserve">
+    <value>{0}: {1} / {2} / {3} / tile {4} - {5:0.##} s</value>
+  </data>
   <data name="StartupBenchmarkResultsRecommendationsTitle" xml:space="preserve">
     <value>Recommendations</value>
   </data>
@@ -1117,6 +1120,30 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   </data>
   <data name="StartupBenchmarkResultsOkay" xml:space="preserve">
     <value>Your GPU looks healthy for this workload.</value>
+  </data>
+  <data name="StartupBenchmarkPhaseGpu" xml:space="preserve">
+    <value>GPU check</value>
+  </data>
+  <data name="StartupBenchmarkPhaseBalanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="StartupBenchmarkPhaseFast" xml:space="preserve">
+    <value>Fast</value>
+  </data>
+  <data name="StartupBenchmarkPhaseSafe" xml:space="preserve">
+    <value>Safe</value>
+  </data>
+  <data name="StartupBenchmarkPhaseQuality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="StartupBenchmarkPhaseThreadsRun" xml:space="preserve">
+    <value>Threads {0}, run {1}</value>
+  </data>
+  <data name="StartupBenchmarkPhaseTile" xml:space="preserve">
+    <value>Tile {0}</value>
+  </data>
+  <data name="StartupBenchmarkPhasePreset" xml:space="preserve">
+    <value>Preset {0}</value>
   </data>
   <data name="HardwareAssessmentTitle" xml:space="preserve">
     <value>Hardware check</value>

@@ -20,7 +20,7 @@ public partial class StartupBenchmarkResultsDialog : Window
         SummaryText = LocalizedStrings.StartupBenchmarkResultsSummary(clipName);
         SelectedGpuText = $"{LocalizedStrings.StartupBenchmarkResultsStrongestGpu}: {report.Recommendation.GpuLabel}";
         SelectedThreadsText = $"{LocalizedStrings.StartupBenchmarkResultsThreads}: {report.Recommendation.UpscalerThreads}";
-        SelectedPresetText = $"{LocalizedStrings.StartupBenchmarkResultsPreset}: {report.Recommendation.EncoderPreset}";
+        SelectedPresetText = $"{LocalizedStrings.StartupBenchmarkResultsPreset}: {BenchmarkRunner.LocalizedPresetForCase(report.Recommendation.EncoderPreset)}";
         SelectedTileText = $"{LocalizedStrings.StartupBenchmarkResultsTile}: {report.Recommendation.TileSize}";
         ThroughputText = $"{LocalizedStrings.StartupBenchmarkResultsThroughput}: ~{report.Recommendation.ThroughputFps:0.0} FPS";
         WarningText = report.Recommendation.IsWeakGpu
@@ -51,12 +51,12 @@ public partial class StartupBenchmarkResultsDialog : Window
                      .OrderBy(result => result.Elapsed)
                      .Take(5))
         {
-            TopCases.Add(string.Format(
-                CultureInfo.InvariantCulture,
-                "{0}: {1} / {2} / tile {3} - {4:0.##} s",
-                entry.Phase,
+            TopCases.Add(LocalizedStrings.Format(
+                "StartupBenchmarkResultsTopCaseFormat",
+                BenchmarkRunner.LocalizeStartupBenchmarkPhase(entry.Phase),
                 entry.GpuLabel,
-                $"{entry.UpscalerThreads} / {entry.EncoderPreset}",
+                entry.UpscalerThreads,
+                BenchmarkRunner.LocalizedPresetForCase(entry.EncoderPreset),
                 entry.TileSize,
                 entry.Elapsed.TotalSeconds));
         }
