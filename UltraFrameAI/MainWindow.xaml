@@ -342,17 +342,6 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
-        <Style x:Key="AnimePresetCardStyle" TargetType="Button" BasedOn="{StaticResource PresetCardButtonStyle}">
-            <Setter Property="Background" Value="#10253B" />
-            <Setter Property="BorderBrush" Value="#2A5B93" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding SelectedContentMode}" Value="Anime">
-                    <Setter Property="Background" Value="#163A5D" />
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
         <Style x:Key="PresetMiniButtonStyle" TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
             <Setter Property="Padding" Value="10,6" />
             <Setter Property="MinHeight" Value="0" />
@@ -401,27 +390,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="VideoPresetCardStyle" TargetType="Button" BasedOn="{StaticResource PresetCardButtonStyle}">
-            <Setter Property="Background" Value="#152737" />
-            <Setter Property="BorderBrush" Value="#35556D" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding SelectedContentMode}" Value="Video">
-                    <Setter Property="Background" Value="#20384B" />
-                    <Setter Property="BorderBrush" Value="#7AA4C8" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="FacesPresetCardStyle" TargetType="Button" BasedOn="{StaticResource PresetCardButtonStyle}">
-            <Setter Property="Background" Value="#1A2631" />
-            <Setter Property="BorderBrush" Value="#465868" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding SelectedContentMode}" Value="Faces">
-                    <Setter Property="Background" Value="#253241" />
-                    <Setter Property="BorderBrush" Value="#9BB0C0" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
 
         <Storyboard x:Key="ScanPopupIn">
             <DoubleAnimation Storyboard.TargetName="ScanPopupBorder"
@@ -623,6 +591,11 @@
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap"
                                    MaxWidth="830" />
+                        <TextBlock Text="{local:Loc RealEsrganAnimeHint}"
+                                   Margin="0,6,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="830" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -694,7 +667,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://application:,,,/images/flag-en.png" Width="18" Height="12" Margin="0,0,8,0" />
-                                                <TextBlock Text="{local:Loc LanguageEnglish}" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.English}" />
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>
@@ -715,7 +688,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://application:,,,/images/flag-ru.png" Width="18" Height="12" Margin="0,0,8,0" />
-                                                <TextBlock Text="{local:Loc LanguageRussian}" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.Russian}" />
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>
@@ -736,7 +709,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://application:,,,/images/flag-de.png" Width="18" Height="12" Margin="0,0,8,0" />
-                                                <TextBlock Text="{local:Loc LanguageGerman}" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.German}" />
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>
@@ -1796,234 +1769,16 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Button Content="{local:Loc Benchmark}"
+                            <Button Content="{local:Loc BenchmarkSelectedGpu}"
                                     Click="BenchmarkButton_Click"
                                     MinWidth="132"
                                     Padding="14,11"
                                     Background="#16243D"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     Foreground="{StaticResource TextPrimaryBrush}"
-                                    ToolTip="{local:Loc BenchmarkHint}"
+                                    ToolTip="{local:Loc BenchmarkSelectedGpuHint}"
                                     Margin="0,10,0,0" />
 
-                                </StackPanel>
-                            </ScrollViewer>
-                        </TabItem>
-
-                        <TabItem Header="{local:Loc SettingsTabAntiFlicker}">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                          HorizontalScrollBarVisibility="Disabled"
-                                          Padding="8,10,8,0">
-                                <StackPanel>
-                            <WrapPanel Margin="0,6,0,4"
-                                       VerticalAlignment="Center">
-                                <CheckBox Content="{local:Loc AntiFlicker}"
-                                          IsChecked="{Binding UseAntiFlicker}"
-                                          VerticalAlignment="Center" />
-                            </WrapPanel>
-                            <TextBlock Text="{local:Loc AntiFlickerHint}"
-                                       Margin="0,0,0,12"
-                                       Style="{StaticResource CaptionStyle}"
-                                       TextWrapping="Wrap" />
-
-                            <Grid Margin="0,0,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource SettingsFieldTitleStyle}"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Center">
-                                    <Run Text="{local:Loc AntiFlickerMode}" />
-                                    <Run Text=" (" />
-                                    <Run Text="{local:Loc AntiFlickerModeHint}"
-                                         Foreground="{StaticResource TextSecondaryBrush}"
-                                         FontWeight="Normal" />
-                                    <Run Text=")" />
-                                </TextBlock>
-                                <Button Grid.Column="1"
-                                        x:Name="AntiFlickerModeHelpButton"
-                                        Style="{StaticResource RoundHelpButtonStyle}"
-                                        Content="?"
-                                        Click="AntiFlickerModeHelp_Click" />
-                            </Grid>
-                            <ComboBox ItemsSource="{Binding AntiFlickerModeOptions}"
-                                      DisplayMemberPath="Label"
-                                      SelectedValuePath="Value"
-                                      SelectedValue="{Binding SelectedAntiFlickerMode}"
-                                      Margin="0,0,0,12" />
-
-                            <TextBlock Style="{StaticResource SettingsFieldTitleStyle}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,10">
-                                <Run Text="{local:Loc AntiFlickerPreset}" />
-                                <Run Text=" (" />
-                                <Run Text="{local:Loc AntiFlickerPresetHint}"
-                                     Foreground="{StaticResource TextSecondaryBrush}"
-                                     FontWeight="Normal" />
-                                <Run Text=")" />
-                            </TextBlock>
-
-                            <StackPanel>
-                                <Button Command="{Binding SetContentModeCommand}"
-                                        CommandParameter="Anime"
-                                        Style="{StaticResource AnimePresetCardStyle}"
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Stretch">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="10" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="26"
-                                                    Height="26"
-                                                    Background="#3B78B8"
-                                                    CornerRadius="13"
-                                                    VerticalAlignment="Top">
-                                                <Viewbox Stretch="Uniform">
-                                                    <Canvas Width="14" Height="14">
-                                                        <Path Fill="White"
-                                                              Opacity="0.92"
-                                                              Data="M7,0.5 L9,5.1 L14,5.6 L10.2,8.9 L11.4,13.5 L7,10.9 L2.6,13.5 L3.8,8.9 L0,5.6 L5,5.1 Z" />
-                                                    </Canvas>
-                                                </Viewbox>
-                                            </Border>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{local:Loc ContentModeAnime}"
-                                                           FontWeight="SemiBold" />
-                                                <TextBlock Text="{local:Loc AntiFlickerAnimeHint}"
-                                                           Style="{StaticResource CaptionStyle}"
-                                                           Margin="0,4,0,0"
-                                                           TextWrapping="Wrap" />
-                                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                                    <Button Content="{local:Loc AntiFlickerUltra}"
-                                                            Command="{Binding SetContentModeCommand}"
-                                                            CommandParameter="AnimeUltra"
-                                                            HorizontalAlignment="Left">
-                                                        <Button.Style>
-                                                            <Style TargetType="Button" BasedOn="{StaticResource PresetMiniButtonStyle}">
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding SelectedContentMode}" Value="AnimeUltra">
-                                                                        <Setter Property="Background" Value="#342069" />
-                                                                        <Setter Property="BorderBrush" Value="#C5B0FF" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Button.Style>
-                                                    </Button>
-                                                    <TextBlock Text="{local:Loc AntiFlickerUltraHint}"
-                                                               Style="{StaticResource CaptionStyle}"
-                                                               Margin="10,0,0,0"
-                                                               VerticalAlignment="Center"
-                                                               TextWrapping="Wrap" />
-                                                </StackPanel>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
-
-                                <Button Command="{Binding SetContentModeCommand}"
-                                        CommandParameter="Video"
-                                        Style="{StaticResource VideoPresetCardStyle}"
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Stretch">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="10" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="26"
-                                                    Height="26"
-                                                    Background="#5D7F96"
-                                                    CornerRadius="13"
-                                                    VerticalAlignment="Top">
-                                                <Viewbox Stretch="Uniform">
-                                                    <Canvas Width="16" Height="12">
-                                                        <Rectangle Width="16"
-                                                                   Height="12"
-                                                                   RadiusX="2"
-                                                                   RadiusY="2"
-                                                                   Fill="White"
-                                                                   Opacity="0.18" />
-                                                        <Polygon Fill="White"
-                                                                 Opacity="0.9"
-                                                                 Points="4.8,2.3 11.8,6 4.8,9.7" />
-                                                    </Canvas>
-                                                </Viewbox>
-                                            </Border>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{local:Loc ContentModeVideo}"
-                                                           FontWeight="SemiBold" />
-                                                <TextBlock Text="{local:Loc AntiFlickerVideoHint}"
-                                                           Style="{StaticResource CaptionStyle}"
-                                                           Margin="0,4,0,0"
-                                                           TextWrapping="Wrap" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
-
-                                <Button Command="{Binding SetContentModeCommand}"
-                                        CommandParameter="Faces"
-                                        Style="{StaticResource FacesPresetCardStyle}"
-                                        HorizontalAlignment="Stretch">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="10" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="26"
-                                                    Height="26"
-                                                    Background="#748999"
-                                                    CornerRadius="13"
-                                                    VerticalAlignment="Top">
-                                                <Viewbox Stretch="Uniform">
-                                                    <Canvas Width="14" Height="14">
-                                                        <Ellipse Width="6.2"
-                                                                 Height="6.2"
-                                                                 Canvas.Left="3.9"
-                                                                 Canvas.Top="0.6"
-                                                                 Fill="White"
-                                                                 Opacity="0.92" />
-                                                        <Path Fill="White"
-                                                              Opacity="0.88"
-                                                              Data="M2,13 C2,10.2 4.2,8 7,8 H9 C11.8,8 14,10.2 14,13 V15 H2 Z" />
-                                                    </Canvas>
-                                                </Viewbox>
-                                            </Border>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{local:Loc ContentModeFaces}"
-                                                           FontWeight="SemiBold" />
-                                                <TextBlock Text="{local:Loc AntiFlickerFacesHint}"
-                                                           Style="{StaticResource CaptionStyle}"
-                                                           Margin="0,4,0,0"
-                                                           TextWrapping="Wrap" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-
-                            <DockPanel Margin="0,12,0,0">
-                                <TextBlock Text="{local:Loc AntiFlickerStrength}"
-                                           Style="{StaticResource SettingsFieldTitleStyle}" />
-                                <TextBlock DockPanel.Dock="Right"
-                                           Text="{Binding AntiFlickerStrength, StringFormat={}{0:0}%}"
-                                           Style="{StaticResource CaptionStyle}"
-                                           Margin="12,0,0,0" />
-                            </DockPanel>
-                            <Slider Minimum="0"
-                                    Maximum="100"
-                                    Value="{Binding AntiFlickerStrength, UpdateSourceTrigger=PropertyChanged}"
-                                    TickFrequency="5"
-                                    IsSnapToTickEnabled="True"
-                                    Margin="0,6,0,0" />
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>

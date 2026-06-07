@@ -33,7 +33,6 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
     private readonly Dictionary<string, WpfBrush> _groupBrushes = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Codec/Preset"] = BrushFromHex("#4DA3FF"),
-        ["Anti-flicker"] = BrushFromHex("#B48CFF"),
         ["Upscaler threads"] = BrushFromHex("#4CD18C"),
         ["Tile size"] = BrushFromHex("#F5B14C"),
     };
@@ -55,7 +54,6 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
             RenderCharts();
         };
         _legendItems.Add(new BenchmarkWindow.BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendCodecPreset, _groupBrushes["Codec/Preset"]));
-        _legendItems.Add(new BenchmarkWindow.BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendAntiFlicker, _groupBrushes["Anti-flicker"]));
         _legendItems.Add(new BenchmarkWindow.BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendThreads, _groupBrushes["Upscaler threads"]));
         _legendItems.Add(new BenchmarkWindow.BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendTileSize, _groupBrushes["Tile size"]));
         _rankingLegendItems.Add(new BenchmarkWindow.BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendFastest, WpfBrushes.WhiteSmoke));
@@ -311,7 +309,6 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
                 ToolTip = CreateBenchmarkToolTip(
                     $"{point.Group} / {point.Name}",
                     $"{point.Elapsed.TotalSeconds:0.###} s",
-                    $"{LocalizedStrings.ContentMode}: {GetLocalizedContentMode(point.ContentMode)}",
                     $"{LocalizedStrings.BenchmarkChartQualityAxis}: {point.QualityScore:0.#}",
                     $"{LocalizedStrings.BenchmarkBestQualityTimeLabel}: {point.QualityScore / Math.Max(0.1, point.Elapsed.TotalSeconds):0.###}")
             };
@@ -395,13 +392,11 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
                     ? CreateBenchmarkToolTip(
                         $"{point.Group} / {point.Name}",
                         $"{LocalizedStrings.BenchmarkChartTimeAxis}: {metric:0.###} s",
-                        $"{LocalizedStrings.ContentMode}: {GetLocalizedContentMode(point.ContentMode)}",
                         $"{LocalizedStrings.BenchmarkChartQualityAxis}: {point.QualityScore:0.#}",
                         $"{LocalizedStrings.BenchmarkBestQualityTimeLabel}: {point.QualityScore / Math.Max(0.1, point.Elapsed.TotalSeconds):0.###}")
                     : CreateBenchmarkToolTip(
                         $"{point.Group} / {point.Name}",
                         $"{LocalizedStrings.BenchmarkQualityTimeMode}: {metric:0.###}",
-                        $"{LocalizedStrings.ContentMode}: {GetLocalizedContentMode(point.ContentMode)}",
                         $"{LocalizedStrings.BenchmarkChartTimeAxis}: {point.Elapsed.TotalSeconds:0.###} s",
                         $"{LocalizedStrings.BenchmarkChartQualityAxis}: {point.QualityScore:0.#}")
             };
@@ -489,23 +484,11 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
         return point.Group switch
         {
             "Codec/Preset" => ShortCodecPreset(point.Codec, point.Preset),
-            "Anti-flicker" => ShortAntiFlicker(point.ContentMode, point.AntiFlicker, point.Strength),
             "Upscaler threads" => $"{LocalizedStrings.BenchmarkShortThreadsPrefix} {point.UpscalerThreads}",
             "Tile size" => $"{LocalizedStrings.BenchmarkShortTilePrefix} {point.TileSize}",
             _ => point.Name
         };
     }
-
-    private static string GetLocalizedContentMode(string contentMode)
-        => contentMode switch
-        {
-            "anime-ultra" => LocalizedStrings.ContentModeAnimeUltra,
-            "animeultra" => LocalizedStrings.ContentModeAnimeUltra,
-            "anime" => LocalizedStrings.ContentModeAnime,
-            "video" => LocalizedStrings.ContentModeVideo,
-            "faces" => LocalizedStrings.ContentModeFaces,
-            _ => contentMode
-        };
 
     private static string ShortCodecPreset(string codec, string preset)
     {
@@ -523,32 +506,10 @@ public partial class BenchmarkChartsWindow : Window, INotifyPropertyChanged
         return $"{codec} {shortPreset}";
     }
 
-    private static string ShortAntiFlicker(string contentMode, bool enabled, double strength)
-    {
-        var normalized = contentMode.ToLowerInvariant();
-        if (!enabled)
-        {
-            return LocalizedStrings.BenchmarkShortAFOff;
-        }
-
-        var mode = normalized switch
-        {
-            "anime" => strength >= 80 ? LocalizedStrings.BenchmarkShortAFUltra : LocalizedStrings.BenchmarkShortAFAnime,
-            "anime-ultra" => LocalizedStrings.BenchmarkShortAFUltra,
-            "animeultra" => LocalizedStrings.BenchmarkShortAFUltra,
-            "video" => LocalizedStrings.BenchmarkShortAFVideo,
-            "faces" => LocalizedStrings.BenchmarkShortAFFaces,
-            _ => LocalizedStrings.BenchmarkShortAFOn
-        };
-
-        return mode;
-    }
-
     private static string GetLocalizedGroupName(string group)
         => group switch
         {
             "Codec/Preset" => LocalizedStrings.BenchmarkLegendCodecPreset,
-            "Anti-flicker" => LocalizedStrings.BenchmarkLegendAntiFlicker,
             "Upscaler threads" => LocalizedStrings.BenchmarkLegendThreads,
             "Tile size" => LocalizedStrings.BenchmarkLegendTileSize,
             _ => group

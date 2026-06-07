@@ -163,7 +163,7 @@
                                     </Button.Style>
                                     <DockPanel>
                                         <TextBlock Text="EN" FontWeight="SemiBold" />
-                                        <TextBlock Text="{local:Loc LanguageEnglish}" Margin="10,0,0,0" />
+                                        <TextBlock Text="{x:Static local:LanguageDisplayNames.English}" Margin="10,0,0,0" />
                                     </DockPanel>
                                 </Button>
                                 <Button Command="{Binding SetLanguageCommand}"
@@ -181,7 +181,7 @@
                                     </Button.Style>
                                     <DockPanel>
                                         <TextBlock Text="RU" FontWeight="SemiBold" />
-                                        <TextBlock Text="{local:Loc LanguageRussian}" Margin="10,0,0,0" />
+                                        <TextBlock Text="{x:Static local:LanguageDisplayNames.Russian}" Margin="10,0,0,0" />
                                     </DockPanel>
                                 </Button>
                                 <Button Command="{Binding SetLanguageCommand}"
@@ -199,7 +199,7 @@
                                     </Button.Style>
                                     <DockPanel>
                                         <TextBlock Text="DE" FontWeight="SemiBold" />
-                                        <TextBlock Text="{local:Loc LanguageGerman}" Margin="10,0,0,0" />
+                                        <TextBlock Text="{x:Static local:LanguageDisplayNames.German}" Margin="10,0,0,0" />
                                     </DockPanel>
                                 </Button>
                             </StackPanel>
@@ -235,6 +235,10 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    <TextBlock Text="{Binding PromptFootnote}"
+                               Margin="0,6,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 

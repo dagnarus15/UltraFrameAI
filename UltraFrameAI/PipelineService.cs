@@ -827,9 +827,6 @@ public sealed class PipelineService
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
-                var antiFlicker = options.UseAntiFlicker && options.AntiFlickerStrength > 0
-                    ? AntiFlickerProcessor.TryCreate(upWidth, upHeight, 3, options.AntiFlickerMode, options.ContentMode, options.AntiFlickerStrength)
-                    : null;
                 var currentFrames = resumeStartFrame;
                 var firstProcessedFrameReceived = false;
                 var lastTick = Stopwatch.StartNew();
@@ -1172,24 +1169,6 @@ public sealed class PipelineService
                                 }
                             }
 
-                            byte[]? processedBuffer = null;
-                            if (antiFlicker is not null)
-                            {
-                                processedBuffer = ArrayPool<byte>.Shared.Rent(outputFrameBytes);
-                                if (!antiFlicker.Process(frameBuffer, processedBuffer))
-                                {
-                                    antiFlicker.Dispose();
-                                    antiFlicker = null;
-                                    ArrayPool<byte>.Shared.Return(processedBuffer);
-                                    processedBuffer = null;
-                                }
-                                else
-                                {
-                                    ArrayPool<byte>.Shared.Return(frameBuffer);
-                                    frameBuffer = processedBuffer;
-                                    processedBuffer = null;
-                                }
-                            }
                             if (shouldUpdatePreview)
                             {
                                 var previewBuffer = frameBuffer;
@@ -1270,7 +1249,6 @@ public sealed class PipelineService
                     }
 
                     try { firstFrameHeartbeatCts.Cancel(); } catch { }
-                    try { antiFlicker?.Dispose(); } catch { }
                     try { refinerIn?.Close(); } catch { }
                     try { upscaleIn.Close(); } catch { }
                     try { await decodeProducer.ConfigureAwait(false); } catch { }
@@ -1922,10 +1900,6 @@ public sealed class PipelineService
             options.EncoderPreset,
             options.UpscalerBackend,
             options.RefinerBackend,
-            options.UseAntiFlicker,
-            options.AntiFlickerMode,
-            AntiFlickerStrength = Math.Round(options.AntiFlickerStrength, 2),
-            options.ContentMode,
             options.RepairBrokenTimestamps,
             options.UpscalerPath,
             options.UpscalerWorkingDirectory,

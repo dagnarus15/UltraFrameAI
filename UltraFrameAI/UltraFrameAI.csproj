@@ -43,11 +43,4 @@
   <ItemGroup>
     <PackageReference Include="System.Management" Version="9.0.4" />
   </ItemGroup>
-
-  <Target Name="CopyNativeAntiFlicker" AfterTargets="Build">
-    <ItemGroup>
-      <NativeAntiFlickerDll Include="$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll" Condition="Exists('$(MSBuildProjectDirectory)\..\UltraFrameAI.Native\AntiFlicker\build\Release\UltraFrameAI.AntiFlicker.Native.dll')" />
-    </ItemGroup>
-    <Copy SourceFiles="@(NativeAntiFlickerDll)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
-  </Target>
 </Project>

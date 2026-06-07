@@ -186,7 +186,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://application:,,,/images/flag-en.png" Width="18" Height="12" Margin="0,0,8,0" />
-                                                <TextBlock Text="{local:Loc LanguageEnglish}" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.English}" />
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>
@@ -207,7 +207,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://application:,,,/images/flag-ru.png" Width="18" Height="12" Margin="0,0,8,0" />
-                                                <TextBlock Text="{local:Loc LanguageRussian}" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.Russian}" />
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>
@@ -228,7 +228,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="pack://application:,,,/images/flag-de.png" Width="18" Height="12" Margin="0,0,8,0" />
-                                                <TextBlock Text="{local:Loc LanguageGerman}" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.German}" />
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>

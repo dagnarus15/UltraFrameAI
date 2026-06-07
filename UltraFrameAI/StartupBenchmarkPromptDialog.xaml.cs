@@ -13,15 +13,13 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
 {
     private bool _allowClose;
     private readonly StartupBenchmarkPromptKind _promptKind;
+    private readonly IReadOnlyList<StartupBenchmarkGpuCandidate> _gpuCandidates;
 
-    public StartupBenchmarkPromptDialog(HardwareAssessment assessment, StartupBenchmarkPromptKind promptKind)
+    public StartupBenchmarkPromptDialog(IReadOnlyList<StartupBenchmarkGpuCandidate> gpuCandidates, StartupBenchmarkPromptKind promptKind)
     {
         InitializeComponent();
         _promptKind = promptKind;
-        foreach (var line in assessment.Lines)
-        {
-            AssessmentLines.Add(line);
-        }
+        _gpuCandidates = gpuCandidates.ToArray();
 
         DataContext = this;
         UpdateLocalizedText();
@@ -40,6 +38,8 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
     public string PromptDetails { get; private set; } = string.Empty;
 
     public string PromptBody { get; private set; } = string.Empty;
+
+    public string PromptFootnote { get; private set; } = string.Empty;
 
     public UiLanguage CurrentLanguage => LocalizedStrings.CurrentLanguage;
 
@@ -138,6 +138,8 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
 
     private void UpdateLocalizedText()
     {
+        RefreshAssessmentLines();
+
         switch (_promptKind)
         {
             case StartupBenchmarkPromptKind.NewHardware:
@@ -145,12 +147,14 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
                 PromptGreeting = LocalizedStrings.StartupBenchmarkNewHardwareGreeting;
                 PromptDetails = string.Empty;
                 PromptBody = LocalizedStrings.StartupBenchmarkNewHardwareBody;
+                PromptFootnote = LocalizedStrings.Get("StartupBenchmarkPromptFootnote");
                 break;
             default:
                 PromptTitle = LocalizedStrings.StartupBenchmarkPromptTitle;
                 PromptGreeting = LocalizedStrings.StartupBenchmarkPromptGreeting;
                 PromptDetails = LocalizedStrings.StartupBenchmarkPromptThanks;
                 PromptBody = LocalizedStrings.StartupBenchmarkPromptBody;
+                PromptFootnote = LocalizedStrings.Get("StartupBenchmarkPromptFootnote");
                 break;
         }
 
@@ -159,6 +163,16 @@ public partial class StartupBenchmarkPromptDialog : Window, INotifyPropertyChang
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptGreeting)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptDetails)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptBody)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptFootnote)));
+    }
+
+    private void RefreshAssessmentLines()
+    {
+        AssessmentLines.Clear();
+        foreach (var line in HardwareAssessmentBuilder.BuildStatic(_gpuCandidates).Lines)
+        {
+            AssessmentLines.Add(line);
+        }
     }
 
     private static void OpenPopup(Popup popup, FrameworkElement content, ScaleTransform scale, TranslateTransform translate)

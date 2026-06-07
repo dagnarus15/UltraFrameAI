@@ -42,7 +42,6 @@ public partial class BenchmarkWindow : Window, INotifyPropertyChanged
     private readonly Dictionary<string, WpfBrush> _groupBrushes = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Codec/Preset"] = BrushFromHex("#4DA3FF"),
-        ["Anti-flicker"] = BrushFromHex("#B48CFF"),
         ["Upscaler threads"] = BrushFromHex("#4CD18C"),
         ["Tile size"] = BrushFromHex("#F5B14C"),
     };
@@ -89,7 +88,6 @@ public partial class BenchmarkWindow : Window, INotifyPropertyChanged
             RenderCharts();
         };
         _legendItems.Add(new BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendCodecPreset, _groupBrushes["Codec/Preset"]));
-        _legendItems.Add(new BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendAntiFlicker, _groupBrushes["Anti-flicker"]));
         _legendItems.Add(new BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendThreads, _groupBrushes["Upscaler threads"]));
         _legendItems.Add(new BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendTileSize, _groupBrushes["Tile size"]));
         _rankingLegendItems.Add(new BenchmarkLegendItem(LocalizedStrings.BenchmarkLegendFastest, WpfBrushes.WhiteSmoke));
@@ -620,7 +618,6 @@ public partial class BenchmarkWindow : Window, INotifyPropertyChanged
         => group switch
         {
             "Codec/Preset" => LocalizedStrings.BenchmarkLegendCodecPreset,
-            "Anti-flicker" => LocalizedStrings.BenchmarkLegendAntiFlicker,
             "Upscaler threads" => LocalizedStrings.BenchmarkLegendThreads,
             "Tile size" => LocalizedStrings.BenchmarkLegendTileSize,
             _ => group

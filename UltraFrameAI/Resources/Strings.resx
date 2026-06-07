@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -17,6 +17,12 @@
   </data>
   <data name="Subtitle" xml:space="preserve">
     <value>Load a folder or a file to build the queue.</value>
+  </data>
+  <data name="QuickStartHint" xml:space="preserve">
+    <value>Quick start</value>
+  </data>
+  <data name="RealEsrganAnimeHint" xml:space="preserve">
+    <value>Works best with animation and anime.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Workspace</value>
@@ -139,7 +145,7 @@
     <value>FFmpeg installed.</value>
   </data>
   <data name="FfmpegInstallSuccessTitle" xml:space="preserve">
-    <value>FFmpeg installed successfully 🎉</value>
+    <value>FFmpeg installed successfully!</value>
   </data>
   <data name="FfmpegInstallSuccessBody" xml:space="preserve">
     <value>UltraFrame AI is ready to enhance your videos.</value>
@@ -175,7 +181,7 @@
     <value>Result folder:</value>
   </data>
   <data name="OutputLocationHint" xml:space="preserve">
-    <value>The result will appear in the “{0}” folder next to the file.</value>
+    <value>The result will appear in the "{0}" folder next to the file.</value>
   </data>
   <data name="OutputFolderNearFileLabel" xml:space="preserve">
     <value>Result folder next to the file</value>
@@ -345,6 +351,12 @@
   <data name="BenchmarkHint" xml:space="preserve">
     <value>Run the benchmark to check your hardware and suggest recommended settings.</value>
   </data>
+  <data name="BenchmarkSelectedGpu" xml:space="preserve">
+    <value>Benchmark selected GPU</value>
+  </data>
+  <data name="BenchmarkSelectedGpuHint" xml:space="preserve">
+    <value>Run the benchmark for the currently selected GPU to fine-tune the recommended settings.</value>
+  </data>
   <data name="BenchmarkWindowTitle" xml:space="preserve">
     <value>Benchmark</value>
   </data>
@@ -429,9 +441,6 @@
   <data name="BenchmarkLegendCodecPreset" xml:space="preserve">
     <value>Codec / preset</value>
   </data>
-  <data name="BenchmarkLegendAntiFlicker" xml:space="preserve">
-    <value>Anti-flicker</value>
-  </data>
   <data name="BenchmarkLegendThreads" xml:space="preserve">
     <value>Threads</value>
   </data>
@@ -471,9 +480,6 @@
   <data name="BenchmarkLogBestCodecPreset" xml:space="preserve">
     <value>Best codec/preset: {0}</value>
   </data>
-  <data name="BenchmarkLogBestAntiFlicker" xml:space="preserve">
-    <value>Best anti-flicker: {0}</value>
-  </data>
   <data name="BenchmarkLogBestUpscalerThreads" xml:space="preserve">
     <value>Best upscaler threads: {0}</value>
   </data>
@@ -510,15 +516,6 @@
   <data name="BenchmarkReportTablePreset" xml:space="preserve">
     <value>Preset</value>
   </data>
-  <data name="BenchmarkReportTableAf" xml:space="preserve">
-    <value>AF</value>
-  </data>
-  <data name="BenchmarkReportTableMode" xml:space="preserve">
-    <value>Mode</value>
-  </data>
-  <data name="BenchmarkReportTableStrength" xml:space="preserve">
-    <value>Strength</value>
-  </data>
   <data name="BenchmarkReportTableThreads" xml:space="preserve">
     <value>Threads</value>
   </data>
@@ -545,21 +542,6 @@
   </data>
   <data name="BenchmarkCaseCodecPreset" xml:space="preserve">
     <value>{0} / {1}</value>
-  </data>
-  <data name="BenchmarkCaseAntiFlickerOff" xml:space="preserve">
-    <value>Off</value>
-  </data>
-  <data name="BenchmarkCaseAntiFlickerLuma" xml:space="preserve">
-    <value>Luma Stabilizer</value>
-  </data>
-  <data name="BenchmarkCaseAntiFlickerFlow" xml:space="preserve">
-    <value>Flow Guided</value>
-  </data>
-  <data name="BenchmarkCaseAntiFlickerEdgeClamp" xml:space="preserve">
-    <value>Edge Clamp</value>
-  </data>
-  <data name="BenchmarkCaseAntiFlickerLegacy" xml:space="preserve">
-    <value>Legacy</value>
   </data>
   <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
     <value>Video files|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|All files|*.*</value>
@@ -630,9 +612,6 @@
   <data name="BenchmarkSummaryBestCodecPreset" xml:space="preserve">
     <value>Best codec/preset</value>
   </data>
-  <data name="BenchmarkSummaryBestAntiFlicker" xml:space="preserve">
-    <value>Best anti-flicker</value>
-  </data>
   <data name="BenchmarkSummaryBestUpscalerThreads" xml:space="preserve">
     <value>Best upscaler threads</value>
   </data>
@@ -687,80 +666,6 @@
   <data name="BenchmarkStop" xml:space="preserve">
     <value>Stop benchmark</value>
   </data>
-  <data name="AntiFlicker" xml:space="preserve">
-    <value>Anti-flicker</value>
-  </data>
-  <data name="AntiFlickerHint" xml:space="preserve">
-    <value>Keeps small flicker under control without smearing lines.</value>
-  </data>
-  <data name="AntiFlickerMode" xml:space="preserve">
-    <value>Mode</value>
-  </data>
-  <data name="AntiFlickerModeHint" xml:space="preserve">
-    <value>Chooses how the app reduces flicker. If you're unsure, leave it on Flow Guided.</value>
-  </data>
-  <data name="AntiFlickerModeHelpTitle" xml:space="preserve">
-    <value>Anti-flicker mode</value>
-  </data>
-  <data name="AntiFlickerModeHelpBody" xml:space="preserve">
-    <value>**Flow Guided** is the recommended default. In our tests it handled harder flicker better and tracked motion between frames more effectively.
-
-**Luma Stabilizer** is the softer and simpler mode. It adds less processing cost, but its stabilization is usually weaker.
-
-If you're unsure, keep **Flow Guided**.</value>
-  </data>
-  <data name="AntiFlickerModeLumaStabilizer" xml:space="preserve">
-    <value>Gentle — Luma Stabilizer</value>
-  </data>
-  <data name="AntiFlickerModeFlowGuided" xml:space="preserve">
-    <value>Enhanced — Flow Guided</value>
-  </data>
-  <data name="AntiFlickerModeEdgeClamp" xml:space="preserve">
-    <value>Edge Clamp</value>
-  </data>
-  <data name="AntiFlickerModeLegacy" xml:space="preserve">
-    <value>Legacy</value>
-  </data>
-  <data name="AntiFlickerStrength" xml:space="preserve">
-    <value>Strength</value>
-  </data>
-  <data name="AntiFlickerPreset" xml:space="preserve">
-    <value>Preset</value>
-  </data>
-  <data name="AntiFlickerPresetHint" xml:space="preserve">
-    <value>each preset includes its own mode, toggle, and strength</value>
-  </data>
-  <data name="AntiFlickerAnimeHint" xml:space="preserve">
-    <value>Flow Guided by default. Best for line art and subtle detail.</value>
-  </data>
-  <data name="AntiFlickerVideoHint" xml:space="preserve">
-    <value>Flow Guided by default. Balanced for mixed live-action footage.</value>
-  </data>
-  <data name="AntiFlickerFacesHint" xml:space="preserve">
-    <value>Flow Guided by default. Softens flicker while protecting faces.</value>
-  </data>
-  <data name="AntiFlickerUltra" xml:space="preserve">
-    <value>Ultra</value>
-  </data>
-  <data name="AntiFlickerUltraHint" xml:space="preserve">
-    <value>Flow Guided with higher strength for the most stubborn anime flicker.
-Best for maximum stability.</value>
-  </data>
-  <data name="ContentMode" xml:space="preserve">
-    <value>Content mode</value>
-  </data>
-  <data name="ContentModeAnime" xml:space="preserve">
-    <value>Anime</value>
-  </data>
-  <data name="ContentModeAnimeUltra" xml:space="preserve">
-    <value>Anime Ultra</value>
-  </data>
-  <data name="ContentModeVideo" xml:space="preserve">
-    <value>Video</value>
-  </data>
-  <data name="ContentModeFaces" xml:space="preserve">
-    <value>Faces</value>
-  </data>
   <data name="ScanningFolder" xml:space="preserve">
     <value>Scanning folder...</value>
   </data>
@@ -770,7 +675,7 @@ Best for maximum stability.</value>
   <data name="Codec" xml:space="preserve">
     <value>Codec</value>
   </data>
-      <data name="Target" xml:space="preserve">
+  <data name="Target" xml:space="preserve">
     <value>Format</value>
   </data>
   <data name="Resolution" xml:space="preserve">
@@ -807,14 +712,17 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   <data name="ContainerFutureLabel" xml:space="preserve">
     <value>Container (more options will be available later)</value>
   </data>
+  <data name="Container" xml:space="preserve">
+    <value>Container</value>
+  </data>
   <data name="CodecHelpTitle" xml:space="preserve">
     <value>Codec</value>
   </data>
   <data name="CodecHelpBody" xml:space="preserve">
     <value>A codec defines how the video is compressed.
 
-**x264** — faster and broadly compatible.
-**x265** — usually makes the result file smaller, but takes longer.</value>
+**x264** - faster and broadly compatible.
+**x265** - usually makes the result file smaller, but takes longer.</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
     <value>Format</value>
@@ -822,11 +730,11 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
   <data name="FormatHelpBody" xml:space="preserve">
     <value>Format here means the result resolution.
 
-**720p** — makes it HD.
-**1080p** — makes it Full HD.
-**1440p** — makes it QHD.
-**2160p** — renders 4K.
-**4320p** — renders 8K.</value>
+**720p** - makes it HD.
+**1080p** - makes it Full HD.
+**1440p** - makes it QHD.
+**2160p** - renders 4K.
+**4320p** - renders 8K.</value>
   </data>
   <data name="ContainerHelpTitle" xml:space="preserve">
     <value>Container</value>
@@ -863,9 +771,9 @@ If set too high, it can also add load without much real benefit.</value>
 **The third number** is how many already processed jobs can wait for the next stage.
 
 Examples:
-**1:1:1** — the safest and lightest mode.
-**4:4:4** — a more balanced faster mode.
-**8:8:8** — an aggressive mode for a strong GPU with solid VRAM headroom.
+**1:1:1** - the safest and lightest mode.
+**4:4:4** - a more balanced faster mode.
+**8:8:8** - an aggressive mode for a strong GPU with solid VRAM headroom.
 
 Usually all three numbers are kept equal so the pipeline stays balanced.</value>
   </data>
@@ -911,6 +819,9 @@ If you ever want to support the project, you can find that option in the help se
   <data name="StartupBenchmarkPromptBody" xml:space="preserve">
     <value>On the first start, UltraFrame AI can run a short benchmark on a One Piece sample clip, check whether this PC meets the practical minimum requirements, choose the fastest GPU, and suggest RealESRGAN settings. This may take a few minutes. If you skip it, you may run into conversion errors later. You can run this benchmark again later from Settings. Run it now?</value>
   </data>
+  <data name="StartupBenchmarkPromptFootnote" xml:space="preserve">
+    <value>This first screen is only a preliminary estimate. The benchmark is mainly needed to find the best UltraFrame AI settings for this PC.</value>
+  </data>
   <data name="StartupBenchmarkNewHardwareTitle" xml:space="preserve">
     <value>Benchmark for new devices</value>
   </data>
@@ -943,6 +854,15 @@ If you ever want to support the project, you can find that option in the help se
   </data>
   <data name="StartupBenchmarkCurrentCase" xml:space="preserve">
     <value>Current case</value>
+  </data>
+  <data name="StartupBenchmarkCurrentSettings" xml:space="preserve">
+    <value>Current settings</value>
+  </data>
+  <data name="StartupBenchmarkCheckedCases" xml:space="preserve">
+    <value>Checked cases</value>
+  </data>
+  <data name="StartupBenchmarkCurrentGpu" xml:space="preserve">
+    <value>GPU</value>
   </data>
   <data name="StartupBenchmarkCancel" xml:space="preserve">
     <value>Cancel</value>
@@ -978,8 +898,7 @@ If you ever want to support the project, you can find that option in the help se
     <value>This area contains the main program settings.
 
 General: codec, resolution, container, GPU selection, and the main processing switches.
-Performance: encoder preset, thread counts, and rendering speed parameters.
-Anti-flicker: flicker reduction and its available modes for a more stable image.</value>
+Performance: encoder preset, thread counts, and rendering speed parameters.</value>
   </data>
   <data name="HelpCenterIntro" xml:space="preserve">
     <value>This window combines a quick usage guide, answers to common questions, and support information for the project.</value>
@@ -999,6 +918,9 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   <data name="HelpCenterFaqTab" xml:space="preserve">
     <value>FAQ</value>
   </data>
+  <data name="HelpCenterFaqTitle" xml:space="preserve">
+    <value>Frequently asked questions</value>
+  </data>
   <data name="HelpCenterHardwareTab" xml:space="preserve">
     <value>Hardware check</value>
   </data>
@@ -1016,7 +938,7 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
 2. Open settings if you want to adjust resolution, codec, GPU, or other options.
 3. If the app offers the startup benchmark, it is usually a good idea to run it. It checks your hardware and suggests recommended settings.
 4. Start rendering. While rendering, the separate render window shows the current stage, preview, elapsed time, ETA, and FPS.
-5. If rendering is interrupted, use “Resume render” for unfinished files when possible.
+5. If rendering is interrupted, use "Resume render" for unfinished files when possible.
 6. After the queue finishes, the app shows a summary window with per-file results.</value>
   </data>
   <data name="HelpCenterDetectedDevicesTitle" xml:space="preserve">
@@ -1060,6 +982,12 @@ Anti-flicker: flicker reduction and its available modes for a more stable image.
   </data>
   <data name="HelpFaqAnswer5" xml:space="preserve">
     <value>You can start it again from Settings with the Benchmark button. At the end, it shows recommended settings and asks whether you want to apply them.</value>
+  </data>
+  <data name="HelpFaqQuestion6" xml:space="preserve">
+    <value>Why do non-animated videos sometimes look worse?</value>
+  </data>
+  <data name="HelpFaqAnswer6" xml:space="preserve">
+    <value>RealESRGAN was trained mainly on animation, so other videos can sometimes pick up animation-like details during upscaling.</value>
   </data>
   <data name="DonationDialogTitle" xml:space="preserve">
     <value>Support the project</value>
@@ -1470,15 +1398,6 @@ Turn it off if you want to preserve the source timeline exactly as-is, including
   <data name="Language" xml:space="preserve">
     <value>Language</value>
   </data>
-  <data name="LanguageEnglish" xml:space="preserve">
-    <value>English</value>
-  </data>
-  <data name="LanguageRussian" xml:space="preserve">
-    <value>Русский</value>
-  </data>
-  <data name="LanguageGerman" xml:space="preserve">
-    <value>Deutsch</value>
-  </data>
   <data name="Apply" xml:space="preserve">
     <value>Apply</value>
   </data>
@@ -1520,9 +1439,6 @@ Turn it off if you want to preserve the source timeline exactly as-is, including
   </data>
   <data name="SettingsTabBackends" xml:space="preserve">
     <value>Backends</value>
-  </data>
-  <data name="SettingsTabAntiFlicker" xml:space="preserve">
-    <value>Anti-flicker</value>
   </data>
   <data name="SettingsTabAppearance" xml:space="preserve">
     <value>Appearance</value>
@@ -1726,5 +1642,3 @@ Turn it off if you want to preserve the source timeline exactly as-is, including
     <value>No frames were extracted.</value>
   </data>
 </root>
-
-

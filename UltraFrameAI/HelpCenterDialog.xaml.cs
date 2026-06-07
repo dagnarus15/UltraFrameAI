@@ -14,6 +14,8 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
         InitializeComponent();
         WindowCaptionColorManager.Attach(this);
         SelectedTab = initialTab;
+        LocalizedStrings.LanguageChanged += OnLanguageChanged;
+        Closed += (_, _) => LocalizedStrings.LanguageChanged -= OnLanguageChanged;
 
         foreach (var entry in BuildFaqEntries())
         {
@@ -145,6 +147,26 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
         OnPropertyChanged(nameof(IsSupportVisible));
     }
 
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        RefreshHardwareCollections();
+    }
+
+    private void RefreshHardwareCollections()
+    {
+        HardwareLines.Clear();
+        foreach (var entry in BuildHardwareAssessmentLines())
+        {
+            HardwareLines.Add(entry);
+        }
+
+        HardwareDevices.Clear();
+        foreach (var entry in BuildHardwareDevices())
+        {
+            HardwareDevices.Add(entry);
+        }
+    }
+
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -158,7 +180,8 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion2"), LocalizedStrings.Get("HelpFaqAnswer2")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion3"), LocalizedStrings.Get("HelpFaqAnswer3")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion4"), LocalizedStrings.Get("HelpFaqAnswer4")),
-            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion5"), LocalizedStrings.Get("HelpFaqAnswer5"))
+            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion5"), LocalizedStrings.Get("HelpFaqAnswer5")),
+            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion6"), LocalizedStrings.Get("HelpFaqAnswer6"))
         };
     }
 

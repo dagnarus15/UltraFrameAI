@@ -32,15 +32,28 @@ public sealed class BenchmarkRunnerTests
     }
 
     [Theory]
-    [InlineData("video", nameof(LocalizedStrings.ContentModeVideo))]
-    [InlineData("faces", nameof(LocalizedStrings.ContentModeFaces))]
-    [InlineData("anime", nameof(LocalizedStrings.ContentModeAnime))]
-    [InlineData("anime-ultra", nameof(LocalizedStrings.ContentModeAnimeUltra))]
-    [InlineData("animeultra", nameof(LocalizedStrings.ContentModeAnimeUltra))]
-    public void LocalizedContentMode_MapsExpectedValues(string contentMode, string resourceName)
+    [InlineData("GPU", "StartupBenchmarkPhaseGpu")]
+    [InlineData("Tile 1024", "StartupBenchmarkPhaseTile")]
+    [InlineData("Preset medium", "StartupBenchmarkPhasePreset")]
+    public void LocalizeStartupBenchmarkPhase_MapsExpectedKeys(string phase, string resourceName)
     {
-        var actual = BenchmarkRunner.LocalizedContentMode(contentMode);
-        var expected = LocalizedStrings.Get(resourceName);
+        var actual = BenchmarkRunner.LocalizeStartupBenchmarkPhase(phase);
+        var expected = phase switch
+        {
+            "GPU" => LocalizedStrings.Get(resourceName),
+            "Tile 1024" => LocalizedStrings.Format(resourceName, "1024"),
+            "Preset medium" => LocalizedStrings.Format(resourceName, BenchmarkRunner.LocalizedPresetForCase("medium")),
+            _ => throw new InvalidOperationException("Unexpected test phase.")
+        };
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void LocalizeStartupBenchmarkPhase_LocalizesThreadRuns()
+    {
+        var actual = BenchmarkRunner.LocalizeStartupBenchmarkPhase("Threads 8:8:8 run 2");
+        var expected = LocalizedStrings.Format("StartupBenchmarkPhaseThreadsRun", "8:8:8", "2");
 
         Assert.Equal(expected, actual);
     }

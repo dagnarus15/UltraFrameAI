@@ -46,6 +46,14 @@
                            Text="{local:Loc StartupBenchmarkProgressIntro}"
                            Foreground="{StaticResource TextSecondaryBrush}"
                            TextWrapping="Wrap" />
+                <TextBlock Grid.Row="2"
+                           Margin="0,42,0,0"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap">
+                    <Run Text="{local:Loc StartupBenchmarkCurrentGpu}" />
+                    <Run Text=": " />
+                    <Run Text="{Binding BenchmarkGpuLabel}" />
+                </TextBlock>
 
                 <Grid Grid.Row="4">
                     <Grid.ColumnDefinitions>
@@ -62,7 +70,7 @@
                                    TextWrapping="Wrap" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="{local:Loc StartupBenchmarkCurrentCase}"
+                        <TextBlock Text="{local:Loc StartupBenchmarkCurrentSettings}"
                                    Foreground="{StaticResource TextSecondaryBrush}" />
                         <TextBlock Text="{Binding CurrentCase}"
                                    Margin="0,4,0,0"
@@ -82,18 +90,33 @@
                                  Value="{Binding CurrentProgress, Mode=OneWay}" />
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding CurrentStepText}" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="2" Text="{Binding CurrentProgressText}" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="4" Text="{Binding CurrentElapsedText}" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="6" Text="{Binding CurrentEtaText}" FontWeight="SemiBold" />
+                        <StackPanel>
+                            <TextBlock Text="{local:Loc QueueProgress}"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="{Binding CurrentProgressText}"
+                                       Margin="0,4,0,0"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{local:Loc QueueElapsed}"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="{Binding CurrentElapsedText}"
+                                       Margin="0,4,0,0"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="{local:Loc QueueETA}"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="{Binding CurrentEtaText}"
+                                       Margin="0,4,0,0"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
 

@@ -18,6 +18,12 @@
   <data name="Subtitle" xml:space="preserve">
     <value>Laden Sie einen Ordner oder eine Datei, um die Warteschlange zu füllen.</value>
   </data>
+  <data name="QuickStartHint" xml:space="preserve">
+    <value>Schnellstart</value>
+  </data>
+  <data name="RealEsrganAnimeHint" xml:space="preserve">
+    <value>Am besten für Animationen und Anime geeignet.</value>
+  </data>
   <data name="Workspace" xml:space="preserve">
     <value>Arbeitsbereich</value>
   </data>
@@ -344,6 +350,12 @@
   </data>
   <data name="BenchmarkHint" xml:space="preserve">
     <value>Benchmark starten, um die Hardware zu prüfen und empfohlene Einstellungen vorzuschlagen.</value>
+  </data>
+  <data name="BenchmarkSelectedGpu" xml:space="preserve">
+    <value>Benchmark für gewählte GPU</value>
+  </data>
+  <data name="BenchmarkSelectedGpuHint" xml:space="preserve">
+    <value>Benchmark für die aktuell ausgewählte GPU starten und die empfohlenen Einstellungen genau für sie abstimmen.</value>
   </data>
   <data name="BenchmarkWindowTitle" xml:space="preserve">
     <value>Benchmark</value>
@@ -914,6 +926,9 @@ Falls Sie das Projekt unterstützen möchten, finden Sie diese Möglichkeit im H
   <data name="StartupBenchmarkPromptBody" xml:space="preserve">
     <value>Beim ersten Start kann UltraFrame AI einen kurzen Benchmark mit einem One-Piece-Sample ausführen, prüfen, ob dieser PC die praktischen Mindestanforderungen erfüllt, die schnellste GPU auswählen und empfohlene RealESRGAN-Einstellungen vorschlagen. Das kann ein paar Minuten dauern. Wenn Sie diesen Schritt überspringen, können später Konvertierungsfehler auftreten. Diesen Benchmark können Sie später auch in den Einstellungen starten. Jetzt starten?</value>
   </data>
+  <data name="StartupBenchmarkPromptFootnote" xml:space="preserve">
+    <value>Dieser erste Bildschirm ist nur eine vorläufige Einschätzung. Der Benchmark wird vor allem gebraucht, um die besten UltraFrame-AI-Einstellungen für diesen PC zu finden.</value>
+  </data>
   <data name="StartupBenchmarkNewHardwareTitle" xml:space="preserve">
     <value>Benchmark für neue Geräte</value>
   </data>
@@ -946,6 +961,15 @@ Falls Sie das Projekt unterstützen möchten, finden Sie diese Möglichkeit im H
   </data>
   <data name="StartupBenchmarkCurrentCase" xml:space="preserve">
     <value>Aktueller Test</value>
+  </data>
+  <data name="StartupBenchmarkCurrentSettings" xml:space="preserve">
+    <value>Aktuelle Einstellungen</value>
+  </data>
+  <data name="StartupBenchmarkCheckedCases" xml:space="preserve">
+    <value>Geprüfte Varianten</value>
+  </data>
+  <data name="StartupBenchmarkCurrentGpu" xml:space="preserve">
+    <value>GPU</value>
   </data>
   <data name="StartupBenchmarkCancel" xml:space="preserve">
     <value>Abbrechen</value>
@@ -1001,6 +1025,9 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   </data>
   <data name="HelpCenterFaqTab" xml:space="preserve">
     <value>FAQ</value>
+  </data>
+  <data name="HelpCenterFaqTitle" xml:space="preserve">
+    <value>Häufige Fragen</value>
   </data>
   <data name="HelpCenterHardwareTab" xml:space="preserve">
     <value>Hardware-Prüfung</value>
@@ -1063,6 +1090,12 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   </data>
   <data name="HelpFaqAnswer5" xml:space="preserve">
     <value>Sie können ihn jederzeit in den Einstellungen über die Benchmark-Schaltfläche starten. Am Ende zeigt er empfohlene Einstellungen an und fragt, ob diese übernommen werden sollen.</value>
+  </data>
+  <data name="HelpFaqQuestion6" xml:space="preserve">
+    <value>Warum sehen normale Videos manchmal schlechter aus?</value>
+  </data>
+  <data name="HelpFaqAnswer6" xml:space="preserve">
+    <value>RealESRGAN wurde vor allem mit Animationen trainiert. Deshalb können bei anderen Videos beim Hochskalieren manchmal animeartige Details entstehen.</value>
   </data>
   <data name="DonationDialogTitle" xml:space="preserve">
     <value>Projekt unterstützen</value>
@@ -1472,15 +1505,6 @@ Schalte es aus, wenn du die Timeline der Quelle exakt so behalten willst, wie si
   </data>
   <data name="Language" xml:space="preserve">
     <value>Sprache</value>
-  </data>
-  <data name="LanguageEnglish" xml:space="preserve">
-    <value>English</value>
-  </data>
-  <data name="LanguageRussian" xml:space="preserve">
-    <value>Русский</value>
-  </data>
-  <data name="LanguageGerman" xml:space="preserve">
-    <value>Deutsch</value>
   </data>
   <data name="Apply" xml:space="preserve">
     <value>Anwenden</value>

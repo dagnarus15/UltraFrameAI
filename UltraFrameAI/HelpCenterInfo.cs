@@ -6,7 +6,6 @@ namespace UltraFrameAI;
 
 internal static class HelpCenterInfo
 {
-    private const string AntiFlickerNativeVersion = "0.1.0";
     private const string ModelsFallbackVersion = "20220424 (Real-ESRGAN-ncnn-vulkan v0.2.0)";
 
     public static string GetApplicationVersion()
@@ -21,7 +20,6 @@ internal static class HelpCenterInfo
             new HelpVersionEntry("UltraFrameAI-Realesrgan-Pipe", GetRealesrganForkVersion()),
             new HelpVersionEntry("FFmpeg", GetFfmpegVersion()),
             new HelpVersionEntry("System.Management", "9.0.4"),
-            new HelpVersionEntry("AntiFlicker.Native", GetAntiFlickerNativeVersion()),
             new HelpVersionEntry("RealESRGAN models", GetModelBundleVersion())
         };
     }
@@ -43,49 +41,6 @@ internal static class HelpCenterInfo
         return RunProcess("git", "-C \"" + forkPath + "\" describe --tags --always --dirty")
             ?? RunProcess("git", "-C \"" + forkPath + "\" rev-parse --short HEAD")
             ?? "unknown";
-    }
-
-    private static string GetAntiFlickerNativeVersion()
-    {
-        foreach (var dllPath in EnumeratePossibleAntiFlickerDllPaths())
-        {
-            if (!File.Exists(dllPath))
-            {
-                continue;
-            }
-
-            var versionInfo = FileVersionInfo.GetVersionInfo(dllPath);
-            if (!string.IsNullOrWhiteSpace(versionInfo.FileVersion))
-            {
-                return versionInfo.FileVersion;
-            }
-
-            if (!string.IsNullOrWhiteSpace(versionInfo.ProductVersion))
-            {
-                return versionInfo.ProductVersion;
-            }
-        }
-
-        return AntiFlickerNativeVersion;
-    }
-
-    private static IEnumerable<string> EnumeratePossibleAntiFlickerDllPaths()
-    {
-        yield return Path.Combine(AppContext.BaseDirectory, "UltraFrameAI.AntiFlicker.Native.dll");
-
-        var repoRoot = FindRepoRoot();
-        if (repoRoot is null)
-        {
-            yield break;
-        }
-
-        yield return Path.Combine(
-            repoRoot,
-            "UltraFrameAI.Native",
-            "AntiFlicker",
-            "build",
-            "Release",
-            "UltraFrameAI.AntiFlicker.Native.dll");
     }
 
     private static string GetModelBundleVersion()
@@ -231,7 +186,6 @@ internal static class HelpCenterInfo
             new HelpLinkEntry("Real-ESRGAN", "https://github.com/xinntao/Real-ESRGAN", "Original Real-ESRGAN project."),
             new HelpLinkEntry("ncnn", "https://github.com/Tencent/ncnn", "Inference backend used by the RealESRGAN fork."),
             new HelpLinkEntry("realsr-ncnn-vulkan", "https://github.com/nihui/realsr-ncnn-vulkan", "Related upstream project referenced by the RealESRGAN fork."),
-            new HelpLinkEntry("UltraFrameAI.Native", "https://github.com/your-name/UltraFrameAI/tree/main/UltraFrameAI.Native", "Native anti-flicker module repository path placeholder."),
             new HelpLinkEntry("FFmpeg", "https://ffmpeg.org/", "Media processing toolkit used by the pipeline.")
         };
     }

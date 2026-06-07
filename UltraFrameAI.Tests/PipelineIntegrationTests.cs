@@ -65,10 +65,6 @@ public sealed class PipelineIntegrationTests
                 UpscalerWorkingDirectory = Path.GetDirectoryName(upscaler) ?? tempRoot,
                 ModelDir = modelDir,
                 ExternalUpscalerArgumentsTemplate = string.Empty,
-                UseAntiFlicker = true,
-                AntiFlickerMode = AntiFlickerMode.LumaStabilizer,
-                ContentMode = "Anime",
-                AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = false,
                 RepairBrokenTimestamps = false
@@ -158,10 +154,6 @@ public sealed class PipelineIntegrationTests
                 RefinerWorkingDirectory = string.Empty,
                 RefinerModelDir = string.Empty,
                 RefinerArgumentsTemplate = string.Empty,
-                UseAntiFlicker = false,
-                AntiFlickerMode = AntiFlickerMode.FlowGuided,
-                ContentMode = "Anime",
-                AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = true,
                 RepairBrokenTimestamps = false
@@ -293,10 +285,6 @@ public sealed class PipelineIntegrationTests
                 RefinerWorkingDirectory = string.Empty,
                 RefinerModelDir = string.Empty,
                 RefinerArgumentsTemplate = string.Empty,
-                UseAntiFlicker = false,
-                AntiFlickerMode = AntiFlickerMode.FlowGuided,
-                ContentMode = "Anime",
-                AntiFlickerStrength = 65,
                 EncoderPreset = "slower",
                 PreserveIncompleteOutput = true,
                 RepairBrokenTimestamps = false

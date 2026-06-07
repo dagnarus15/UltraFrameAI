@@ -50,6 +50,7 @@ public sealed record StartupBenchmarkProgressUpdate(
     int StepIndex,
     int TotalSteps,
     string Phase,
+    string GpuLabel,
     string CaseName,
     double Progress,
     string ProgressText,
@@ -116,10 +117,6 @@ public sealed record BenchmarkCaseResult(
     string Name,
     string Codec,
     string Preset,
-    bool AntiFlicker,
-    AntiFlickerMode AntiFlickerMode,
-    string ContentMode,
-    double Strength,
     string UpscalerThreads,
     int TileSize,
     double QualityScore,
@@ -146,7 +143,6 @@ public static class BenchmarkRunner
         string Reason);
 
     private const string GroupCodecPreset = "Codec/Preset";
-    private const string GroupAntiFlicker = "Anti-flicker";
     private const string GroupUpscalerThreads = "Upscaler threads";
     private const string GroupTileSize = "Tile size";
 
@@ -154,10 +150,6 @@ public static class BenchmarkRunner
         string Name,
         string Codec,
         string Preset,
-        bool UseAntiFlicker,
-        AntiFlickerMode AntiFlickerMode,
-        string ContentMode,
-        double AntiFlickerStrength,
         string UpscalerThreads,
         int TileSize,
         double QualityScore);
@@ -167,10 +159,6 @@ public static class BenchmarkRunner
         string Name,
         string Codec,
         string Preset,
-        bool AntiFlicker,
-        AntiFlickerMode AntiFlickerMode,
-        string ContentMode,
-        double Strength,
         string UpscalerThreads,
         int TileSize,
         double QualityScore,
@@ -182,10 +170,6 @@ public static class BenchmarkRunner
 
     private static string CaseCodecPreset(string codec, string preset)
         => string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkCaseCodecPreset, codec, LocalizedPresetForCase(preset));
-
-    private static string CaseAntiFlickerOff => LocalizedStrings.BenchmarkCaseAntiFlickerOff;
-    private static string CaseAntiFlickerLuma => LocalizedStrings.BenchmarkCaseAntiFlickerLuma;
-    private static string CaseAntiFlickerFlow => LocalizedStrings.BenchmarkCaseAntiFlickerFlow;
 
     internal static string LocalizeStartupBenchmarkPhase(string phase) => phase switch
     {
@@ -205,16 +189,6 @@ public static class BenchmarkRunner
         "faster" => LocalizedStrings.BenchmarkShortCodecFast,
         "veryfast" => LocalizedStrings.BenchmarkShortCodecVFast,
         _ => preset
-    };
-
-    internal static string LocalizedContentMode(string contentMode) => contentMode switch
-    {
-        "video" => LocalizedStrings.ContentModeVideo,
-        "faces" => LocalizedStrings.ContentModeFaces,
-        "anime" => LocalizedStrings.ContentModeAnime,
-        "anime-ultra" => LocalizedStrings.ContentModeAnimeUltra,
-        "animeultra" => LocalizedStrings.ContentModeAnimeUltra,
-        _ => contentMode
     };
 
     private static string LocalizeThreadRunPhase(string phase)
@@ -252,6 +226,17 @@ public static class BenchmarkRunner
         return LocalizedStrings.Format("StartupBenchmarkPhasePreset", LocalizedPresetForCase(preset));
     }
 
+    private static string BuildStartupBenchmarkCaseLabel(string phase, string gpuLabel, string upscalerThreads, string encoderPreset, int tileSize)
+    {
+        if (string.Equals(phase, "GPU", StringComparison.OrdinalIgnoreCase))
+        {
+            return gpuLabel;
+        }
+
+        var tileLabel = LocalizeTilePhase($"Tile {tileSize}");
+        return $"{upscalerThreads}  •  {LocalizedPresetForCase(encoderPreset)}  •  {tileLabel}";
+    }
+
     private static string[] BuildStartupThreadCandidates(long? memoryMb)
     {
         var values = memoryMb switch
@@ -283,6 +268,64 @@ public static class BenchmarkRunner
     }
 
     private static string FormatSymmetricThreads(int value) => $"{value}:{value}:{value}";
+
+    private static string PickClosestThreadCandidate(IEnumerable<string> candidates, int estimatedScore)
+    {
+        return candidates
+            .Select(candidate => new { Candidate = candidate, Score = ParseThreadScore(candidate) })
+            .OrderBy(entry => Math.Abs(entry.Score - estimatedScore))
+            .ThenBy(entry => entry.Score)
+            .Select(entry => entry.Candidate)
+            .FirstOrDefault()
+            ?? "2:2:2";
+    }
+
+    private static string EstimateStartupPeakThreads(
+        StartupBenchmarkCaseResult baselineResult,
+        IReadOnlyList<string> candidates,
+        long? gpuMemoryMb)
+    {
+        var baselineScore = Math.Max(1, ParseThreadScore(baselineResult.UpscalerThreads));
+        var maxScore = candidates.Select(ParseThreadScore).DefaultIfEmpty(baselineScore).Max();
+
+        var gpuLoad = baselineResult.Metrics.AvgGpu ?? baselineResult.Metrics.PeakGpu ?? 0d;
+        var effectiveGpuLoad = gpuLoad > 1d ? Math.Max(12d, gpuLoad) : 0d;
+        var gpuScale = effectiveGpuLoad > 1d
+            ? 96d / effectiveGpuLoad
+            : maxScore / (double)baselineScore;
+
+        var vramScale = double.PositiveInfinity;
+        if (gpuMemoryMb is > 0 && baselineResult.Metrics.PeakVram is > 0)
+        {
+            var baselineVramRatio = baselineResult.Metrics.PeakVram.Value / (gpuMemoryMb.Value * 1024d * 1024d);
+            if (baselineVramRatio > 0.01d)
+            {
+                vramScale = 0.88d / baselineVramRatio;
+            }
+        }
+
+        var safeScale = Math.Min(gpuScale, vramScale);
+        if (double.IsNaN(safeScale) || double.IsInfinity(safeScale) || safeScale <= 0)
+        {
+            safeScale = 1d;
+        }
+
+        var estimatedScore = (int)Math.Round(baselineScore * safeScale, MidpointRounding.AwayFromZero);
+        estimatedScore = Math.Clamp(estimatedScore, baselineScore, maxScore);
+        return PickClosestThreadCandidate(candidates, estimatedScore);
+    }
+
+    private static int EstimateStartupTile(long? gpuMemoryMb)
+    {
+        return gpuMemoryMb switch
+        {
+            >= 24576 => 4096,
+            >= 12288 => 2048,
+            >= 8192 => 1536,
+            >= 4096 => 1024,
+            _ => 512
+        };
+    }
 
     private static bool IsThreadCandidateOverloaded(StartupBenchmarkCaseResult result, long? gpuMemoryMb)
     {
@@ -363,53 +406,34 @@ public static class BenchmarkRunner
 
         var baselineThreads = settings.BaselineThreads;
         var baselineTile = settings.BaselineTileSize;
-        var antiFlickerOnly = string.Equals(settings.Profile, "anti-flicker", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(settings.Profile, "antiflicker", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(settings.Profile, "af", StringComparison.OrdinalIgnoreCase);
 
-        var groups = antiFlickerOnly
-            ? new List<(string Group, IReadOnlyList<BenchmarkCase> Cases)>
+        var groups = new List<(string Group, IReadOnlyList<BenchmarkCase> Cases)>
+        {
+            (GroupCodecPreset, new[]
             {
-                (GroupAntiFlicker, new[]
-                {
-                    new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
-                    new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
-                    new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
-                }),
-            }
-            : new List<(string Group, IReadOnlyList<BenchmarkCase> Cases)>
+                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", baselineThreads, baselineTile, 46),
+                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", baselineThreads, baselineTile, 50),
+                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", baselineThreads, baselineTile, 68),
+                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", baselineThreads, baselineTile, 73),
+            }),
+            (GroupUpscalerThreads, new[]
             {
-                (GroupCodecPreset, new[]
-                {
-                    new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 46),
-                    new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 50),
-                    new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 68),
-                    new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 73),
-                }),
-                (GroupAntiFlicker, new[]
-                {
-                    new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
-                    new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
-                    new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
-                }),
-                (GroupUpscalerThreads, new[]
-                {
-                    new BenchmarkCase("4:4:4", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "4:4:4", baselineTile, 58),
-                    new BenchmarkCase("6:6:6", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "6:6:6", baselineTile, 58),
-                    new BenchmarkCase("8:8:8", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "8:8:8", baselineTile, 58),
-                    new BenchmarkCase("2:2:2", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "2:2:2", baselineTile, 58),
-                    new BenchmarkCase("1:1:1", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "1:1:1", baselineTile, 58),
-                }),
-                (GroupTileSize, new[]
-                {
-                    new BenchmarkCase("1024", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1024, 58),
-                    new BenchmarkCase("1536", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1536, 59),
-                    new BenchmarkCase("2048", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 2048, 60),
-                    new BenchmarkCase("512", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 512, 56),
-                    new BenchmarkCase("4096", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 4096, 61),
-                    new BenchmarkCase("256", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 256, 53),
-                }),
-            };
+                new BenchmarkCase("4:4:4", "x264", "medium", "4:4:4", baselineTile, 58),
+                new BenchmarkCase("6:6:6", "x264", "medium", "6:6:6", baselineTile, 58),
+                new BenchmarkCase("8:8:8", "x264", "medium", "8:8:8", baselineTile, 58),
+                new BenchmarkCase("2:2:2", "x264", "medium", "2:2:2", baselineTile, 58),
+                new BenchmarkCase("1:1:1", "x264", "medium", "1:1:1", baselineTile, 58),
+            }),
+            (GroupTileSize, new[]
+            {
+                new BenchmarkCase("1024", "x264", "medium", baselineThreads, 1024, 58),
+                new BenchmarkCase("1536", "x264", "medium", baselineThreads, 1536, 59),
+                new BenchmarkCase("2048", "x264", "medium", baselineThreads, 2048, 60),
+                new BenchmarkCase("512", "x264", "medium", baselineThreads, 512, 56),
+                new BenchmarkCase("4096", "x264", "medium", baselineThreads, 4096, 61),
+                new BenchmarkCase("256", "x264", "medium", baselineThreads, 256, 53),
+            }),
+        };
 
         var totalSteps = groups.Sum(group => group.Cases.Count);
         var currentStep = 0;
@@ -446,7 +470,6 @@ public static class BenchmarkRunner
         AppendLine(logPath, LocalizedStrings.BenchmarkLogSummary);
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogFastestOverall, FormatSummary(results.OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestCodecPreset, FormatSummary(results.Where(r => r.Group == GroupCodecPreset).OrderBy(r => r.Elapsed).FirstOrDefault())));
-        AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestAntiFlicker, FormatSummary(results.Where(r => r.Group == GroupAntiFlicker).OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestUpscalerThreads, FormatSummary(results.Where(r => r.Group == GroupUpscalerThreads).OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestTileSize, FormatSummary(results.Where(r => r.Group == GroupTileSize).OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendBestSettings(logPath, results);
@@ -524,10 +547,6 @@ public static class BenchmarkRunner
             UpscalerWorkingDirectory = Path.GetDirectoryName(upscaler) ?? Environment.CurrentDirectory,
             ModelDir = modelDir,
             ExternalUpscalerArgumentsTemplate = string.Empty,
-            UseAntiFlicker = benchCase.UseAntiFlicker,
-            AntiFlickerMode = benchCase.AntiFlickerMode,
-            ContentMode = benchCase.ContentMode,
-            AntiFlickerStrength = benchCase.AntiFlickerStrength,
             EncoderPreset = benchCase.Preset,
             OutputContainer = "mkv",
             PreserveIncompleteOutput = false,
@@ -585,7 +604,7 @@ public static class BenchmarkRunner
             var error = string.IsNullOrWhiteSpace(ex.Message)
                 ? LocalizedStrings.BenchmarkErrorPipelineFailed
                 : $"{LocalizedStrings.BenchmarkErrorPipelineFailed}: {ex.Message}";
-            return new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UseAntiFlicker, benchCase.AntiFlickerMode, benchCase.ContentMode, benchCase.AntiFlickerStrength, benchCase.UpscalerThreads, benchCase.TileSize, benchCase.QualityScore, started.Elapsed, File.Exists(outputPath) ? new FileInfo(outputPath).Length : 0, false, error, metrics);
+            return new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UpscalerThreads, benchCase.TileSize, benchCase.QualityScore, started.Elapsed, File.Exists(outputPath) ? new FileInfo(outputPath).Length : 0, false, error, metrics);
         }
         finally
         {
@@ -606,7 +625,7 @@ public static class BenchmarkRunner
             sampleDuration,
             caseDir,
             cancellationToken).ConfigureAwait(false);
-        var result = new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UseAntiFlicker, benchCase.AntiFlickerMode, benchCase.ContentMode, benchCase.AntiFlickerStrength, benchCase.UpscalerThreads, benchCase.TileSize, qualityScore, started.Elapsed, bytes, true, null, metrics);
+        var result = new BenchmarkResult(group, benchCase.Name, benchCase.Codec, benchCase.Preset, benchCase.UpscalerThreads, benchCase.TileSize, qualityScore, started.Elapsed, bytes, true, null, metrics);
         uiProgress?.Report(new BenchmarkProgressUpdate(
             BenchmarkProgressKind.CaseCompleted,
             stepIndex,
@@ -625,10 +644,6 @@ public static class BenchmarkRunner
                 result.Name,
                 result.Codec,
                 result.Preset,
-                result.AntiFlicker,
-                result.AntiFlickerMode,
-                result.ContentMode,
-                result.Strength,
                 result.UpscalerThreads,
                 result.TileSize,
                 result.QualityScore,
@@ -691,33 +706,27 @@ public static class BenchmarkRunner
         {
             (GroupCodecPreset, new[]
             {
-                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 46),
-                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 50),
-                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 68),
-                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, baselineTile, 73),
-            }),
-            (GroupAntiFlicker, new[]
-            {
-                new BenchmarkCase(CaseAntiFlickerOff, "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "anime", 0, baselineThreads, baselineTile, 42),
-                new BenchmarkCase(CaseAntiFlickerLuma, "x264", "medium", true, AntiFlickerMode.LumaStabilizer, "anime", 65, baselineThreads, baselineTile, 62),
-                new BenchmarkCase(CaseAntiFlickerFlow, "x264", "medium", true, AntiFlickerMode.FlowGuided, "anime", 65, baselineThreads, baselineTile, 74),
+                new BenchmarkCase(CaseCodecPreset("x264", "medium"), "x264", "medium", baselineThreads, baselineTile, 46),
+                new BenchmarkCase(CaseCodecPreset("x264", "slower"), "x264", "slower", baselineThreads, baselineTile, 50),
+                new BenchmarkCase(CaseCodecPreset("x265", "medium"), "x265", "medium", baselineThreads, baselineTile, 68),
+                new BenchmarkCase(CaseCodecPreset("x265", "slower"), "x265", "slower", baselineThreads, baselineTile, 73),
             }),
             (GroupUpscalerThreads, new[]
             {
-                new BenchmarkCase("4:4:4", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "4:4:4", baselineTile, 58),
-                new BenchmarkCase("6:6:6", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "6:6:6", baselineTile, 58),
-                new BenchmarkCase("8:8:8", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "8:8:8", baselineTile, 58),
-                new BenchmarkCase("2:2:2", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "2:2:2", baselineTile, 58),
-                new BenchmarkCase("1:1:1", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, "1:1:1", baselineTile, 58),
+                new BenchmarkCase("4:4:4", "x264", "medium", "4:4:4", baselineTile, 58),
+                new BenchmarkCase("6:6:6", "x264", "medium", "6:6:6", baselineTile, 58),
+                new BenchmarkCase("8:8:8", "x264", "medium", "8:8:8", baselineTile, 58),
+                new BenchmarkCase("2:2:2", "x264", "medium", "2:2:2", baselineTile, 58),
+                new BenchmarkCase("1:1:1", "x264", "medium", "1:1:1", baselineTile, 58),
             }),
             (GroupTileSize, new[]
             {
-                new BenchmarkCase("1024", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1024, 58),
-                new BenchmarkCase("1536", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 1536, 59),
-                new BenchmarkCase("2048", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 2048, 60),
-                new BenchmarkCase("512", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 512, 56),
-                new BenchmarkCase("4096", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 4096, 61),
-                new BenchmarkCase("256", "x264", "medium", false, AntiFlickerMode.LumaStabilizer, "video", 0, baselineThreads, 256, 53),
+                new BenchmarkCase("1024", "x264", "medium", baselineThreads, 1024, 58),
+                new BenchmarkCase("1536", "x264", "medium", baselineThreads, 1536, 59),
+                new BenchmarkCase("2048", "x264", "medium", baselineThreads, 2048, 60),
+                new BenchmarkCase("512", "x264", "medium", baselineThreads, 512, 56),
+                new BenchmarkCase("4096", "x264", "medium", baselineThreads, 4096, 61),
+                new BenchmarkCase("256", "x264", "medium", baselineThreads, 256, 53),
             }),
         };
 
@@ -769,7 +778,6 @@ public static class BenchmarkRunner
         AppendLine(logPath, LocalizedStrings.BenchmarkLogSummary);
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogFastestOverall, FormatSummary(results.OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestCodecPreset, FormatSummary(results.Where(r => r.Group == GroupCodecPreset).OrderBy(r => r.Elapsed).FirstOrDefault())));
-        AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestAntiFlicker, FormatSummary(results.Where(r => r.Group == GroupAntiFlicker).OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestUpscalerThreads, FormatSummary(results.Where(r => r.Group == GroupUpscalerThreads).OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendLine(logPath, string.Format(CultureInfo.InvariantCulture, LocalizedStrings.BenchmarkLogBestTileSize, FormatSummary(results.Where(r => r.Group == GroupTileSize).OrderBy(r => r.Elapsed).FirstOrDefault())));
         AppendBestSettings(logPath, results);
@@ -802,10 +810,6 @@ public static class BenchmarkRunner
                 result.Name,
                 result.Codec,
                 result.Preset,
-                result.AntiFlicker,
-                result.AntiFlickerMode,
-                result.ContentMode,
-                result.Strength,
                 result.UpscalerThreads,
                 result.TileSize,
                 result.QualityScore,
@@ -850,14 +854,16 @@ public static class BenchmarkRunner
         var gpuCandidates = request.GpuCandidates.Count > 0
             ? request.GpuCandidates
             : new[] { new StartupBenchmarkGpuCandidate(0, "GPU 0", null) };
-        var maxGpuMemoryMb = gpuCandidates
-            .Where(candidate => candidate.MemoryMb.HasValue)
-            .Select(candidate => candidate.MemoryMb!.Value)
-            .DefaultIfEmpty()
-            .Max();
-        var plannedThreadCandidates = BuildStartupThreadCandidates(maxGpuMemoryMb > 0 ? maxGpuMemoryMb : null);
-        var totalSteps = gpuCandidates.Count + 2 + ((plannedThreadCandidates.Length - 1) * 2) + 4 + 3;
+        var totalSteps = gpuCandidates.Count + 2;
         var currentStep = 0;
+
+        void PlanAdditionalSteps(int count)
+        {
+            if (count > 0)
+            {
+                totalSteps += count;
+            }
+        }
 
         StartupBenchmarkCaseResult? bestGpuResult = null;
         foreach (var candidate in gpuCandidates)
@@ -893,9 +899,16 @@ public static class BenchmarkRunner
         var selectedGpuMemoryMb = gpuCandidates.FirstOrDefault(candidate => candidate.GpuId == selectedGpuId)?.MemoryMb;
         var threadCandidates = BuildStartupThreadCandidates(selectedGpuMemoryMb);
         var threadSummaries = new List<(string Threads, TimeSpan MedianElapsed, bool Stable)>();
+        var threadProbeCache = new Dictionary<string, StartupBenchmarkCaseResult[]>(StringComparer.Ordinal);
 
         async Task<StartupBenchmarkCaseResult[]> RunThreadProbeAsync(string threads, int tile, StartupCaseAbortGuard? abortGuard = null)
         {
+            if (abortGuard is null && threadProbeCache.TryGetValue(threads, out var cachedRuns))
+            {
+                return cachedRuns;
+            }
+
+            PlanAdditionalSteps(2);
             var runs = new List<StartupBenchmarkCaseResult>(2);
             for (var run = 1; run <= 2; run++)
             {
@@ -923,7 +936,13 @@ public static class BenchmarkRunner
                 runs.Add(caseResult);
             }
 
-            return runs.ToArray();
+            var completedRuns = runs.ToArray();
+            if (abortGuard is null)
+            {
+                threadProbeCache[threads] = completedRuns;
+            }
+
+            return completedRuns;
         }
 
         var baseRuns = await RunThreadProbeAsync("2:2:2", 1536).ConfigureAwait(false);
@@ -957,96 +976,192 @@ public static class BenchmarkRunner
         else
         {
             var baseMedian = baseSuccessfulRuns[baseSuccessfulRuns.Length / 2];
-            threadSummaries.Add(("2:2:2", baseMedian.Elapsed, !IsThreadCandidateOverloaded(baseMedian, selectedGpuMemoryMb)));
+            var baseStable = !IsThreadCandidateOverloaded(baseMedian, selectedGpuMemoryMb);
+            threadSummaries.Add(("2:2:2", baseMedian.Elapsed, baseStable));
 
-            var memoryMaxScore = threadCandidates.Select(ParseThreadScore).DefaultIfEmpty(2).Max();
-            var baseGpuLoad = baseMedian.Metrics.AvgGpu ?? baseMedian.Metrics.PeakGpu ?? 0d;
-            var estimatedPeakScore = baseGpuLoad > 1d
-                ? (int)Math.Ceiling(2d * (92d / baseGpuLoad))
-                : memoryMaxScore;
-            estimatedPeakScore = Math.Clamp(estimatedPeakScore, 2, memoryMaxScore);
-
-            var adaptiveCandidates = threadCandidates
-                .Where(candidate => ParseThreadScore(candidate) > 2)
-                .Where(candidate => ParseThreadScore(candidate) <= Math.Max(estimatedPeakScore * 2, 8))
-                .ToArray();
-
-            var bestStableElapsed = baseMedian.Elapsed;
-            var diminishingCount = 0;
-            foreach (var threads in adaptiveCandidates)
+            var threadOrder = threadCandidates.ToArray();
+            var baselineIndex = Array.FindIndex(threadOrder, candidate => string.Equals(candidate, "2:2:2", StringComparison.Ordinal));
+            if (baselineIndex < 0)
             {
-                var abortGuard = BuildThreadProbeAbortGuard(threads, bestStableElapsed, selectedGpuMemoryMb);
-                var threadRuns = await RunThreadProbeAsync(threads, 1536, abortGuard).ConfigureAwait(false);
-                var successfulRuns = threadRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
+                baselineIndex = 0;
+            }
+
+            var estimatedThreads = EstimateStartupPeakThreads(baseMedian, threadOrder, selectedGpuMemoryMb);
+            var estimatedIndex = Array.FindIndex(threadOrder, candidate => string.Equals(candidate, estimatedThreads, StringComparison.Ordinal));
+            if (estimatedIndex < 0)
+            {
+                estimatedIndex = baselineIndex;
+            }
+
+            async Task<bool> ProbeThreadsAsync(int candidateIndex)
+            {
+                if (candidateIndex < 0 || candidateIndex >= threadOrder.Length)
+                {
+                    return false;
+                }
+
+                var threads = threadOrder[candidateIndex];
+                if (threadSummaries.Any(summary => string.Equals(summary.Threads, threads, StringComparison.Ordinal)))
+                {
+                    return threadSummaries.First(summary => string.Equals(summary.Threads, threads, StringComparison.Ordinal)).Stable;
+                }
+
+                var bestKnownStableElapsed = threadSummaries
+                    .Where(summary => summary.Stable)
+                    .OrderBy(summary => summary.MedianElapsed)
+                    .Select(summary => summary.MedianElapsed)
+                    .FirstOrDefault();
+                var abortGuard = bestKnownStableElapsed > TimeSpan.Zero
+                    ? BuildThreadProbeAbortGuard(threads, bestKnownStableElapsed, selectedGpuMemoryMb)
+                    : null;
+
+                var probeRuns = await RunThreadProbeAsync(threads, 1536, abortGuard).ConfigureAwait(false);
+                var successfulRuns = probeRuns.Where(result => result.Success).OrderBy(result => result.Elapsed).ToArray();
                 if (successfulRuns.Length == 0)
                 {
-                    break;
+                    threadSummaries.Add((threads, TimeSpan.MaxValue, false));
+                    return false;
                 }
 
                 var medianRun = successfulRuns[successfulRuns.Length / 2];
                 var stable = successfulRuns.All(result => !IsThreadCandidateOverloaded(result, selectedGpuMemoryMb));
                 threadSummaries.Add((threads, medianRun.Elapsed, stable));
-                if (!stable)
+
+                return stable;
+            }
+
+            if (estimatedIndex != baselineIndex)
+            {
+                _ = await ProbeThreadsAsync(estimatedIndex).ConfigureAwait(false);
+            }
+
+            var highestStableIndex = baseStable ? baselineIndex : -1;
+            var lowestFailedIndex = threadOrder.Length;
+
+            foreach (var summary in threadSummaries)
+            {
+                var summaryIndex = Array.FindIndex(threadOrder, candidate => string.Equals(candidate, summary.Threads, StringComparison.Ordinal));
+                if (summaryIndex < 0)
                 {
-                    break;
+                    continue;
                 }
 
-                var improvement = bestStableElapsed.TotalSeconds > 0.01
-                    ? (bestStableElapsed.TotalSeconds - medianRun.Elapsed.TotalSeconds) / bestStableElapsed.TotalSeconds
-                    : 0d;
-                var avgGpuLoad = medianRun.Metrics.AvgGpu ?? medianRun.Metrics.PeakGpu ?? 0d;
-
-                if (medianRun.Elapsed < bestStableElapsed)
+                if (summary.Stable)
                 {
-                    bestStableElapsed = medianRun.Elapsed;
-                }
-
-                if (improvement >= 0.02d)
-                {
-                    diminishingCount = 0;
+                    highestStableIndex = Math.Max(highestStableIndex, summaryIndex);
                 }
                 else
                 {
-                    diminishingCount++;
-                }
-
-                if (diminishingCount >= 2 || (avgGpuLoad >= 97d && improvement < 0.02d))
-                {
-                    break;
+                    lowestFailedIndex = Math.Min(lowestFailedIndex, summaryIndex);
                 }
             }
-        }
 
-        var stableThreadSummaries = threadSummaries.Where(summary => summary.Stable).ToArray();
-        var fastestStableThreads = stableThreadSummaries.OrderBy(summary => summary.MedianElapsed).FirstOrDefault();
-        var bestThreads = fastestStableThreads.Threads;
-        if (fastestStableThreads != default)
-        {
-            var nearFastestBudget = fastestStableThreads.MedianElapsed.TotalSeconds * 1.05d;
-            var strongestNearFastest = stableThreadSummaries
-                .Where(summary => summary.MedianElapsed.TotalSeconds <= nearFastestBudget)
-                .OrderByDescending(summary => ParseThreadScore(summary.Threads))
-                .ThenBy(summary => summary.MedianElapsed)
-                .FirstOrDefault();
-
-            if (strongestNearFastest != default)
+            if (estimatedIndex > highestStableIndex && lowestFailedIndex == threadOrder.Length)
             {
-                bestThreads = strongestNearFastest.Threads;
+                if (!await ProbeThreadsAsync(estimatedIndex).ConfigureAwait(false))
+                {
+                    lowestFailedIndex = Math.Min(lowestFailedIndex, estimatedIndex);
+                }
+                else
+                {
+                    highestStableIndex = Math.Max(highestStableIndex, estimatedIndex);
+                }
+            }
+
+            if (lowestFailedIndex != threadOrder.Length && highestStableIndex < 0)
+            {
+                for (var candidateIndex = Math.Min(lowestFailedIndex - 1, baselineIndex); candidateIndex >= 0; candidateIndex--)
+                {
+                    if (await ProbeThreadsAsync(candidateIndex).ConfigureAwait(false))
+                    {
+                        highestStableIndex = candidateIndex;
+                        break;
+                    }
+                }
+            }
+
+            if (highestStableIndex >= 0)
+            {
+                if (lowestFailedIndex == threadOrder.Length)
+                {
+                    var probeLow = highestStableIndex;
+                    var probeHigh = threadOrder.Length - 1;
+                    while (probeLow < probeHigh)
+                    {
+                        var mid = (probeLow + probeHigh + 1) / 2;
+                        if (await ProbeThreadsAsync(mid).ConfigureAwait(false))
+                        {
+                            probeLow = mid;
+                        }
+                        else
+                        {
+                            probeHigh = mid - 1;
+                        }
+                    }
+
+                    highestStableIndex = probeLow;
+                }
+                else
+                {
+                    var probeLow = highestStableIndex;
+                    var probeHigh = lowestFailedIndex - 1;
+                    while (probeLow < probeHigh)
+                    {
+                        var mid = (probeLow + probeHigh + 1) / 2;
+                        if (await ProbeThreadsAsync(mid).ConfigureAwait(false))
+                        {
+                            probeLow = mid;
+                        }
+                        else
+                        {
+                            probeHigh = mid - 1;
+                        }
+                    }
+
+                    highestStableIndex = probeLow;
+                }
             }
         }
 
+        var stableThreadSummaries = threadSummaries
+            .Where(summary => summary.Stable)
+            .OrderByDescending(summary => ParseThreadScore(summary.Threads))
+            .ThenBy(summary => summary.MedianElapsed)
+            .ToArray();
+        var bestThreads = stableThreadSummaries.FirstOrDefault().Threads;
         if (string.IsNullOrWhiteSpace(bestThreads))
         {
             bestThreads = threadSummaries
-                .OrderBy(summary => summary.MedianElapsed)
+                .Where(summary => summary.Threads == "1:1:1")
                 .Select(summary => summary.Threads)
                 .FirstOrDefault()
-                ?? "2:2:2";
+                ?? "1:1:1";
         }
 
-        var tileCases = new[] { 1024, 1536, 2048, 4096 };
-        foreach (var tile in tileCases)
+        var tileCandidates = new[] { 256, 512, 1024, 1536, 2048, 4096 };
+        var estimatedTile = EstimateStartupTile(selectedGpuMemoryMb);
+        var estimatedTileIndex = Array.FindIndex(tileCandidates, tile => tile == estimatedTile);
+        if (estimatedTileIndex < 0)
         {
+            estimatedTileIndex = Array.FindIndex(tileCandidates, tile => tile == 1536);
+        }
+
+        var tileSummaries = new List<(int Tile, TimeSpan Elapsed, bool Stable)>();
+
+        async Task<bool> ProbeTileAsync(int tileIndex)
+        {
+            if (tileIndex < 0 || tileIndex >= tileCandidates.Length)
+            {
+                return false;
+            }
+
+            var tile = tileCandidates[tileIndex];
+            if (tileSummaries.Any(summary => summary.Tile == tile))
+            {
+                return tileSummaries.First(summary => summary.Tile == tile).Stable;
+            }
+
+            PlanAdditionalSteps(1);
             currentStep++;
             var caseResult = await RunStartupCaseAsync(
                 pipeline,
@@ -1067,15 +1182,70 @@ public static class BenchmarkRunner
                 progress,
                 cancellationToken).ConfigureAwait(false);
             results.Add(caseResult);
+
+            var stable = caseResult.Success && !IsThreadCandidateOverloaded(caseResult, selectedGpuMemoryMb);
+            tileSummaries.Add((tile, caseResult.Elapsed, stable));
+            return stable;
         }
 
-        var successfulTileCases = results
-            .Where(result => result.Success && result.Phase.StartsWith("Tile ", StringComparison.OrdinalIgnoreCase))
-            .OrderBy(result => result.Elapsed)
-            .ToArray();
-        var bestTile = successfulTileCases.FirstOrDefault()?.TileSize ?? 1536;
+        var estimatedTileStable = await ProbeTileAsync(estimatedTileIndex).ConfigureAwait(false);
+        var highestStableTileIndex = estimatedTileStable ? estimatedTileIndex : -1;
+        var lowestFailedTileIndex = estimatedTileStable ? tileCandidates.Length : estimatedTileIndex;
+
+        if (!estimatedTileStable)
+        {
+            var probeLow = 0;
+            var probeHigh = estimatedTileIndex - 1;
+            while (probeLow <= probeHigh)
+            {
+                var mid = (probeLow + probeHigh + 1) / 2;
+                if (await ProbeTileAsync(mid).ConfigureAwait(false))
+                {
+                    highestStableTileIndex = mid;
+                    probeLow = mid + 1;
+                }
+                else
+                {
+                    probeHigh = mid - 1;
+                }
+            }
+        }
+
+        if (highestStableTileIndex >= 0)
+        {
+            var probeLow = highestStableTileIndex;
+            var probeHigh = lowestFailedTileIndex == tileCandidates.Length
+                ? tileCandidates.Length - 1
+                : lowestFailedTileIndex - 1;
+            while (probeLow < probeHigh)
+            {
+                var mid = (probeLow + probeHigh + 1) / 2;
+                if (await ProbeTileAsync(mid).ConfigureAwait(false))
+                {
+                    probeLow = mid;
+                }
+                else
+                {
+                    probeHigh = mid - 1;
+                }
+            }
+
+            highestStableTileIndex = probeLow;
+        }
+
+        var bestTile = tileSummaries
+            .Where(summary => summary.Stable)
+            .OrderByDescending(summary => summary.Tile)
+            .ThenBy(summary => summary.Elapsed)
+            .Select(summary => summary.Tile)
+            .FirstOrDefault();
+        if (bestTile <= 0)
+        {
+            bestTile = 1024;
+        }
 
         var presetCases = new[] { "fast", "medium", "slower" };
+        PlanAdditionalSteps(presetCases.Length);
         foreach (var preset in presetCases)
         {
             currentStep++;
@@ -1174,12 +1344,14 @@ public static class BenchmarkRunner
             OutputPath = outputPath
         };
         item.ResetUiState();
+        var caseLabel = BuildStartupBenchmarkCaseLabel(phase, gpuLabel, upscalerThreads, encoderPreset, tileSize);
 
         progress?.Report(new StartupBenchmarkProgressUpdate(
             stepIndex,
             totalSteps,
             phase,
-            $"{gpuLabel}  {upscalerThreads}  {encoderPreset}  tile {tileSize}",
+            gpuLabel,
+            caseLabel,
             0,
             "0%",
             "--:--:--",
@@ -1209,10 +1381,6 @@ public static class BenchmarkRunner
             RefinerWorkingDirectory = string.Empty,
             RefinerModelDir = string.Empty,
             RefinerArgumentsTemplate = string.Empty,
-            UseAntiFlicker = false,
-            AntiFlickerMode = AntiFlickerMode.LumaStabilizer,
-            ContentMode = "anime",
-            AntiFlickerStrength = 0,
             EncoderPreset = encoderPreset,
             OutputContainer = "mkv",
             PreserveIncompleteOutput = false,
@@ -1248,7 +1416,8 @@ public static class BenchmarkRunner
                     stepIndex,
                     totalSteps,
                     phase,
-                    $"{gpuLabel}  {upscalerThreads}  {encoderPreset}  tile {tileSize}",
+                    gpuLabel,
+                    caseLabel,
                     pipelineProgress.Progress,
                     pipelineProgress.ProgressText,
                     pipelineProgress.ElapsedText,
@@ -1645,7 +1814,7 @@ public static class BenchmarkRunner
         var csvPath = Path.Combine(outputRoot, "benchmark-results.csv");
         var mdPath = Path.Combine(outputRoot, "benchmark-results.md");
         var csv = new StringBuilder();
-        csv.AppendLine("Group,Name,Codec,Preset,AntiFlicker,ContentMode,Strength,UpscalerThreads,TileSize,ElapsedSeconds,OutputMB,CpuStartPct,CpuAvgPct,CpuPeakPct,RamStartPct,RamAvgPct,RamPeakPct,GpuStartPct,GpuAvgPct,GpuPeakPct,VramStartPct,VramAvgPct,VramPeakPct,Success,Error");
+        csv.AppendLine("Group,Name,Codec,Preset,UpscalerThreads,TileSize,ElapsedSeconds,OutputMB,CpuStartPct,CpuAvgPct,CpuPeakPct,RamStartPct,RamAvgPct,RamPeakPct,GpuStartPct,GpuAvgPct,GpuPeakPct,VramStartPct,VramAvgPct,VramPeakPct,Success,Error");
         foreach (var result in results)
         {
             csv.AppendLine(string.Join(",",
@@ -1653,9 +1822,6 @@ public static class BenchmarkRunner
                 Csv(result.Name),
                 Csv(result.Codec),
                 Csv(result.Preset),
-                result.AntiFlicker ? "true" : "false",
-                Csv(LocalizedContentMode(result.ContentMode)),
-                result.Strength.ToString("0.##", CultureInfo.InvariantCulture),
                 Csv(result.UpscalerThreads),
                 result.TileSize.ToString(CultureInfo.InvariantCulture),
                 result.Elapsed.TotalSeconds.ToString("0.###", CultureInfo.InvariantCulture),
@@ -1685,18 +1851,17 @@ public static class BenchmarkRunner
         md.AppendLine($"- {LocalizedStrings.BenchmarkLogSample} `{sampleFile}`");
         md.AppendLine($"- {LocalizedStrings.BenchmarkLogSampleDuration} `{sampleDuration:0.###} s`");
         md.AppendLine();
-        md.AppendLine($"| {LocalizedStrings.BenchmarkReportTableGroup} | {LocalizedStrings.BenchmarkReportTableCase} | {LocalizedStrings.BenchmarkReportTableCodec} | {LocalizedStrings.BenchmarkReportTablePreset} | {LocalizedStrings.BenchmarkReportTableAf} | {LocalizedStrings.BenchmarkReportTableMode} | {LocalizedStrings.BenchmarkReportTableStrength} | {LocalizedStrings.BenchmarkReportTableThreads} | {LocalizedStrings.BenchmarkReportTableTile} | {LocalizedStrings.BenchmarkReportTableTime} | {LocalizedStrings.BenchmarkReportTableOutputMb} | {LocalizedStrings.BenchmarkReportTableCpu} | {LocalizedStrings.BenchmarkReportTableRamGb} | {LocalizedStrings.BenchmarkReportTableGpu} | {LocalizedStrings.BenchmarkReportTableVramGb} |");
-        md.AppendLine("|---|---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|");
+        md.AppendLine($"| {LocalizedStrings.BenchmarkReportTableGroup} | {LocalizedStrings.BenchmarkReportTableCase} | {LocalizedStrings.BenchmarkReportTableCodec} | {LocalizedStrings.BenchmarkReportTablePreset} | {LocalizedStrings.BenchmarkReportTableThreads} | {LocalizedStrings.BenchmarkReportTableTile} | {LocalizedStrings.BenchmarkReportTableTime} | {LocalizedStrings.BenchmarkReportTableOutputMb} | {LocalizedStrings.BenchmarkReportTableCpu} | {LocalizedStrings.BenchmarkReportTableRamGb} | {LocalizedStrings.BenchmarkReportTableGpu} | {LocalizedStrings.BenchmarkReportTableVramGb} |");
+        md.AppendLine("|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|");
         foreach (var result in results)
         {
-            md.AppendLine($"| {EscapeMd(result.Group)} | {EscapeMd(result.Name)} | {EscapeMd(result.Codec)} | {EscapeMd(result.Preset)} | {(result.AntiFlicker ? "on" : "off")} | {EscapeMd(LocalizedContentMode(result.ContentMode))} | {result.Strength:0.##} | {EscapeMd(result.UpscalerThreads)} | {result.TileSize} | {result.Elapsed.TotalSeconds:0.###} | {(result.OutputBytes / 1024d / 1024d):0.###} | {MetricTriplet(result.Metrics.StartCpu, result.Metrics.AvgCpu, result.Metrics.PeakCpu)} | {MetricTriplet(result.Metrics.StartRam, result.Metrics.AvgRam, result.Metrics.PeakRam)} | {MetricTriplet(result.Metrics.StartGpu, result.Metrics.AvgGpu, result.Metrics.PeakGpu)} | {MetricTriplet(result.Metrics.StartVram, result.Metrics.AvgVram, result.Metrics.PeakVram)} |");
+            md.AppendLine($"| {EscapeMd(result.Group)} | {EscapeMd(result.Name)} | {EscapeMd(result.Codec)} | {EscapeMd(result.Preset)} | {EscapeMd(result.UpscalerThreads)} | {result.TileSize} | {result.Elapsed.TotalSeconds:0.###} | {(result.OutputBytes / 1024d / 1024d):0.###} | {MetricTriplet(result.Metrics.StartCpu, result.Metrics.AvgCpu, result.Metrics.PeakCpu)} | {MetricTriplet(result.Metrics.StartRam, result.Metrics.AvgRam, result.Metrics.PeakRam)} | {MetricTriplet(result.Metrics.StartGpu, result.Metrics.AvgGpu, result.Metrics.PeakGpu)} | {MetricTriplet(result.Metrics.StartVram, result.Metrics.AvgVram, result.Metrics.PeakVram)} |");
         }
 
         md.AppendLine();
         md.AppendLine($"## {LocalizedStrings.BenchmarkSummaryHeader}");
         AppendSummaryMd(md, LocalizedStrings.BenchmarkSummaryFastestOverall, results.OrderBy(r => r.Elapsed).FirstOrDefault());
         AppendSummaryMd(md, LocalizedStrings.BenchmarkSummaryBestCodecPreset, results.Where(r => r.Group == GroupCodecPreset).OrderBy(r => r.Elapsed).FirstOrDefault());
-        AppendSummaryMd(md, LocalizedStrings.BenchmarkSummaryBestAntiFlicker, results.Where(r => r.Group == GroupAntiFlicker).OrderBy(r => r.Elapsed).FirstOrDefault());
         AppendSummaryMd(md, LocalizedStrings.BenchmarkSummaryBestUpscalerThreads, results.Where(r => r.Group == GroupUpscalerThreads).OrderBy(r => r.Elapsed).FirstOrDefault());
         AppendSummaryMd(md, LocalizedStrings.BenchmarkSummaryBestTileSize, results.Where(r => r.Group == GroupTileSize).OrderBy(r => r.Elapsed).FirstOrDefault());
         AppendBestSettingsMd(md, results);
@@ -1721,7 +1886,6 @@ public static class BenchmarkRunner
     {
         AppendLine(path, LocalizedStrings.BenchmarkLogBestSettings);
         AppendLine(path, $"{LocalizedStrings.BenchmarkLegendCodecPreset}: {FormatSummaryWithTime(GetBest(results, GroupCodecPreset))}");
-        AppendLine(path, $"{LocalizedStrings.BenchmarkLegendAntiFlicker}: {FormatSummaryWithTime(GetBest(results, GroupAntiFlicker))}");
         AppendLine(path, $"{LocalizedStrings.BenchmarkLegendThreads}: {FormatSummaryWithTime(GetBest(results, GroupUpscalerThreads))}");
         AppendLine(path, $"{LocalizedStrings.BenchmarkLegendTileSize}: {FormatSummaryWithTime(GetBest(results, GroupTileSize))}");
     }
@@ -1731,7 +1895,6 @@ public static class BenchmarkRunner
         md.AppendLine();
         md.AppendLine($"## {LocalizedStrings.BenchmarkSummaryBestSettings}");
         AppendBestSettingMd(md, LocalizedStrings.BenchmarkLegendCodecPreset, GetBest(results, GroupCodecPreset));
-        AppendBestSettingMd(md, LocalizedStrings.BenchmarkLegendAntiFlicker, GetBest(results, GroupAntiFlicker));
         AppendBestSettingMd(md, LocalizedStrings.BenchmarkLegendThreads, GetBest(results, GroupUpscalerThreads));
         AppendBestSettingMd(md, LocalizedStrings.BenchmarkLegendTileSize, GetBest(results, GroupTileSize));
     }
@@ -1750,20 +1913,18 @@ public static class BenchmarkRunner
     private static void AppendRecommendedFastPresetMd(StringBuilder md, IReadOnlyList<BenchmarkResult> results)
     {
         var codec = GetBest(results, GroupCodecPreset);
-        var antiFlicker = GetBest(results, GroupAntiFlicker);
         var threads = GetBest(results, GroupUpscalerThreads);
         var tile = GetBest(results, GroupTileSize);
 
         md.AppendLine();
         md.AppendLine($"## {LocalizedStrings.BenchmarkSummaryRecommendedFastPreset}");
-        if (codec is null || antiFlicker is null || threads is null || tile is null)
+        if (codec is null || threads is null || tile is null)
         {
             md.AppendLine($"- {LocalizedStrings.BenchmarkNotAvailable}");
             return;
         }
 
         md.AppendLine($"- {LocalizedStrings.BenchmarkLegendCodecPreset}: **{EscapeMd(codec.Codec)} / {EscapeMd(codec.Preset)}**");
-        md.AppendLine($"- {LocalizedStrings.BenchmarkLegendAntiFlicker}: **{EscapeMd(antiFlicker.Name)}**");
         md.AppendLine($"- {LocalizedStrings.BenchmarkLegendThreads}: **{EscapeMd(threads.UpscalerThreads)}**");
         md.AppendLine($"- {LocalizedStrings.BenchmarkLegendTileSize}: **{tile.TileSize}**");
     }
@@ -1785,19 +1946,17 @@ public static class BenchmarkRunner
     private static void AppendRecommendedFastPreset(string path, IReadOnlyList<BenchmarkResult> results)
     {
         var codec = GetBest(results, GroupCodecPreset);
-        var antiFlicker = GetBest(results, GroupAntiFlicker);
         var threads = GetBest(results, GroupUpscalerThreads);
         var tile = GetBest(results, GroupTileSize);
 
         AppendLine(path, LocalizedStrings.BenchmarkLogRecommendedFastPreset);
-        if (codec is null || antiFlicker is null || threads is null || tile is null)
+        if (codec is null || threads is null || tile is null)
         {
             AppendLine(path, $"  {LocalizedStrings.BenchmarkNotAvailable}");
             return;
         }
 
         AppendLine(path, $"  {LocalizedStrings.BenchmarkLegendCodecPreset}: {codec.Codec} / {codec.Preset}");
-        AppendLine(path, $"  {LocalizedStrings.BenchmarkLegendAntiFlicker}: {antiFlicker.Name}");
         AppendLine(path, $"  {LocalizedStrings.BenchmarkLegendThreads}: {threads.UpscalerThreads}");
         AppendLine(path, $"  {LocalizedStrings.BenchmarkLegendTileSize}: {tile.TileSize}");
     }
@@ -1809,11 +1968,10 @@ public static class BenchmarkRunner
     {
         var successful = results.Where(result => result.Success).ToList();
         var codec = successful.Where(result => result.Group == GroupCodecPreset).OrderBy(result => result.Elapsed).FirstOrDefault();
-        var antiFlicker = successful.Where(result => result.Group == GroupAntiFlicker).OrderBy(result => result.Elapsed).FirstOrDefault();
         var threads = successful.Where(result => result.Group == GroupUpscalerThreads).OrderBy(result => result.Elapsed).FirstOrDefault();
         var tile = successful.Where(result => result.Group == GroupTileSize).OrderBy(result => result.Elapsed).FirstOrDefault();
 
-        if (codec is null || antiFlicker is null || threads is null || tile is null)
+        if (codec is null || threads is null || tile is null)
         {
             return LocalizedStrings.BenchmarkNotAvailable;
         }
@@ -1821,7 +1979,6 @@ public static class BenchmarkRunner
         return string.Join(Environment.NewLine, new[]
         {
             $"{LocalizedStrings.BenchmarkLegendCodecPreset}: {codec.Codec} / {codec.Preset}",
-            $"{LocalizedStrings.BenchmarkLegendAntiFlicker}: {antiFlicker.Name}",
             $"{LocalizedStrings.BenchmarkLegendThreads}: {threads.UpscalerThreads}",
             $"{LocalizedStrings.BenchmarkLegendTileSize}: {tile.TileSize}",
         });
@@ -1831,7 +1988,6 @@ public static class BenchmarkRunner
         => group switch
         {
             GroupCodecPreset => LocalizedStrings.BenchmarkLegendCodecPreset,
-            GroupAntiFlicker => LocalizedStrings.BenchmarkLegendAntiFlicker,
             GroupUpscalerThreads => LocalizedStrings.BenchmarkLegendThreads,
             GroupTileSize => LocalizedStrings.BenchmarkLegendTileSize,
             _ => group
@@ -1840,7 +1996,7 @@ public static class BenchmarkRunner
     private static string FormatResult(BenchmarkResult result)
     {
         var state = result.Success ? LocalizedStrings.BenchmarkSuccess : LocalizedStrings.BenchmarkFailure;
-        return $"{state} | {result.Name} | {result.Elapsed.TotalSeconds:0.###} s | {result.OutputBytes / 1024d / 1024d:0.###} MB | CPU {MetricTriplet(result.Metrics.StartCpu, result.Metrics.AvgCpu, result.Metrics.PeakCpu)} | RAM {MetricTripletGiB(result.Metrics.StartRam, result.Metrics.AvgRam, result.Metrics.PeakRam)} GB | GPU {MetricTriplet(result.Metrics.StartGpu, result.Metrics.AvgGpu, result.Metrics.PeakGpu)} | VRAM {MetricTripletGiB(result.Metrics.StartVram, result.Metrics.AvgVram, result.Metrics.PeakVram)} GB | Mode {LocalizedContentMode(result.ContentMode)}";
+        return $"{state} | {result.Name} | {result.Elapsed.TotalSeconds:0.###} s | {result.OutputBytes / 1024d / 1024d:0.###} MB | CPU {MetricTriplet(result.Metrics.StartCpu, result.Metrics.AvgCpu, result.Metrics.PeakCpu)} | RAM {MetricTripletGiB(result.Metrics.StartRam, result.Metrics.AvgRam, result.Metrics.PeakRam)} GB | GPU {MetricTriplet(result.Metrics.StartGpu, result.Metrics.AvgGpu, result.Metrics.PeakGpu)} | VRAM {MetricTripletGiB(result.Metrics.StartVram, result.Metrics.AvgVram, result.Metrics.PeakVram)} GB";
     }
 
     private static string FormatSummary(BenchmarkResult? result)

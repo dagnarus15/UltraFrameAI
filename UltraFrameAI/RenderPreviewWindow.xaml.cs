@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -30,6 +31,7 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
         FrameTimestampText = string.IsNullOrWhiteSpace(frameTimestampText) ? string.Empty : frameTimestampText.Trim();
         Title = PreviewLabel;
         Loaded += (_, _) => Dispatcher.BeginInvoke(Focus);
+        Closed += (_, _) => RestoreOwnerActivation();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -221,5 +223,38 @@ public partial class RenderPreviewWindow : Window, INotifyPropertyChanged
     private void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private void RestoreOwnerActivation()
+    {
+        var ownerWindow = Owner;
+        if (ownerWindow is null)
+        {
+            return;
+        }
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            var siblingPreview = System.Windows.Application.Current.Windows
+                .OfType<RenderPreviewWindow>()
+                .FirstOrDefault(window => !ReferenceEquals(window, this)
+                    && ReferenceEquals(window.Owner, ownerWindow)
+                    && window.IsVisible);
+
+            if (siblingPreview is not null)
+            {
+                siblingPreview.Activate();
+                return;
+            }
+
+            if (ownerWindow.WindowState == WindowState.Minimized)
+            {
+                ownerWindow.WindowState = WindowState.Normal;
+            }
+
+            ownerWindow.Show();
+            ownerWindow.Activate();
+            ownerWindow.Focus();
+        });
     }
 }

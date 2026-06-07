@@ -160,10 +160,6 @@ public sealed class PipelineServiceTests
             UpscalerWorkingDirectory = Path.GetDirectoryName(upscaler ?? "realesrgan-ncnn-vulkan.exe") ?? root,
             ModelDir = modelDir ?? Path.Combine(root, "models"),
             ExternalUpscalerArgumentsTemplate = string.Empty,
-            UseAntiFlicker = false,
-            AntiFlickerMode = AntiFlickerMode.LumaStabilizer,
-            ContentMode = "Anime",
-            AntiFlickerStrength = 65,
             EncoderPreset = "slower",
             PreserveIncompleteOutput = false,
             RepairBrokenTimestamps = false

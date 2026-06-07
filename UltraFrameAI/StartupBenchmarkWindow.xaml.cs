@@ -9,6 +9,7 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
     private readonly StartupBenchmarkRequest _request;
     private readonly CancellationTokenSource _cts = new();
     private bool _started;
+    private string _benchmarkGpuLabel = string.Empty;
     private string _currentPhase = string.Empty;
     private string _currentCase = string.Empty;
     private string _currentDetail = string.Empty;
@@ -22,6 +23,7 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
     {
         _request = request;
         InitializeComponent();
+        _benchmarkGpuLabel = ResolveInitialGpuLabel();
         DataContext = this;
         Loaded += StartupBenchmarkWindow_Loaded;
     }
@@ -29,6 +31,12 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public StartupBenchmarkReport? Report { get; private set; }
+
+    public string BenchmarkGpuLabel
+    {
+        get => _benchmarkGpuLabel;
+        private set => SetField(ref _benchmarkGpuLabel, value);
+    }
 
     public string CurrentPhase
     {
@@ -119,6 +127,11 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
     private void HandleProgress(StartupBenchmarkProgressUpdate update)
     {
         CurrentPhase = BenchmarkRunner.LocalizeStartupBenchmarkPhase(update.Phase);
+        if (!string.IsNullOrWhiteSpace(update.GpuLabel))
+        {
+            BenchmarkGpuLabel = update.GpuLabel;
+        }
+
         CurrentCase = update.CaseName;
         CurrentDetail = update.Detail;
         CurrentStepText = $"{update.StepIndex}/{update.TotalSteps}";
@@ -126,6 +139,17 @@ public partial class StartupBenchmarkWindow : Window, INotifyPropertyChanged
         CurrentElapsedText = update.ElapsedText;
         CurrentEtaText = update.EtaText;
         CurrentProgress = update.Progress;
+    }
+
+    private string ResolveInitialGpuLabel()
+    {
+        var candidates = _request.GpuCandidates;
+        if (candidates.Count == 1 && !string.IsNullOrWhiteSpace(candidates[0].Label))
+        {
+            return candidates[0].Label;
+        }
+
+        return UltraFrameAI.Resources.LocalizedStrings.GpuSelectionAuto;
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)

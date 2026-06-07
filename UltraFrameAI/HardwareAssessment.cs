@@ -23,10 +23,10 @@ internal static class HardwareAssessmentBuilder
 {
     private const int MinimumCpuLogicalCores = 4;
     private const int RecommendedCpuLogicalCores = 8;
-    private const double MinimumRamGb = 8;
-    private const double RecommendedRamGb = 16;
-    private const double MinimumVramGb = 4;
-    private const double RecommendedVramGb = 6;
+    private const double MinimumRamGb = 2;
+    private const double RecommendedRamGb = 3;
+    private const double MinimumVramGb = 1.5;
+    private const double RecommendedVramGb = 2;
     private const double MinimumPracticalGpuFps = 8;
 
     public static HardwareAssessment BuildStatic(
@@ -59,13 +59,15 @@ internal static class HardwareAssessmentBuilder
         }
         else
         {
+            var gpuLooksStrong = vramGb >= comfortableVramGb;
             lines.Add(new HardwareAssessmentLine(
                 LocalizedStrings.HardwareGpuTitle,
-                LocalizedStrings.HardwareEnough,
+                gpuLooksStrong ? LocalizedStrings.HardwareEnough : LocalizedStrings.HardwareWeak,
                 string.Format(
                     CultureInfo.InvariantCulture,
-                    LocalizedStrings.HardwareGpuStaticEnoughDetail,
+                    gpuLooksStrong ? LocalizedStrings.HardwareGpuStaticEnoughDetail : LocalizedStrings.HardwareGpuStaticLowDetail,
                     strongestGpu.Label,
+                    minimumVramGb,
                     gpuRecommendations.Comfortable)));
         }
 
@@ -93,6 +95,7 @@ internal static class HardwareAssessmentBuilder
                         CultureInfo.InvariantCulture,
                         vramGb >= comfortableVramGb ? LocalizedStrings.HardwareVramEnoughDetail : LocalizedStrings.HardwareVramMinimumDetail,
                         vramGb,
+                        minimumVramGb,
                         comfortableVramGb)
                     : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareVramLowDetail, vramGb, minimumVramGb, comfortableVramGb)));
 
@@ -105,6 +108,7 @@ internal static class HardwareAssessmentBuilder
                     CultureInfo.InvariantCulture,
                     logicalCores >= RecommendedCpuLogicalCores ? LocalizedStrings.HardwareCpuEnoughDetail : LocalizedStrings.HardwareCpuMinimumDetail,
                     logicalCores,
+                    MinimumCpuLogicalCores,
                     RecommendedCpuLogicalCores)
                 : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareCpuLowDetail, logicalCores, MinimumCpuLogicalCores, RecommendedCpuLogicalCores)));
 
@@ -132,6 +136,7 @@ internal static class HardwareAssessmentBuilder
                         CultureInfo.InvariantCulture,
                         totalRamGb >= comfortableRamGb ? LocalizedStrings.HardwareRamEnoughDetail : LocalizedStrings.HardwareRamMinimumDetail,
                         totalRamGb,
+                        minimumRamGb,
                         comfortableRamGb)
                     : string.Format(CultureInfo.InvariantCulture, LocalizedStrings.HardwareRamLowDetail, totalRamGb, minimumRamGb, comfortableRamGb)));
 

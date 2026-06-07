@@ -370,10 +370,6 @@ public sealed class PipelineOptions
     public string RefinerWorkingDirectory { get; init; } = string.Empty;
     public string RefinerModelDir { get; init; } = string.Empty;
     public string RefinerArgumentsTemplate { get; init; } = string.Empty;
-    public required bool UseAntiFlicker { get; init; }
-    public required AntiFlickerMode AntiFlickerMode { get; init; }
-    public required string ContentMode { get; init; }
-    public required double AntiFlickerStrength { get; init; }
     public required string EncoderPreset { get; init; }
     public string OutputContainer { get; init; } = "mkv";
     public required bool PreserveIncompleteOutput { get; init; }
@@ -416,26 +412,6 @@ public sealed record GpuDeviceOption(string Key, string Label, int? ResolvedGpuI
 public sealed record TargetFormatOption(string Value, string Label, bool IsCustomAction = false)
 {
     public override string ToString() => Label;
-}
-
-public enum AntiFlickerMode
-{
-    LumaStabilizer,
-    FlowGuided
-}
-
-public sealed record AntiFlickerModeOption(AntiFlickerMode Value, string Label)
-{
-    public override string ToString() => Label;
-}
-
-public sealed class AntiFlickerPresetState
-{
-    public bool Enabled { get; set; }
-
-    public AntiFlickerMode Mode { get; set; } = AntiFlickerMode.FlowGuided;
-
-    public double Strength { get; set; }
 }
 
 public sealed record PipelineProgress(

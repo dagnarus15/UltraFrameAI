@@ -82,8 +82,7 @@ public sealed class MainViewModelResumeTests
                     EncoderPreset = "slower",
                     FfmpegThreadsText = "1",
                     UpscalerThreadsText = "1:1:1",
-                    TileSizeText = "-1",
-                    UseAntiFlicker = false
+                    TileSizeText = "-1"
                 };
                 Assert.True(viewModel.TrySetFfmpegDirectory(Path.GetDirectoryName(ffmpeg)!, out _));
 
@@ -224,8 +223,7 @@ public sealed class MainViewModelResumeTests
                     EncoderPreset = "slower",
                     FfmpegThreadsText = "1",
                     UpscalerThreadsText = "1:1:1",
-                    TileSizeText = "-1",
-                    UseAntiFlicker = false
+                    TileSizeText = "-1"
                 };
                 Assert.True(viewModel.TrySetFfmpegDirectory(Path.GetDirectoryName(ffmpeg)!, out _));
 

@@ -322,11 +322,6 @@ public partial class MainWindow : Window
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("RepairBrokenTimestampsHelpTitle"), LocalizedStrings.Get("RepairBrokenTimestampsHelpBody"));
     }
 
-    private void AntiFlickerModeHelp_Click(object sender, RoutedEventArgs e)
-    {
-        OpenCodecFormatHelp(sender, LocalizedStrings.Get("AntiFlickerModeHelpTitle"), LocalizedStrings.Get("AntiFlickerModeHelpBody"));
-    }
-
     private void ExternalUpscalerHelp_Click(object sender, RoutedEventArgs e)
     {
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("ExternalUpscalerHelpTitle"), LocalizedStrings.Get("ExternalUpscalerHelpBody"));
@@ -1006,8 +1001,6 @@ public partial class MainWindow : Window
         }
 
         _viewModel.MarkStartupBenchmarkPromptShown();
-        var staticAssessment = HardwareAssessmentBuilder.BuildStatic(_viewModel.GetStartupBenchmarkGpuCandidates());
-
         if (!_viewModel.HasDetectedGpuCandidates || string.IsNullOrWhiteSpace(_viewModel.GetStartupBenchmarkSourcePath()))
         {
             ShowStyledMessage(
@@ -1016,7 +1009,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var promptDialog = new StartupBenchmarkPromptDialog(staticAssessment, _viewModel.CurrentStartupBenchmarkPromptKind)
+        var promptDialog = new StartupBenchmarkPromptDialog(_viewModel.GetStartupBenchmarkGpuCandidates(), _viewModel.CurrentStartupBenchmarkPromptKind)
         {
             Owner = this
         };
@@ -1414,7 +1407,7 @@ public partial class MainWindow : Window
             {
                 var request = new StartupBenchmarkRequest(
                     sourcePath,
-                    _viewModel.GetStartupBenchmarkGpuCandidates(),
+                    _viewModel.GetSelectedStartupBenchmarkGpuCandidates(),
                     _viewModel.GetResolvedFfmpegExecutablePath(),
                     _viewModel.GetResolvedFfprobeExecutablePath(),
                     outputDir,

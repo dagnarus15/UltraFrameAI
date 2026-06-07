@@ -42,7 +42,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     private sealed record RecentRootFoldersCacheEntry(List<string> Folders, bool Complete);
-    private sealed record AntiFlickerProfilesCacheEntry(Dictionary<string, AntiFlickerPresetState> Presets, bool Complete);
     private sealed record PersistedQueueItemCacheEntry(string SourcePath, string Title, string OutputPath, bool IsChecked, bool SkipInRender);
     private sealed record ResumePreflightTelemetry(string? PhaseText = null, string? DetailText = null, string? EtaText = null, string? FpsText = null);
     private sealed class ResumePreflightUiState
@@ -77,11 +76,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string SupirUpscalerModelDir,
         string SupirUpscalerArgumentsTemplate,
         bool Overwrite,
-        string SelectedContentMode,
         string CurrentLanguage,
         string? BackgroundColorHex,
-        bool? UseAntiFlicker,
-        string? SelectedAntiFlickerMode,
         bool PreserveIncompleteOutput,
         bool? RepairBrokenTimestamps,
         bool StartupBenchmarkPromptShown,
@@ -106,7 +102,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly RelayCommand _openOutputCommand;
     private readonly AsyncRelayCommand _resetRootCommand;
     private readonly RelayCommand _setLanguageCommand;
-    private readonly RelayCommand _setContentModeCommand;
     private readonly RelayCommand _removeItemCommand;
     private readonly RelayCommand _cancelCommand;
     private readonly RelayCommand _skipCurrentCommand;
@@ -116,7 +111,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AsyncRelayCommand _startCommand;
     private readonly AsyncRelayCommand _startSelectedCommand;
     private readonly ObservableCollection<LogEntryViewModel> _logLines = UiCollections.CreateLogCollection();
-    private IReadOnlyList<AntiFlickerModeOption> _antiFlickerModeOptions = Array.Empty<AntiFlickerModeOption>();
     private IReadOnlyList<TargetFormatOption> _targetOptions = Array.Empty<TargetFormatOption>();
     private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
     private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
@@ -126,7 +120,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly string _repoRoot = FindRepoRoot();
     private readonly string _lastRootFolderPath;
     private readonly string _recentRootFoldersPath;
-    private readonly string _antiFlickerProfilesPath;
     private readonly string _appSettingsPath;
     private const string DefaultTargetValue = "1080p";
     private const string CustomTargetActionValue = "__custom_target__";
@@ -134,7 +127,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private CancellationTokenSource? _runCts;
     private CancellationTokenSource? _scanCts;
-    private readonly Dictionary<string, AntiFlickerPresetState> _antiFlickerPresets;
     private readonly HashSet<QueueItemViewModel> _attachedQueueItems = new();
     private bool _isBusy;
     private string _rootFolder = Directory.GetCurrentDirectory();
@@ -165,13 +157,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _benchmarkedHardwareSignature = string.Empty;
     private StartupBenchmarkPracticalRequirements? _startupBenchmarkPracticalRequirements;
     private StartupBenchmarkPromptKind _startupBenchmarkPromptKind;
-    private bool _useAntiFlicker = true;
     private bool _preserveIncompleteOutput;
     private bool _repairBrokenTimestamps = true;
-    private double _antiFlickerStrength = 65;
-    private AntiFlickerMode _selectedAntiFlickerMode = AntiFlickerMode.FlowGuided;
-    private string _selectedContentMode = "Anime";
-    private bool _suppressAntiFlickerPresetPersistence;
     private bool _suppressAppSettingsPersistence;
     private string _statusSummary = string.Empty;
     private string _lastHeartbeat = string.Empty;
@@ -243,7 +230,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             "UltraFrameAI");
         _lastRootFolderPath = Path.Combine(settingsRoot, "last-root-folder.txt");
         _recentRootFoldersPath = Path.Combine(settingsRoot, "recent-root-folders.txt");
-        _antiFlickerProfilesPath = Path.Combine(settingsRoot, "anti-flicker-presets.json");
         _appSettingsPath = Path.Combine(settingsRoot, "app-settings.json");
         _pipeline = new PipelineService();
         Items = new ObservableCollection<QueueItemViewModel>();
@@ -261,7 +247,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _openOutputCommand = new RelayCommand(OpenOutputFolder);
         _resetRootCommand = new AsyncRelayCommand(ResetToLastFolderAsync, () => !IsBusy);
         _setLanguageCommand = new RelayCommand(SetLanguage);
-        _setContentModeCommand = new RelayCommand(SetContentMode);
         _removeItemCommand = new RelayCommand(RemoveItem, CanRemoveItem);
         _cancelCommand = new RelayCommand(CancelRun, () => IsBusy);
         _skipCurrentCommand = new RelayCommand(SkipCurrentItem, () => IsBusy);
@@ -281,8 +266,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
         };
         _currentLanguage = LocalizedStrings.CurrentLanguage;
-        _antiFlickerPresets = LoadAntiFlickerPresets();
-        _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
         _detectedGpuDevices = GpuDeviceDetector.DetectDevices();
@@ -293,7 +276,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         try
         {
             RootFolder = LoadPersistedRootFolder(_repoRoot);
-            ApplyAntiFlickerPreset(_selectedContentMode, persist: false);
             LoadAppSettings();
         }
         finally
@@ -370,8 +352,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public IEnumerable<string> EncoderPresetOptions { get; }
 
-    public IReadOnlyList<AntiFlickerModeOption> AntiFlickerModeOptions => _antiFlickerModeOptions;
-
     public ICommand BrowseRootFolderCommand => _browseRootFolderCommand;
 
     public ICommand BrowseRootFileCommand => _browseRootFileCommand;
@@ -383,8 +363,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ResetRootCommand => _resetRootCommand;
 
     public ICommand SetLanguageCommand => _setLanguageCommand;
-
-    public ICommand SetContentModeCommand => _setContentModeCommand;
 
     public ICommand RemoveItemCommand => _removeItemCommand;
 
@@ -887,19 +865,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool UseAntiFlicker
-    {
-        get => _useAntiFlicker;
-        set
-        {
-            if (SetField(ref _useAntiFlicker, value))
-            {
-                PersistCurrentAntiFlickerPreset();
-                PersistAppSettings();
-            }
-        }
-    }
-
     public bool PreserveIncompleteOutput
     {
         get => _preserveIncompleteOutput;
@@ -919,50 +884,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField(ref _repairBrokenTimestamps, value))
             {
-                PersistAppSettings();
-            }
-        }
-    }
-
-    public double AntiFlickerStrength
-    {
-        get => _antiFlickerStrength;
-        set
-        {
-            if (SetField(ref _antiFlickerStrength, Math.Clamp(value, 0, 100)))
-            {
-                PersistCurrentAntiFlickerPreset();
-            }
-        }
-    }
-
-    public AntiFlickerMode SelectedAntiFlickerMode
-    {
-        get => _selectedAntiFlickerMode;
-        set
-        {
-            if (SetField(ref _selectedAntiFlickerMode, value))
-            {
-                PersistAppSettings();
-            }
-        }
-    }
-
-    public string SelectedContentMode
-    {
-        get => _selectedContentMode;
-        set
-        {
-            var normalized = NormalizeContentMode(value);
-            if (string.Equals(_selectedContentMode, normalized, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            if (SetField(ref _selectedContentMode, normalized))
-            {
-                ApplyAntiFlickerPreset(normalized, persist: false);
-                PersistAllAntiFlickerPresets();
                 PersistAppSettings();
             }
         }
@@ -1310,14 +1231,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         else if (parameter is string text && Enum.TryParse(text, true, out UiLanguage parsed))
         {
             CurrentLanguage = parsed;
-        }
-    }
-
-    private void SetContentMode(object? parameter)
-    {
-        if (parameter is string mode && !string.IsNullOrWhiteSpace(mode))
-        {
-            SelectedContentMode = mode;
         }
     }
 
@@ -1694,10 +1607,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             RefinerWorkingDirectory = refinerWorkingDirectory,
             RefinerModelDir = refinerModelDir,
             RefinerArgumentsTemplate = refinerArgsTemplate,
-            UseAntiFlicker = UseAntiFlicker,
-            AntiFlickerMode = SelectedAntiFlickerMode,
-            ContentMode = SelectedContentMode,
-            AntiFlickerStrength = AntiFlickerStrength,
             EncoderPreset = EncoderPreset,
             PreserveIncompleteOutput = PreserveIncompleteOutput,
             RepairBrokenTimestamps = RepairBrokenTimestamps
@@ -1768,9 +1677,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     public IReadOnlyList<StartupBenchmarkGpuCandidate> GetStartupBenchmarkGpuCandidates()
-        => _detectedGpuDevices
-            .Select(device => new StartupBenchmarkGpuCandidate(device.DeviceId, BuildGpuLabel(device), device.MemoryMb))
+        => GetRenderableGpuDevices()
+            .Select(device => new StartupBenchmarkGpuCandidate(device.BackendGpuId ?? device.DeviceId, BuildGpuLabel(device), device.MemoryMb))
             .ToArray();
+
+    public IReadOnlyList<StartupBenchmarkGpuCandidate> GetSelectedStartupBenchmarkGpuCandidates()
+    {
+        if (SelectedGpuOption is { IsAuto: false } selectedOption
+            && int.TryParse(selectedOption.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var selectedDeviceId))
+        {
+            var selected = GetRenderableGpuDevices()
+                .Where(device => device.DeviceId == selectedDeviceId)
+                .Select(device => new StartupBenchmarkGpuCandidate(device.BackendGpuId ?? device.DeviceId, BuildGpuLabel(device), device.MemoryMb))
+                .ToArray();
+            if (selected.Length > 0)
+            {
+                return selected;
+            }
+        }
+
+        return GetStartupBenchmarkGpuCandidates();
+    }
 
     public void ApplyStartupBenchmarkRecommendation(StartupBenchmarkRecommendation recommendation)
     {
@@ -3522,7 +3449,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void RefreshLocalizedText()
     {
         _currentLanguage = LocalizedStrings.CurrentLanguage;
-        _antiFlickerModeOptions = BuildAntiFlickerModeOptions();
         RefreshTargetOptions();
         _upscalerBackendOptions = BuildUpscalerBackendOptions();
         _refinerBackendOptions = BuildRefinerBackendOptions();
@@ -3531,7 +3457,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(string.Empty);
         OnPropertyChanged(nameof(CurrentLanguageFlagPath));
         OnPropertyChanged(nameof(FfmpegDirectoryDisplay));
-        OnPropertyChanged(nameof(AntiFlickerModeOptions));
         OnPropertyChanged(nameof(UpscalerBackendOptions));
         OnPropertyChanged(nameof(RefinerBackendOptions));
         OnPropertyChanged(nameof(GpuOptions));
@@ -3567,13 +3492,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ScanFoundText = LocalizedStrings.LogFoundVideoFiles(_scanFoundCount);
         }
     }
-
-    private static IReadOnlyList<AntiFlickerModeOption> BuildAntiFlickerModeOptions() =>
-        new[]
-        {
-            new AntiFlickerModeOption(AntiFlickerMode.FlowGuided, LocalizedStrings.AntiFlickerModeFlowGuided),
-            new AntiFlickerModeOption(AntiFlickerMode.LumaStabilizer, LocalizedStrings.AntiFlickerModeLumaStabilizer)
-        };
 
     private static IReadOnlyList<TargetFormatOption> BuildTargetOptions(string? selectedTarget)
     {
@@ -3648,21 +3566,33 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private IReadOnlyList<GpuDeviceOption> BuildGpuOptions()
     {
         var options = new List<GpuDeviceOption>();
-        var strongestDevice = _detectedGpuDevices.FirstOrDefault();
+        var renderableDevices = GetRenderableGpuDevices();
+        var strongestDevice = renderableDevices.FirstOrDefault();
         var autoLabel = strongestDevice is null
             ? LocalizedStrings.GpuSelectionAuto
             : LocalizedStrings.GpuSelectionAutoWithName(strongestDevice.Name);
-        options.Add(new GpuDeviceOption(GpuDeviceOption.AutoKey, autoLabel, strongestDevice?.DeviceId));
+        options.Add(new GpuDeviceOption(GpuDeviceOption.AutoKey, autoLabel, strongestDevice is null ? null : strongestDevice.BackendGpuId ?? strongestDevice.DeviceId));
 
-        foreach (var device in _detectedGpuDevices)
+        foreach (var device in renderableDevices)
         {
             options.Add(new GpuDeviceOption(
                 device.DeviceId.ToString(CultureInfo.InvariantCulture),
                 BuildGpuLabel(device),
-                device.DeviceId));
+                device.BackendGpuId ?? device.DeviceId));
         }
 
         return options;
+    }
+
+    private IReadOnlyList<DetectedGpuDevice> GetRenderableGpuDevices()
+    {
+        var backendCapable = _detectedGpuDevices
+            .Where(device => device.BackendGpuId.HasValue)
+            .ToArray();
+
+        return backendCapable.Length > 0
+            ? backendCapable
+            : _detectedGpuDevices;
     }
 
     private static string BuildGpuLabel(DetectedGpuDevice device)
@@ -3704,14 +3634,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShouldOfferStartupBenchmark));
         OnPropertyChanged(nameof(CurrentStartupBenchmarkPromptKind));
     }
-
-    private static AntiFlickerMode NormalizeAntiFlickerMode(string? raw) => raw?.Trim() switch
-    {
-        nameof(AntiFlickerMode.FlowGuided) => AntiFlickerMode.FlowGuided,
-        "EdgeClamp" => AntiFlickerMode.LumaStabilizer,
-        "Legacy" => AntiFlickerMode.LumaStabilizer,
-        _ => AntiFlickerMode.FlowGuided
-    };
 
     private static UpscalerBackendKind NormalizeUpscalerBackendKind(string? raw) => raw?.Trim() switch
     {
@@ -4423,21 +4345,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             AppThemeManager.ApplyBackgroundColor(loaded.BackgroundColorHex);
 
-            if (!string.IsNullOrWhiteSpace(loaded.SelectedContentMode))
-            {
-                SelectedContentMode = loaded.SelectedContentMode;
-            }
-
-            if (loaded.UseAntiFlicker is bool useAntiFlicker)
-            {
-                UseAntiFlicker = useAntiFlicker;
-            }
-
-            if (!string.IsNullOrWhiteSpace(loaded.SelectedAntiFlickerMode))
-            {
-                SelectedAntiFlickerMode = NormalizeAntiFlickerMode(loaded.SelectedAntiFlickerMode);
-            }
-
             PreserveIncompleteOutput = loaded.PreserveIncompleteOutput;
             RepairBrokenTimestamps = loaded.RepairBrokenTimestamps ?? true;
             ShowQueuePaths = loaded.ShowQueuePaths;
@@ -4698,11 +4605,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _supirUpscalerModelDir,
                 _supirUpscalerArgumentsTemplate,
                 Overwrite,
-                SelectedContentMode,
                 CurrentLanguage.ToString(),
                 AppThemeManager.CurrentBackgroundColorHex,
-                UseAntiFlicker,
-                SelectedAntiFlickerMode.ToString(),
                 PreserveIncompleteOutput,
                 RepairBrokenTimestamps,
                 _startupBenchmarkPromptShown,
@@ -4935,65 +4839,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 #endif
     }
 
-    private void ApplyAntiFlickerPreset(string mode, bool persist)
-    {
-        var normalized = NormalizeContentMode(mode);
-        var preset = GetAntiFlickerPreset(normalized);
-
-        _suppressAntiFlickerPresetPersistence = true;
-        try
-        {
-            UseAntiFlicker = preset.Enabled;
-            SelectedAntiFlickerMode = preset.Mode;
-            AntiFlickerStrength = preset.Strength;
-        }
-        finally
-        {
-            _suppressAntiFlickerPresetPersistence = false;
-        }
-
-        if (persist)
-        {
-            PersistCurrentAntiFlickerPreset();
-        }
-    }
-
-    private void PersistCurrentAntiFlickerPreset()
-    {
-        if (_suppressAntiFlickerPresetPersistence)
-        {
-            return;
-        }
-
-        var normalized = NormalizeContentMode(_selectedContentMode);
-        _antiFlickerPresets[normalized] = new AntiFlickerPresetState
-        {
-            Enabled = UseAntiFlicker,
-            Mode = SelectedAntiFlickerMode,
-            Strength = AntiFlickerStrength
-        };
-        PersistAllAntiFlickerPresets();
-    }
-
-    private void PersistAllAntiFlickerPresets()
-    {
-        try
-        {
-            var directory = Path.GetDirectoryName(_antiFlickerProfilesPath);
-            if (!string.IsNullOrWhiteSpace(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var entry = new AntiFlickerProfilesCacheEntry(new Dictionary<string, AntiFlickerPresetState>(_antiFlickerPresets), true);
-            var json = JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true });
-            WriteAtomicText(_antiFlickerProfilesPath, json);
-        }
-        catch
-        {
-        }
-    }
-
     private static void WriteAtomicText(string path, string content)
     {
         var directory = Path.GetDirectoryName(path);
@@ -5006,88 +4851,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         File.WriteAllText(tempPath, content);
         File.Move(tempPath, path, true);
     }
-
-    private Dictionary<string, AntiFlickerPresetState> LoadAntiFlickerPresets()
-    {
-        var presets = CreateDefaultAntiFlickerPresets();
-        try
-        {
-            if (File.Exists(_antiFlickerProfilesPath))
-            {
-                var json = File.ReadAllText(_antiFlickerProfilesPath);
-                var loaded = JsonSerializer.Deserialize<AntiFlickerProfilesCacheEntry>(json);
-                if (loaded is not null && loaded.Complete)
-                {
-                    ApplyLoadedAntiFlickerPresets(presets, loaded.Presets);
-                }
-                else
-                {
-                    var legacyLoaded = JsonSerializer.Deserialize<Dictionary<string, AntiFlickerPresetState>>(json);
-                    if (legacyLoaded is not null)
-                    {
-                        ApplyLoadedAntiFlickerPresets(presets, legacyLoaded);
-                    }
-                }
-            }
-        }
-        catch
-        {
-        }
-
-        return presets;
-    }
-
-    private static void ApplyLoadedAntiFlickerPresets(
-        Dictionary<string, AntiFlickerPresetState> presets,
-        IReadOnlyDictionary<string, AntiFlickerPresetState> loaded)
-    {
-        foreach (var pair in loaded)
-        {
-            var mode = NormalizeContentMode(pair.Key);
-            if (string.IsNullOrWhiteSpace(mode))
-            {
-                continue;
-            }
-
-            presets[mode] = new AntiFlickerPresetState
-            {
-                Enabled = pair.Value.Enabled,
-                Mode = pair.Value.Mode,
-                Strength = Math.Clamp(pair.Value.Strength, 0, 100)
-            };
-        }
-    }
-
-    private static Dictionary<string, AntiFlickerPresetState> CreateDefaultAntiFlickerPresets()
-    {
-        return new Dictionary<string, AntiFlickerPresetState>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Anime"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 68 },
-            ["AnimeUltra"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 84 },
-            ["Video"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 40 },
-            ["Faces"] = new AntiFlickerPresetState { Enabled = true, Mode = AntiFlickerMode.FlowGuided, Strength = 26 }
-        };
-    }
-
-    private AntiFlickerPresetState GetAntiFlickerPreset(string mode)
-    {
-        if (_antiFlickerPresets.TryGetValue(mode, out var preset))
-        {
-            return preset;
-        }
-
-        preset = CreateDefaultAntiFlickerPresets()[mode];
-        _antiFlickerPresets[mode] = preset;
-        return preset;
-    }
-
-    private static string NormalizeContentMode(string? mode) => mode?.Trim() switch
-    {
-        "AnimeUltra" => "AnimeUltra",
-        "Video" => "Video",
-        "Faces" => "Faces",
-        _ => "Anime"
-    };
 
     private static string NormalizeInputPath(string folder)
     {
