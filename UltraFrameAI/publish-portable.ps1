@@ -1,6 +1,6 @@
 param(
     [switch]$IncludeFfmpeg,
-    [switch]$SingleFile,
+    [switch]$FolderBuild,
     [string]$FfmpegBin = 'C:\ffmpeg\bin'
 )
 
@@ -12,7 +12,7 @@ $distDir = Join-Path $repoRoot 'dist\UltraFrameAI'
 $realesrganSrc = Join-Path $repoRoot 'realesrgan-ncnn-vulkan-20220424'
 $realesrganDst = Join-Path $distDir 'realesrgan-ncnn-vulkan-20220424'
 $realesrganForkExe = Join-Path $repoRoot 'realesrgan-ncnn-vulkan-fork\build\Release\realesrgan-ncnn-vulkan.exe'
-$publishSingleFile = $SingleFile.IsPresent.ToString().ToLowerInvariant()
+$publishSingleFile = (-not $FolderBuild.IsPresent).ToString().ToLowerInvariant()
 
 if (Test-Path $distDir) {
     Remove-Item -LiteralPath $distDir -Recurse -Force
@@ -39,6 +39,7 @@ if ($LASTEXITCODE -ne 0) {
     -p:SelfContained=true `
     -p:PublishSingleFile=$publishSingleFile `
     -p:IncludeNativeLibrariesForSelfExtract=true `
+    -p:EnableCompressionInSingleFile=true `
     --no-restore `
     -o $distDir
 if ($LASTEXITCODE -ne 0) {
