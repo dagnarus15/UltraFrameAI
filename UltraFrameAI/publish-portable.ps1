@@ -1,5 +1,6 @@
 param(
     [switch]$IncludeFfmpeg,
+    [switch]$SingleFile,
     [string]$FfmpegBin = 'C:\ffmpeg\bin'
 )
 
@@ -11,6 +12,7 @@ $distDir = Join-Path $repoRoot 'dist\UltraFrameAI'
 $realesrganSrc = Join-Path $repoRoot 'realesrgan-ncnn-vulkan-20220424'
 $realesrganDst = Join-Path $distDir 'realesrgan-ncnn-vulkan-20220424'
 $realesrganForkExe = Join-Path $repoRoot 'realesrgan-ncnn-vulkan-fork\build\Release\realesrgan-ncnn-vulkan.exe'
+$publishSingleFile = $SingleFile.IsPresent.ToString().ToLowerInvariant()
 
 if (Test-Path $distDir) {
     Remove-Item -LiteralPath $distDir -Recurse -Force
@@ -30,21 +32,13 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet restore failed with exit code $LASTEXITCODE"
 }
 
-& dotnet build (Join-Path $projectDir 'UltraFrameAI.csproj') `
-    -c Release `
-    -r win-x64 `
-    --no-restore
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet build failed with exit code $LASTEXITCODE"
-}
-
 & dotnet publish (Join-Path $projectDir 'UltraFrameAI.csproj') `
     -c Release `
     -r win-x64 `
     --self-contained true `
-    -p:PublishSingleFile=true `
+    -p:SelfContained=true `
+    -p:PublishSingleFile=$publishSingleFile `
     -p:IncludeNativeLibrariesForSelfExtract=true `
-    --no-build `
     --no-restore `
     -o $distDir
 if ($LASTEXITCODE -ne 0) {
