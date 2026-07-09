@@ -20,6 +20,16 @@ realesrgan-ncnn-vulkan-20220424/onepiece_demo.mp4
 UltraFrameAI.Native/AntiFlicker/build/
 *.mkv
 *.mp4
+ffmpeg/
+**/ffmpeg/
+**/ffmpeg.exe
+**/ffprobe.exe
+**/ffplay.exe
+**/avcodec*.dll
+**/avformat*.dll
+**/avutil*.dll
+**/swscale*.dll
+**/swresample*.dll
 run-upscale.ps1
 run-x264.ps1
 run-x265.ps1
