@@ -70,7 +70,15 @@ Publish a portable build:
 .\UltraFrameAI\publish-portable.ps1
 ```
 
-The portable output is generated under `dist/`.
+The portable output is generated under `dist/`. By default, FFmpeg binaries are not bundled; the app will ask the user to configure or download FFmpeg on first run if needed.
+
+If you intentionally want to create a package that includes your own FFmpeg binaries, use:
+
+```powershell
+.\UltraFrameAI\publish-portable.ps1 -IncludeFfmpeg -FfmpegBin C:\ffmpeg\bin
+```
+
+Only use that option when you are also ready to satisfy the license obligations for the exact FFmpeg build you distribute.
 
 ## Development Notes
 

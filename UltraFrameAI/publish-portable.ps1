@@ -1,3 +1,8 @@
+param(
+    [switch]$IncludeFfmpeg,
+    [string]$FfmpegBin = 'C:\ffmpeg\bin'
+)
+
 $ErrorActionPreference = 'Stop'
 
 $projectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -48,14 +53,8 @@ if ($LASTEXITCODE -ne 0) {
 
 New-Item -ItemType Directory -Path $distDir -Force | Out-Null
 
-$ffmpegBin = 'C:\ffmpeg\bin'
-$ffmpegExe = Join-Path $ffmpegBin 'ffmpeg.exe'
-$ffprobeExe = Join-Path $ffmpegBin 'ffprobe.exe'
 Copy-Item -LiteralPath (Join-Path $projectDir 'RUN_ME.txt') -Destination (Join-Path $distDir 'RUN_ME.txt') -Force
-
-if (-not (Test-Path $ffmpegExe) -or -not (Test-Path $ffprobeExe)) {
-    throw "ffmpeg.exe / ffprobe.exe not found in $ffmpegBin"
-}
+Copy-Item -LiteralPath (Join-Path $repoRoot 'THIRD_PARTY.md') -Destination (Join-Path $distDir 'THIRD_PARTY.md') -Force
 
 if (-not (Test-Path $realesrganForkExe)) {
     throw "Fork build not found at $realesrganForkExe"
@@ -63,8 +62,22 @@ if (-not (Test-Path $realesrganForkExe)) {
 
 Copy-Item -LiteralPath $realesrganForkExe -Destination (Join-Path $realesrganSrc 'realesrgan-ncnn-vulkan.exe') -Force
 
-Copy-Item -LiteralPath $ffmpegExe -Destination (Join-Path $distDir 'ffmpeg.exe') -Force
-Copy-Item -LiteralPath $ffprobeExe -Destination (Join-Path $distDir 'ffprobe.exe') -Force
+if ($IncludeFfmpeg) {
+    $ffmpegExe = Join-Path $FfmpegBin 'ffmpeg.exe'
+    $ffprobeExe = Join-Path $FfmpegBin 'ffprobe.exe'
+
+    if (-not (Test-Path $ffmpegExe) -or -not (Test-Path $ffprobeExe)) {
+        throw "ffmpeg.exe / ffprobe.exe not found in $FfmpegBin"
+    }
+
+    Copy-Item -LiteralPath $ffmpegExe -Destination (Join-Path $distDir 'ffmpeg.exe') -Force
+    Copy-Item -LiteralPath $ffprobeExe -Destination (Join-Path $distDir 'ffprobe.exe') -Force
+    Write-Host "Included external FFmpeg binaries from: $FfmpegBin"
+}
+else {
+    Write-Host "FFmpeg binaries were not bundled. The app will ask the user to configure or download FFmpeg on first run if needed."
+}
+
 Copy-Item -LiteralPath $realesrganSrc -Destination $realesrganDst -Recurse -Force
 
 Write-Host "Portable build ready at: $distDir"
