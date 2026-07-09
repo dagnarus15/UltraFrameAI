@@ -221,6 +221,9 @@ public static class Strings
     public static string BenchmarkErrorUnableToCreateSampleClipWithExitCode => GetRequired(nameof(BenchmarkErrorUnableToCreateSampleClipWithExitCode));
     public static string BenchmarkErrorUnableToCreateSampleClip => GetRequired(nameof(BenchmarkErrorUnableToCreateSampleClip));
     public static string BenchmarkErrorPipelineFailed => GetRequired(nameof(BenchmarkErrorPipelineFailed));
+    public static string BenchmarkErrorStartupCaseNoFrames => GetRequired(nameof(BenchmarkErrorStartupCaseNoFrames));
+    public static string BenchmarkErrorStartupCaseStalled => GetRequired(nameof(BenchmarkErrorStartupCaseStalled));
+    public static string BenchmarkErrorStartupCaseNoHeartbeat => GetRequired(nameof(BenchmarkErrorStartupCaseNoHeartbeat));
     public static string BenchmarkShortCodecFast => GetRequired(nameof(BenchmarkShortCodecFast));
     public static string BenchmarkSuccess => GetRequired(nameof(BenchmarkSuccess));
     public static string BenchmarkFailure => GetRequired(nameof(BenchmarkFailure));
@@ -347,9 +350,15 @@ public static class Strings
     public static string HelpFaqAnswer5 => GetRequired(nameof(HelpFaqAnswer5));
     public static string HelpFaqQuestion6 => GetRequired(nameof(HelpFaqQuestion6));
     public static string HelpFaqAnswer6 => GetRequired(nameof(HelpFaqAnswer6));
+    public static string HelpFaqQuestion7 => GetRequired(nameof(HelpFaqQuestion7));
+    public static string HelpFaqAnswer7 => GetRequired(nameof(HelpFaqAnswer7));
     public static string DonationDialogTitle => GetRequired(nameof(DonationDialogTitle));
-    public static string DonationDialogThanks => GetRequired(nameof(DonationDialogThanks));
-    public static string DonationDialogBody => GetRequired(nameof(DonationDialogBody));
+    public static string DonationDialogIntro => GetRequired(nameof(DonationDialogIntro));
+    public static string DonationDialogBenefits => GetRequired(nameof(DonationDialogBenefits));
+    public static string DonationDialogFooter => GetRequired(nameof(DonationDialogFooter));
+    public static string DonationEntryAuthorSiteSummary => GetRequired(nameof(DonationEntryAuthorSiteSummary));
+    public static string DonationEntryAuthorSiteDetails => GetRequired(nameof(DonationEntryAuthorSiteDetails));
+    public static string DonationEntryAuthorSiteAction => GetRequired(nameof(DonationEntryAuthorSiteAction));
     public static string RenderSessionResultsTitle => GetRequired(nameof(RenderSessionResultsTitle));
     public static string RenderSessionResultsSummary => GetRequired(nameof(RenderSessionResultsSummary));
     public static string RenderSessionResultsItemComplete => GetRequired(nameof(RenderSessionResultsItemComplete));
@@ -561,8 +570,14 @@ public static class Strings
     public static string LogItemSummary => GetRequired(nameof(LogItemSummary));
     public static string LogNoFramesExtracted => GetRequired(nameof(LogNoFramesExtracted));
 
-    private static string GetRequired(string key)
+    private static string GetRequired(string name)
     {
-        return ResourceManager.GetString(key, resourceCulture) ?? throw new MissingManifestResourceException($"Missing resource: {key}");
+        var value = ResourceManager.GetString(name, resourceCulture);
+        if (value is null)
+        {
+            throw new InvalidOperationException($"Missing resource: {name}");
+        }
+
+        return value;
     }
 }

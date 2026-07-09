@@ -564,6 +564,15 @@
   <data name="BenchmarkErrorPipelineFailed" xml:space="preserve">
     <value>Pipeline failed</value>
   </data>
+  <data name="BenchmarkErrorStartupCaseNoFrames" xml:space="preserve">
+    <value>Benchmark case stopped because no frames were processed in time.</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseStalled" xml:space="preserve">
+    <value>Benchmark case stopped because progress was stuck for too long.</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseNoHeartbeat" xml:space="preserve">
+    <value>Benchmark case stopped because the pipeline stopped sending progress updates.</value>
+  </data>
   <data name="BenchmarkShortCodecFast" xml:space="preserve">
     <value>fast</value>
   </data>
@@ -898,7 +907,9 @@ If you ever want to support the project, you can find that option in the help se
     <value>This area contains the main program settings.
 
 General: codec, resolution, container, GPU selection, and the main processing switches.
-Performance: encoder preset, thread counts, and rendering speed parameters.</value>
+Performance: encoder preset, thread counts, and rendering speed parameters.
+
+Changes are applied automatically, so there is no separate Save button.</value>
   </data>
   <data name="HelpCenterIntro" xml:space="preserve">
     <value>This window combines a quick usage guide, answers to common questions, and support information for the project.</value>
@@ -928,7 +939,7 @@ Performance: encoder preset, thread counts, and rendering speed parameters.</val
     <value>Contacts and links</value>
   </data>
   <data name="HelpCenterDonateTab" xml:space="preserve">
-    <value>Financial support</value>
+    <value>Support the project</value>
   </data>
   <data name="HelpCenterHowToTitle" xml:space="preserve">
     <value>How to use the app</value>
@@ -989,14 +1000,32 @@ Performance: encoder preset, thread counts, and rendering speed parameters.</val
   <data name="HelpFaqAnswer6" xml:space="preserve">
     <value>RealESRGAN was trained mainly on animation, so other videos can sometimes pick up animation-like details during upscaling.</value>
   </data>
+  <data name="HelpFaqQuestion7" xml:space="preserve">
+    <value>Why can't I convert images here if RealESRGAN can do that?</value>
+  </data>
+  <data name="HelpFaqAnswer7" xml:space="preserve">
+    <value>Image conversion is planned for future versions of the app.</value>
+  </data>
   <data name="DonationDialogTitle" xml:space="preserve">
     <value>Support the project</value>
   </data>
-  <data name="DonationDialogThanks" xml:space="preserve">
-    <value>Thank you for wanting to support the app.</value>
+  <data name="DonationDialogIntro" xml:space="preserve">
+    <value>dagnaruscode.eu is the author's website.</value>
   </data>
-  <data name="DonationDialogBody" xml:space="preserve">
-    <value>Below are the suggested support methods. Feel free to use whichever one is most convenient for you.</value>
+  <data name="DonationDialogBenefits" xml:space="preserve">
+    <value>There you can support the author with a coffee and help the further development of this and other programs.</value>
+  </data>
+  <data name="DonationDialogFooter" xml:space="preserve">
+    <value>This is completely optional. The app will continue to work even if you do not contribute.</value>
+  </data>
+  <data name="DonationEntryAuthorSiteSummary" xml:space="preserve">
+    <value>Author website and support page.</value>
+  </data>
+  <data name="DonationEntryAuthorSiteDetails" xml:space="preserve">
+    <value>Support the author with a coffee and help further development.</value>
+  </data>
+  <data name="DonationEntryAuthorSiteAction" xml:space="preserve">
+    <value>Open dagnaruscode.eu</value>
   </data>
   <data name="RenderSessionResultsTitle" xml:space="preserve">
     <value>Enhancement results</value>

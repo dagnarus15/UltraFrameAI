@@ -1393,10 +1393,63 @@ public static class BenchmarkRunner
         BenchmarkMetricsSummary metrics = BenchmarkMetricsSummary.Empty;
         using var caseCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var autoAborted = false;
+        var watchdogAborted = false;
+        var watchdogReason = string.Empty;
+        var lastProgressValue = 0d;
+        var lastMeaningfulProgressUtc = DateTime.UtcNow;
+        var lastHeartbeatUtc = DateTime.UtcNow;
+        using var watchdogCts = CancellationTokenSource.CreateLinkedTokenSource(caseCts.Token);
+        var watchdogTask = Task.Run(async () =>
+        {
+            try
+            {
+                while (!watchdogCts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, watchdogCts.Token).ConfigureAwait(false);
+
+                    var nowUtc = DateTime.UtcNow;
+                    var sinceHeartbeat = nowUtc - lastHeartbeatUtc;
+                    var sinceMeaningfulProgress = nowUtc - lastMeaningfulProgressUtc;
+                    if (!watchdogAborted && lastProgressValue <= 0.01d && started.Elapsed >= TimeSpan.FromSeconds(18) && sinceMeaningfulProgress >= TimeSpan.FromSeconds(18))
+                    {
+                        watchdogReason = LocalizedStrings.Get("BenchmarkErrorStartupCaseNoFrames");
+                        watchdogAborted = true;
+                        caseCts.Cancel();
+                        break;
+                    }
+
+                    if (!watchdogAborted && started.Elapsed >= TimeSpan.FromSeconds(30) && sinceMeaningfulProgress >= TimeSpan.FromSeconds(25))
+                    {
+                        watchdogReason = LocalizedStrings.Get("BenchmarkErrorStartupCaseStalled");
+                        watchdogAborted = true;
+                        caseCts.Cancel();
+                        break;
+                    }
+
+                    if (!watchdogAborted && started.Elapsed >= TimeSpan.FromSeconds(20) && sinceHeartbeat >= TimeSpan.FromSeconds(10))
+                    {
+                        watchdogReason = LocalizedStrings.Get("BenchmarkErrorStartupCaseNoHeartbeat");
+                        watchdogAborted = true;
+                        caseCts.Cancel();
+                        break;
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (watchdogCts.Token.IsCancellationRequested)
+            {
+            }
+        }, watchdogCts.Token);
         try
         {
             await pipeline.RunAsync(new[] { item }, options, pipelineProgress =>
             {
+                lastHeartbeatUtc = DateTime.UtcNow;
+                if (pipelineProgress.Progress > lastProgressValue + 0.05d)
+                {
+                    lastProgressValue = pipelineProgress.Progress;
+                    lastMeaningfulProgressUtc = DateTime.UtcNow;
+                }
+
                 if (!autoAborted && abortGuard is not null)
                 {
                     var latestMetrics = metricsSampler.GetLatestSnapshot();
@@ -1426,18 +1479,32 @@ public static class BenchmarkRunner
             }, caseCts.Token).ConfigureAwait(false);
 
             started.Stop();
+            watchdogCts.Cancel();
+            await watchdogTask.ConfigureAwait(false);
             metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
             return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, true, null, metrics);
+        }
+        catch (OperationCanceledException) when (watchdogAborted)
+        {
+            started.Stop();
+            watchdogCts.Cancel();
+            await watchdogTask.ConfigureAwait(false);
+            metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
+            return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, false, string.IsNullOrWhiteSpace(watchdogReason) ? LocalizedStrings.Get("BenchmarkErrorStartupCaseStalled") : watchdogReason, metrics);
         }
         catch (OperationCanceledException) when (autoAborted)
         {
             started.Stop();
+            watchdogCts.Cancel();
+            await watchdogTask.ConfigureAwait(false);
             metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
             return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, false, abortGuard?.Reason ?? "Auto-stopped.", metrics);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             started.Stop();
+            watchdogCts.Cancel();
+            await watchdogTask.ConfigureAwait(false);
             metrics = await metricsSampler.StopAsync().ConfigureAwait(false);
             return new StartupBenchmarkCaseResult(phase, gpuId, gpuLabel, upscalerThreads, encoderPreset, tileSize, started.Elapsed, false, ex.Message, metrics);
         }

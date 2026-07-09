@@ -22,7 +22,15 @@ public sealed class PipelineService
     private bool _stopAfterCurrentItemRequested;
 
     private sealed record SourceMetadata(double Duration, int Width, int Height, double Fps);
-    private sealed record SourceMetadataCacheEntry(double Duration, int Width, int Height, double Fps, bool Complete);
+    private sealed record SourceMetadataCacheEntry
+    {
+        public int Version { get; init; }
+        public double Duration { get; init; }
+        public int Width { get; init; }
+        public int Height { get; init; }
+        public double Fps { get; init; }
+        public bool Complete { get; init; }
+    }
     private sealed record TimestampCacheEntry(double[] Timestamps, bool Complete);
     private sealed record ResumeStateEntry(
         int Version,
@@ -45,6 +53,7 @@ public sealed class PipelineService
         string SettingsSignature,
         DateTime CompletedUtc);
     private sealed record FrameWriteItem(byte[] Buffer, int Length, double? TimestampSeconds);
+    private const int SourceMetadataCacheVersion = 2;
     private const int RawFrameQueueCapacity = 8;
     private const int EncodeFrameQueueCapacity = 4;
     private static readonly string CompletedRenderIndexPath = Path.Combine(
@@ -57,7 +66,7 @@ public sealed class PipelineService
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private static readonly Regex VideoSizeRegex = new(
-        @"Video:.*?(?<width>\d+)x(?<height>\d+)",
+        @"Video:.*?(?<width>[1-9]\d{1,5})x(?<height>[1-9]\d{1,5})",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private static readonly Regex FpsRegex = new(
@@ -614,6 +623,14 @@ public sealed class PipelineService
                 var timestampRepairState = options.RepairBrokenTimestamps ? new TimestampRepairState() : null;
                 var emittedTimestamps = new List<double>(Math.Max(totalFrames, 1));
                 var timestampRepairLogged = false;
+                var timestampFallbackLogged = false;
+                var useFallbackTimestamps = false;
+                var currentFrames = resumeStartFrame;
+                var liveFallbackFrameDuration = metadata.Fps > 0
+                    ? 1.0 / metadata.Fps
+                    : metadata.Duration > 0 && totalFrames > 0
+                        ? metadata.Duration / totalFrames
+                        : 0.04;
                 double? latestFrameTimestampSeconds = null;
 
                 async ValueTask<double?> GetTimestampForFrameAsync(CancellationToken ct)
@@ -632,7 +649,39 @@ public sealed class PipelineService
 
                     if (timestampBridge is not null)
                     {
-                        latestFrameTimestampSeconds = await timestampBridge.DequeueAsync(ct).ConfigureAwait(false);
+                        if (!useFallbackTimestamps && timestampBridge.TryDequeue(out var timestamp))
+                        {
+                            latestFrameTimestampSeconds = timestamp;
+                            return latestFrameTimestampSeconds;
+                        }
+
+                        if (!useFallbackTimestamps)
+                        {
+                            try
+                            {
+                                latestFrameTimestampSeconds = await timestampBridge
+                                    .DequeueAsync(ct)
+                                    .AsTask()
+                                    .WaitAsync(TimeSpan.FromMilliseconds(300), ct)
+                                    .ConfigureAwait(false);
+                                if (latestFrameTimestampSeconds is not null)
+                                {
+                                    return latestFrameTimestampSeconds;
+                                }
+                            }
+                            catch (TimeoutException)
+                            {
+                                useFallbackTimestamps = true;
+                            }
+                        }
+
+                        if (!timestampFallbackLogged)
+                        {
+                            timestampFallbackLogged = true;
+                            WriteStartupLog($"Timestamp fallback enabled near frame {currentFrames + 1}; showinfo timestamps were not available in time.");
+                        }
+
+                        latestFrameTimestampSeconds = Math.Max(0, currentFrames) * liveFallbackFrameDuration;
                         return latestFrameTimestampSeconds;
                     }
 
@@ -827,7 +876,6 @@ public sealed class PipelineService
 
                 var inputFrameBytes = rawWidth * rawHeight * 3;
                 var outputFrameBytes = upWidth * upHeight * 3;
-                var currentFrames = resumeStartFrame;
                 var firstProcessedFrameReceived = false;
                 var lastTick = Stopwatch.StartNew();
                 var previewUpdateWatch = Stopwatch.StartNew();
@@ -1651,11 +1699,10 @@ public sealed class PipelineService
 
                 if (width <= 0 || height <= 0)
                 {
-                    var streamMatch = VideoSizeRegex.Match(trimmed);
-                    if (streamMatch.Success)
+                    if (TryParseVideoSizeLine(trimmed, out var parsedWidth, out var parsedHeight))
                     {
-                        width = ParseIntInvariant(streamMatch.Groups["width"].Value);
-                        height = ParseIntInvariant(streamMatch.Groups["height"].Value);
+                        width = parsedWidth;
+                        height = parsedHeight;
                     }
                 }
 
@@ -1697,6 +1744,33 @@ public sealed class PipelineService
         var mm = ParseIntInvariant(minutes);
         var ss = double.TryParse(seconds, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedSeconds) ? parsedSeconds : 0;
         return (hh * 3600) + (mm * 60) + ss;
+    }
+
+    internal static bool TryParseVideoSizeLine(string line, out int width, out int height)
+    {
+        width = 0;
+        height = 0;
+        if (line.Contains("attached pic", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var streamMatch = VideoSizeRegex.Match(line);
+        if (!streamMatch.Success)
+        {
+            return false;
+        }
+
+        var parsedWidth = ParseIntInvariant(streamMatch.Groups["width"].Value);
+        var parsedHeight = ParseIntInvariant(streamMatch.Groups["height"].Value);
+        if (parsedWidth is < 16 or > 16384 || parsedHeight is < 16 or > 16384)
+        {
+            return false;
+        }
+
+        width = parsedWidth;
+        height = parsedHeight;
+        return true;
     }
 
     private static string GetSourceMetadataCachePath(string sourcePath)
@@ -1927,7 +2001,7 @@ public sealed class PipelineService
 
             var json = File.ReadAllText(cachePath);
             var entry = JsonSerializer.Deserialize<SourceMetadataCacheEntry>(json);
-            if (entry is null || !entry.Complete || entry.Width <= 0 || entry.Height <= 0)
+            if (entry is null || entry.Version != SourceMetadataCacheVersion || !entry.Complete || entry.Width <= 0 || entry.Height <= 0)
             {
                 return false;
             }
@@ -1947,7 +2021,15 @@ public sealed class PipelineService
         {
             var cachePath = GetSourceMetadataCachePath(sourcePath);
             Directory.CreateDirectory(Path.GetDirectoryName(cachePath) ?? Environment.CurrentDirectory);
-            var entry = new SourceMetadataCacheEntry(metadata.Duration, metadata.Width, metadata.Height, metadata.Fps, true);
+            var entry = new SourceMetadataCacheEntry
+            {
+                Version = SourceMetadataCacheVersion,
+                Duration = metadata.Duration,
+                Width = metadata.Width,
+                Height = metadata.Height,
+                Fps = metadata.Fps,
+                Complete = true
+            };
             File.WriteAllText(cachePath, JsonSerializer.Serialize(entry));
         }
         catch

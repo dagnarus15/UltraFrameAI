@@ -31,10 +31,15 @@
                     <TextBlock Text="{local:Loc DonationDialogTitle}"
                                FontSize="22"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="{local:Loc DonationDialogThanks}"
+                    <TextBlock Text="{local:Loc DonationDialogIntro}"
                                Margin="0,8,0,0"
-                               FontWeight="SemiBold" />
-                    <TextBlock Text="{local:Loc DonationDialogBody}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{local:Loc DonationDialogBenefits}"
+                               Margin="0,8,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{local:Loc DonationDialogFooter}"
                                Margin="0,8,0,0"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
@@ -53,14 +58,32 @@
                                 Margin="0,0,0,8">
                             <StackPanel>
                                 <TextBlock Text="{Binding Title}"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding Value}"
+                                           FontWeight="SemiBold"
+                                           FontSize="15" />
+                                <TextBlock Text="{Binding Summary}"
                                            Margin="0,6,0,0"
                                            TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding Note}"
+                                <TextBlock Text="{Binding Details}"
                                            Margin="0,6,0,0"
                                            Foreground="{StaticResource TextSecondaryBrush}"
                                            TextWrapping="Wrap" />
+                                <Button Content="{Binding ActionLabel}"
+                                        Margin="0,8,0,0"
+                                        Padding="0"
+                                        HorizontalAlignment="Left"
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        Foreground="{StaticResource AccentBrush}"
+                                        FontWeight="SemiBold"
+                                        Cursor="Hand"
+                                        Tag="{Binding Url}"
+                                        Click="DonationLink_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
                             </StackPanel>
                         </Border>
                     </DataTemplate>

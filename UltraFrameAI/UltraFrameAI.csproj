@@ -28,13 +28,6 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);FORCE_STARTUP_BENCHMARK_PROMPT</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);FORCE_STARTUP_BENCHMARK_PROMPT</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <Resource Include="Assets\UltraFrameAI.ico" />
     <Resource Include="images\*.png" />

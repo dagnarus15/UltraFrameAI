@@ -594,6 +594,15 @@
   <data name="BenchmarkErrorPipelineFailed" xml:space="preserve">
     <value>Pipeline fehlgeschlagen</value>
   </data>
+  <data name="BenchmarkErrorStartupCaseNoFrames" xml:space="preserve">
+    <value>Der Benchmark-Fall wurde gestoppt, weil zu lange keine Frames verarbeitet wurden.</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseStalled" xml:space="preserve">
+    <value>Der Benchmark-Fall wurde gestoppt, weil der Fortschritt zu lange festhing.</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseNoHeartbeat" xml:space="preserve">
+    <value>Der Benchmark-Fall wurde gestoppt, weil die Pipeline keine Fortschrittsmeldungen mehr gesendet hat.</value>
+  </data>
   <data name="BenchmarkShortCodecFast" xml:space="preserve">
     <value>schnell</value>
   </data>
@@ -1006,7 +1015,8 @@ Falls Sie das Projekt unterstützen möchten, finden Sie diese Möglichkeit im H
 
 Allgemein: Codec, Auflösung, Container, GPU-Auswahl und die grundlegenden Verarbeitungsschalter.
 Leistung: Encoder-Preset, Thread-Anzahlen und Parameter für die Rendergeschwindigkeit.
-Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres Bild.</value>
+
+Änderungen werden automatisch angewendet, daher gibt es keine separate Schaltfläche „Speichern“.</value>
   </data>
   <data name="HelpCenterIntro" xml:space="preserve">
     <value>Hier finden Sie eine kurze Anleitung, Antworten auf häufige Fragen und Informationen zur Unterstützung des Projekts.</value>
@@ -1036,7 +1046,7 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
     <value>Kontakte und Links</value>
   </data>
   <data name="HelpCenterDonateTab" xml:space="preserve">
-    <value>Finanzielle Unterstützung</value>
+    <value>Projekt unterstützen</value>
   </data>
   <data name="HelpCenterHowToTitle" xml:space="preserve">
     <value>So verwenden Sie das Programm</value>
@@ -1097,14 +1107,32 @@ Anti-Flicker: Flimmerreduzierung und ihre verfügbaren Modi für ein stabileres 
   <data name="HelpFaqAnswer6" xml:space="preserve">
     <value>RealESRGAN wurde vor allem mit Animationen trainiert. Deshalb können bei anderen Videos beim Hochskalieren manchmal animeartige Details entstehen.</value>
   </data>
+  <data name="HelpFaqQuestion7" xml:space="preserve">
+    <value>Warum kann ich hier keine Bilder konvertieren, obwohl RealESRGAN das kann?</value>
+  </data>
+  <data name="HelpFaqAnswer7" xml:space="preserve">
+    <value>Die Bildkonvertierung ist für kommende Versionen der App geplant.</value>
+  </data>
   <data name="DonationDialogTitle" xml:space="preserve">
     <value>Projekt unterstützen</value>
   </data>
-  <data name="DonationDialogThanks" xml:space="preserve">
-    <value>Vielen Dank für den Wunsch, das Programm zu unterstützen.</value>
+  <data name="DonationDialogIntro" xml:space="preserve">
+    <value>dagnaruscode.eu ist die Website des Autors.</value>
   </data>
-  <data name="DonationDialogBody" xml:space="preserve">
-    <value>Unten finden Sie die vorgeschlagenen Unterstützungsmöglichkeiten. Wählen Sie einfach den für Sie angenehmsten Weg.</value>
+  <data name="DonationDialogBenefits" xml:space="preserve">
+    <value>Dort können Sie den Autor auf einen Kaffee unterstützen und die weitere Entwicklung dieser und anderer Programme fördern.</value>
+  </data>
+  <data name="DonationDialogFooter" xml:space="preserve">
+    <value>Die Unterstützung ist völlig freiwillig. Die App funktioniert auch ohne Zahlung weiter.</value>
+  </data>
+  <data name="DonationEntryAuthorSiteSummary" xml:space="preserve">
+    <value>Website des Autors und Unterstützungsseite.</value>
+  </data>
+  <data name="DonationEntryAuthorSiteDetails" xml:space="preserve">
+    <value>Unterstützen Sie den Autor auf einen Kaffee und die weitere Entwicklung.</value>
+  </data>
+  <data name="DonationEntryAuthorSiteAction" xml:space="preserve">
+    <value>dagnaruscode.eu öffnen</value>
   </data>
   <data name="RenderSessionResultsTitle" xml:space="preserve">
     <value>Ergebnisse der Verbesserung</value>

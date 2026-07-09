@@ -243,8 +243,9 @@ public static class LocalizedStrings
     public static string HelpCenterLibraryVersions => GetText(nameof(HelpCenterLibraryVersions));
     public static string HelpCenterLibraryVersionsBody => GetText(nameof(HelpCenterLibraryVersionsBody));
     public static string DonationDialogTitle => GetText(nameof(DonationDialogTitle));
-    public static string DonationDialogThanks => GetText(nameof(DonationDialogThanks));
-    public static string DonationDialogBody => GetText(nameof(DonationDialogBody));
+    public static string DonationDialogIntro => GetText(nameof(DonationDialogIntro));
+    public static string DonationDialogBenefits => GetText(nameof(DonationDialogBenefits));
+    public static string DonationDialogFooter => GetText(nameof(DonationDialogFooter));
     public static string RenderSessionResultsTitle => GetText(nameof(RenderSessionResultsTitle));
     public static string RenderSessionResultsDonatePrefix => GetText(nameof(RenderSessionResultsDonatePrefix));
     public static string RenderSessionResultsDonateLink => GetText(nameof(RenderSessionResultsDonateLink));
@@ -261,6 +262,8 @@ public static class LocalizedStrings
     public static string HelpFaqAnswer5 => GetText(nameof(HelpFaqAnswer5));
     public static string HelpFaqQuestion6 => GetText(nameof(HelpFaqQuestion6));
     public static string HelpFaqAnswer6 => GetText(nameof(HelpFaqAnswer6));
+    public static string HelpFaqQuestion7 => GetText(nameof(HelpFaqQuestion7));
+    public static string HelpFaqAnswer7 => GetText(nameof(HelpFaqAnswer7));
     public static string HardwareAssessmentTitle => GetText(nameof(HardwareAssessmentTitle));
     public static string HardwareGpuTitle => GetText(nameof(HardwareGpuTitle));
     public static string HardwareVramTitle => GetText(nameof(HardwareVramTitle));

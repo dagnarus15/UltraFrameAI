@@ -263,8 +263,10 @@ public sealed record RenderSessionResults(
 
 public sealed record DonationSupportEntry(
     string Title,
-    string Value,
-    string Note);
+    string Summary,
+    string Details,
+    string Url,
+    string ActionLabel);
 
 public sealed record HelpFaqEntry(
     string Question,

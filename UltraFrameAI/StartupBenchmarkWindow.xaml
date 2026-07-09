@@ -52,7 +52,7 @@
                            TextWrapping="Wrap">
                     <Run Text="{local:Loc StartupBenchmarkCurrentGpu}" />
                     <Run Text=": " />
-                    <Run Text="{Binding BenchmarkGpuLabel}" />
+                    <Run Text="{Binding BenchmarkGpuLabel, Mode=OneWay}" />
                 </TextBlock>
 
                 <Grid Grid.Row="4">
@@ -64,7 +64,7 @@
                     <StackPanel>
                         <TextBlock Text="{local:Loc StartupBenchmarkCurrentPhase}"
                                    Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="{Binding CurrentPhase}"
+                        <TextBlock Text="{Binding CurrentPhase, Mode=OneWay}"
                                    Margin="0,4,0,0"
                                    FontWeight="SemiBold"
                                    TextWrapping="Wrap" />
@@ -72,7 +72,7 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="{local:Loc StartupBenchmarkCurrentSettings}"
                                    Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="{Binding CurrentCase}"
+                        <TextBlock Text="{Binding CurrentCase, Mode=OneWay}"
                                    Margin="0,4,0,0"
                                    FontWeight="SemiBold"
                                    TextWrapping="Wrap" />
@@ -80,7 +80,7 @@
                 </Grid>
 
                 <StackPanel Grid.Row="6">
-                    <TextBlock Text="{Binding CurrentDetail}"
+                    <TextBlock Text="{Binding CurrentDetail, Mode=OneWay}"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
                     <ProgressBar Height="16"
@@ -99,21 +99,21 @@
                         <StackPanel>
                             <TextBlock Text="{local:Loc QueueProgress}"
                                        Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="{Binding CurrentProgressText}"
+                            <TextBlock Text="{Binding CurrentProgressText, Mode=OneWay}"
                                        Margin="0,4,0,0"
                                        FontWeight="SemiBold" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="{local:Loc QueueElapsed}"
                                        Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="{Binding CurrentElapsedText}"
+                            <TextBlock Text="{Binding CurrentElapsedText, Mode=OneWay}"
                                        Margin="0,4,0,0"
                                        FontWeight="SemiBold" />
                         </StackPanel>
                         <StackPanel Grid.Column="4">
                             <TextBlock Text="{local:Loc QueueETA}"
                                        Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="{Binding CurrentEtaText}"
+                            <TextBlock Text="{Binding CurrentEtaText, Mode=OneWay}"
                                        Margin="0,4,0,0"
                                        FontWeight="SemiBold" />
                         </StackPanel>

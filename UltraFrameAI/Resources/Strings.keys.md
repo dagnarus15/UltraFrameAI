@@ -186,6 +186,9 @@ This file is generated from `Resources/Strings.resx`.
 - `BenchmarkErrorUnableToCreateSampleClipWithExitCode`
 - `BenchmarkErrorUnableToCreateSampleClip`
 - `BenchmarkErrorPipelineFailed`
+- `BenchmarkErrorStartupCaseNoFrames`
+- `BenchmarkErrorStartupCaseStalled`
+- `BenchmarkErrorStartupCaseNoHeartbeat`
 - `BenchmarkShortCodecFast`
 - `BenchmarkSuccess`
 - `BenchmarkFailure`
@@ -312,9 +315,15 @@ This file is generated from `Resources/Strings.resx`.
 - `HelpFaqAnswer5`
 - `HelpFaqQuestion6`
 - `HelpFaqAnswer6`
+- `HelpFaqQuestion7`
+- `HelpFaqAnswer7`
 - `DonationDialogTitle`
-- `DonationDialogThanks`
-- `DonationDialogBody`
+- `DonationDialogIntro`
+- `DonationDialogBenefits`
+- `DonationDialogFooter`
+- `DonationEntryAuthorSiteSummary`
+- `DonationEntryAuthorSiteDetails`
+- `DonationEntryAuthorSiteAction`
 - `RenderSessionResultsTitle`
 - `RenderSessionResultsSummary`
 - `RenderSessionResultsItemComplete`

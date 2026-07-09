@@ -600,7 +600,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool ShouldOfferStartupBenchmark => IsStartupBenchmarkForced() || _startupBenchmarkPromptKind != StartupBenchmarkPromptKind.None;
+    public bool ShouldOfferStartupBenchmark => _startupBenchmarkPromptKind != StartupBenchmarkPromptKind.None;
 
     public bool HasConfiguredFfmpegTools()
         => File.Exists(ResolveToolPath("ffmpeg.exe", @"C:\ffmpeg\bin\ffmpeg.exe"))
@@ -637,9 +637,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return true;
     }
 
-    public StartupBenchmarkPromptKind CurrentStartupBenchmarkPromptKind => IsStartupBenchmarkForced()
-        ? StartupBenchmarkPromptKind.Welcome
-        : _startupBenchmarkPromptKind;
+    public StartupBenchmarkPromptKind CurrentStartupBenchmarkPromptKind => _startupBenchmarkPromptKind;
 
     public bool HasDetectedGpuCandidates => _detectedGpuDevices.Count > 0;
 
@@ -1615,11 +1613,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void MarkStartupBenchmarkPromptShown()
     {
-        if (IsStartupBenchmarkForced())
-        {
-            return;
-        }
-
         if (_startupBenchmarkPromptShown)
         {
             return;
@@ -1632,11 +1625,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void MarkStartupBenchmarkCompleted()
     {
-        if (IsStartupBenchmarkForced())
-        {
-            return;
-        }
-
         _startupBenchmarkPromptShown = true;
         _startupBenchmarkCompleted = true;
         _benchmarkedHardwareSignature = _currentHardwareSignature;
@@ -1684,10 +1672,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public IReadOnlyList<StartupBenchmarkGpuCandidate> GetSelectedStartupBenchmarkGpuCandidates()
     {
         if (SelectedGpuOption is { IsAuto: false } selectedOption
-            && int.TryParse(selectedOption.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var selectedDeviceId))
+            && int.TryParse(selectedOption.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var selectedBackendGpuId))
         {
             var selected = GetRenderableGpuDevices()
-                .Where(device => device.DeviceId == selectedDeviceId)
+                .Where(device => (device.BackendGpuId ?? device.DeviceId) == selectedBackendGpuId)
                 .Select(device => new StartupBenchmarkGpuCandidate(device.BackendGpuId ?? device.DeviceId, BuildGpuLabel(device), device.MemoryMb))
                 .ToArray();
             if (selected.Length > 0)
@@ -1783,7 +1771,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 && string.Equals(progress.CurrentStatus, LocalizedStrings.LogSkippingEncode, StringComparison.Ordinal))
             {
                 _closeRenderModeAfterCurrentSkip = false;
-                IsRenderMode = false;
             }
 
             OnQueueStateChanged();
@@ -1813,10 +1800,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _keepRenderModeForAutoResume = false;
         current.SkipRequested = true;
         current.IsInterrupted = true;
-        if (_closeRenderModeAfterCurrentSkip)
-        {
-            IsRenderMode = false;
-        }
         Log(LocalizedStrings.LogSkippingEncode);
     }
 
@@ -2136,12 +2119,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var overwriteAllowed = options.Overwrite;
             if (File.Exists(item.OutputPath) && !overwriteAllowed)
             {
-                if (PipelineService.IsCompletedOutputMatch(item.OutputPath, options))
-                {
-                    MarkItemSkipped(item);
-                    continue;
-                }
-
                 var decision = await ResolveOutputConflictAsync(item).ConfigureAwait(true);
                 switch (decision)
                 {
@@ -2353,17 +2330,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         await Task.Yield();
 
-        var handler = OutputConflictRequested;
-        if (handler is not null)
-        {
-            var delegates = handler.GetInvocationList();
-            if (delegates.Length > 0)
-            {
-                var request = new OutputConflictRequest(item, item.SourcePath, item.OutputPath);
-                return await ((Func<OutputConflictRequest, Task<OutputConflictDecision>>)delegates[0]).Invoke(request).ConfigureAwait(true);
-            }
-        }
-
         if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
             return OutputConflictDecision.Skip;
@@ -2383,21 +2349,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         item.ResumeSourceOutputPath = item.OutputPath;
         if (!IsResumeOutputUsable(item.OutputPath))
         {
-            reportPhase?.Invoke(LocalizedStrings.Get("ResumePreflightRecovering"));
-            reportTelemetry?.Invoke(new ResumePreflightTelemetry(
-                PhaseText: LocalizedStrings.Get("ResumePreflightRecovering"),
-                DetailText: LocalizedStrings.Get("ResumePreflightLoadingFile"),
-                FpsText: "--"));
-            if (!TryRecoverResumeOutput(
-                    item,
-                    options,
-                    out var recoveredOutputPath,
-                    telemetry => reportTelemetry?.Invoke(telemetry)))
-            {
-                return false;
-            }
-
-            item.ResumeSourceOutputPath = recoveredOutputPath;
+            return false;
         }
 
         if (!PipelineService.TryLoadResumeState(item.OutputPath, out var json) || string.IsNullOrWhiteSpace(json))
@@ -2917,6 +2869,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (!IsResumeOutputUsable(item.OutputPath, ffprobePath))
             {
                 return LocalizedStrings.Get("ResumeUnavailableReasonInvalidOutput");
+            }
+
+            var sourceDuration = ProbeMediaDurationSeconds(ffprobePath, item.SourcePath);
+            var outputDuration = ProbeMediaDurationSeconds(ffprobePath, item.OutputPath);
+            if (sourceDuration > 0 && outputDuration >= sourceDuration * 0.995)
+            {
+                return LocalizedStrings.Get("ResumeUnavailableReasonAlreadyComplete");
             }
 
             if (!PipelineService.TryLoadResumeState(item.OutputPath, out var json) || string.IsNullOrWhiteSpace(json))
@@ -3575,10 +3534,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         foreach (var device in renderableDevices)
         {
+            var resolvedGpuId = device.BackendGpuId ?? device.DeviceId;
             options.Add(new GpuDeviceOption(
-                device.DeviceId.ToString(CultureInfo.InvariantCulture),
+                resolvedGpuId.ToString(CultureInfo.InvariantCulture),
                 BuildGpuLabel(device),
-                device.BackendGpuId ?? device.DeviceId));
+                resolvedGpuId));
         }
 
         return options;
@@ -3614,22 +3574,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void EvaluateStartupBenchmarkPromptState()
     {
-        if (string.IsNullOrWhiteSpace(_benchmarkedHardwareSignature))
-        {
-            _startupBenchmarkPromptKind = !_startupBenchmarkCompleted && !_startupBenchmarkPromptShown
-                ? StartupBenchmarkPromptKind.Welcome
-                : StartupBenchmarkPromptKind.None;
-        }
-        else if (!string.Equals(_benchmarkedHardwareSignature, _currentHardwareSignature, StringComparison.Ordinal))
-        {
-            _startupBenchmarkPromptKind = StartupBenchmarkPromptKind.NewHardware;
-            _selectedGpuOption = _gpuOptions.FirstOrDefault(option => option.IsAuto) ?? _selectedGpuOption;
-            OnPropertyChanged(nameof(SelectedGpuOption));
-        }
-        else
-        {
-            _startupBenchmarkPromptKind = StartupBenchmarkPromptKind.None;
-        }
+        _startupBenchmarkPromptKind = !_startupBenchmarkCompleted && !_startupBenchmarkPromptShown
+            ? StartupBenchmarkPromptKind.Welcome
+            : StartupBenchmarkPromptKind.None;
 
         OnPropertyChanged(nameof(ShouldOfferStartupBenchmark));
         OnPropertyChanged(nameof(CurrentStartupBenchmarkPromptKind));
@@ -4828,15 +4775,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             "slower" => "slower",
             _ => "slower"
         };
-    }
-
-    private static bool IsStartupBenchmarkForced()
-    {
-#if FORCE_STARTUP_BENCHMARK_PROMPT
-        return true;
-#else
-        return false;
-#endif
     }
 
     private static void WriteAtomicText(string path, string content)

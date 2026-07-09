@@ -34,6 +34,18 @@ public sealed class PipelineServiceTests
     }
 
     [Fact]
+    public void TryParseVideoSizeLine_IgnoresCodecTagsAndAttachedPictures()
+    {
+        const string videoLine = "Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 720x544, 1501 kb/s, 25 fps, 25 tbr, 25 tbn, start 0.080000 (default)";
+        const string attachedPictureLine = "Stream #0:2[0x0]: Video: mjpeg (Baseline), yuvj420p(pc, bt470bg/unknown/unknown), 200x120 [SAR 96:96 DAR 5:3], 90k tbr, 90k tbn (attached pic)";
+
+        Assert.True(PipelineService.TryParseVideoSizeLine(videoLine, out var width, out var height));
+        Assert.Equal(720, width);
+        Assert.Equal(544, height);
+        Assert.False(PipelineService.TryParseVideoSizeLine(attachedPictureLine, out _, out _));
+    }
+
+    [Fact]
     public async Task RunAsync_EmptyQueue_ReportsIdleAndReturns()
     {
         var pipeline = new PipelineService();

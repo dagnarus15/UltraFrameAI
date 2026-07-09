@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using UltraFrameAI.Resources;
 
 namespace UltraFrameAI;
@@ -149,7 +150,27 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
+        RefreshFaqEntries();
+        RefreshDonationEntries();
         RefreshHardwareCollections();
+    }
+
+    private void RefreshFaqEntries()
+    {
+        FaqEntries.Clear();
+        foreach (var entry in BuildFaqEntries())
+        {
+            FaqEntries.Add(entry);
+        }
+    }
+
+    private void RefreshDonationEntries()
+    {
+        DonationEntries.Clear();
+        foreach (var entry in DonationSupportInfo.GetEntries())
+        {
+            DonationEntries.Add(entry);
+        }
     }
 
     private void RefreshHardwareCollections()
@@ -172,6 +193,11 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    private void DonationLink_Click(object sender, RoutedEventArgs e)
+    {
+        HelpLink_Click(sender, e);
+    }
+
     private static IReadOnlyList<HelpFaqEntry> BuildFaqEntries()
     {
         return new[]
@@ -181,7 +207,8 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion3"), LocalizedStrings.Get("HelpFaqAnswer3")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion4"), LocalizedStrings.Get("HelpFaqAnswer4")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion5"), LocalizedStrings.Get("HelpFaqAnswer5")),
-            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion6"), LocalizedStrings.Get("HelpFaqAnswer6"))
+            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion6"), LocalizedStrings.Get("HelpFaqAnswer6")),
+            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion7"), LocalizedStrings.Get("HelpFaqAnswer7"))
         };
     }
 

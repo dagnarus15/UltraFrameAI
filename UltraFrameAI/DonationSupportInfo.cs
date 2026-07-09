@@ -1,3 +1,5 @@
+using UltraFrameAI.Resources;
+
 namespace UltraFrameAI;
 
 internal static class DonationSupportInfo
@@ -7,17 +9,11 @@ internal static class DonationSupportInfo
         return new[]
         {
             new DonationSupportEntry(
-                "Boosty",
-                "https://boosty.to/your-page",
-                "Replace with your public support page."),
-            new DonationSupportEntry(
-                "DonationAlerts",
-                "https://www.donationalerts.com/r/your-name",
-                "Replace with your DonationAlerts page."),
-            new DonationSupportEntry(
-                "USDT TRC20",
-                "TXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                "Replace with your wallet address.")
+                "dagnaruscode.eu",
+                LocalizedStrings.Get("DonationEntryAuthorSiteSummary"),
+                LocalizedStrings.Get("DonationEntryAuthorSiteDetails"),
+                "https://dagnaruscode.eu",
+                LocalizedStrings.Get("DonationEntryAuthorSiteAction"))
         };
     }
 }
