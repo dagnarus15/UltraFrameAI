@@ -423,6 +423,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _removeItemCommand.RaiseCanExecuteChanged();
                 if (!value)
                 {
+                    _pipeline.CancelStopAfterCurrentItemRequest();
                     _finishAfterCurrentRequested = false;
                     OnPropertyChanged(nameof(CanFinishAfterCurrent));
                     OnPropertyChanged(nameof(RenderFinishAfterCurrentText));
@@ -980,8 +981,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IsBusy
         && IsRenderMode
         && CurrentRenderItems.Count > 0
-        && !string.IsNullOrWhiteSpace(CurrentItemTitle)
-        && !_finishAfterCurrentRequested;
+        && !string.IsNullOrWhiteSpace(CurrentItemTitle);
 
     public string RenderFinishAfterCurrentText => _finishAfterCurrentRequested
         ? LocalizedStrings.Get("RenderFinishAfterCurrentQueued")
@@ -1509,7 +1509,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
                 ClearRenderPreviewPaths();
                 await _pipeline.RunAsync(effectiveItems, options, HandleProgress, HandleRenderPreviewFrame, _runCts.Token).ConfigureAwait(true);
-                if (_runCts.IsCancellationRequested)
+                if (_runCts.IsCancellationRequested || _finishAfterCurrentRequested)
                 {
                     break;
                 }
@@ -1798,6 +1798,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         _closeRenderModeAfterCurrentSkip = !_keepRenderModeForAutoResume && IsLastPendingRenderItem(current);
         _keepRenderModeForAutoResume = false;
+        if (_finishAfterCurrentRequested)
+        {
+            _pipeline.RequestStopAfterCurrentItem();
+        }
+
         current.SkipRequested = true;
         current.IsInterrupted = true;
         Log(LocalizedStrings.LogSkippingEncode);
@@ -1845,12 +1850,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        _pipeline.RequestStopAfterCurrentItem();
-        _finishAfterCurrentRequested = true;
+        _finishAfterCurrentRequested = !_finishAfterCurrentRequested;
+        if (_finishAfterCurrentRequested)
+        {
+            _pipeline.RequestStopAfterCurrentItem();
+            Log(LocalizedStrings.Get("RenderFinishAfterCurrentLog"));
+        }
+        else
+        {
+            _pipeline.CancelStopAfterCurrentItemRequest();
+            Log(LocalizedStrings.Get("RenderFinishAfterCurrentCancelledLog"));
+        }
+
         OnPropertyChanged(nameof(CanFinishAfterCurrent));
         OnPropertyChanged(nameof(RenderFinishAfterCurrentText));
         _finishAfterCurrentCommand.RaiseCanExecuteChanged();
-        Log(LocalizedStrings.Get("RenderFinishAfterCurrentLog"));
     }
 
     private async Task<List<QueueItemViewModel>> PrepareAutoResumeRunListAsync(PipelineOptions options, CancellationToken ct)

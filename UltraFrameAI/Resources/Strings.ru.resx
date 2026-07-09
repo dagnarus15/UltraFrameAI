@@ -237,6 +237,9 @@
   <data name="RenderFinishAfterCurrentLog" xml:space="preserve">
     <value>Текущая очередь будет остановлена после завершения этого файла.</value>
   </data>
+  <data name="RenderFinishAfterCurrentCancelledLog" xml:space="preserve">
+    <value>Завершение после текущего файла отменено. Рендер продолжится как обычно.</value>
+  </data>
   <data name="PausedProcessExitedTitle" xml:space="preserve">
     <value>Процесс завершился во время паузы</value>
   </data>

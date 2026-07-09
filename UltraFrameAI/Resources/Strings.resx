@@ -237,6 +237,9 @@
   <data name="RenderFinishAfterCurrentLog" xml:space="preserve">
     <value>The current queue will stop after this file finishes.</value>
   </data>
+  <data name="RenderFinishAfterCurrentCancelledLog" xml:space="preserve">
+    <value>Finish-after-current was cancelled. Rendering will continue normally.</value>
+  </data>
   <data name="PausedProcessExitedTitle" xml:space="preserve">
     <value>Paused process exited</value>
   </data>

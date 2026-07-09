@@ -443,6 +443,14 @@ public sealed class PipelineService
         }
     }
 
+    public void CancelStopAfterCurrentItemRequest()
+    {
+        lock (_pauseSync)
+        {
+            _stopAfterCurrentItemRequested = false;
+        }
+    }
+
     private bool ConsumeStopAfterCurrentItemRequested()
     {
         lock (_pauseSync)
@@ -532,6 +540,11 @@ public sealed class PipelineService
                     item.OutputState = LocalizedStrings.LogSkippingEncode;
                     item.Detail = Path.GetFileName(item.OutputPath);
                     report(new PipelineProgress(item.Index, total, item.Title, LocalizedStrings.LogProcessing, 100, "100%", Time(itemWatch.Elapsed), "00:00:00", LocalizedStrings.LogSkippingEncode, Path.GetFileName(item.OutputPath), Summary(item.Index, total, overall.Elapsed), LocalizedStrings.LogSkippingEncode, StageElapsedText: Time(itemWatch.Elapsed), ProcessingFpsText: "--"));
+                    if (ConsumeStopAfterCurrentItemRequested())
+                    {
+                        return;
+                    }
+
                     continue;
                 }
 

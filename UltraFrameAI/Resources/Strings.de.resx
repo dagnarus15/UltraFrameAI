@@ -237,6 +237,9 @@
   <data name="RenderFinishAfterCurrentLog" xml:space="preserve">
     <value>Die aktuelle Warteschlange wird nach Abschluss dieser Datei gestoppt.</value>
   </data>
+  <data name="RenderFinishAfterCurrentCancelledLog" xml:space="preserve">
+    <value>Beenden nach der aktuellen Datei wurde abgebrochen. Das Rendering läuft normal weiter.</value>
+  </data>
   <data name="PausedProcessExitedTitle" xml:space="preserve">
     <value>Prozess wurde während der Pause beendet</value>
   </data>
