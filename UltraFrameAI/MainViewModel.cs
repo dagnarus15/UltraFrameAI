@@ -1471,6 +1471,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             _closeRenderModeAfterCurrentSkip = false;
             _keepRenderModeForAutoResume = false;
             _pendingAutoResumeItems.Clear();
+            ClearRenderSkipSelections(runItems);
             ResetItemUi(runItems);
             Log(startMessage);
             _sessionOutputDecision = null;
@@ -3347,6 +3348,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    private static void ClearRenderSkipSelections(IEnumerable<QueueItemViewModel> items)
+    {
+        foreach (var item in items)
+        {
+            item.SkipInRender = false;
+        }
+    }
+
     public void RemoveItems(IEnumerable<QueueItemViewModel> items)
     {
         if (IsBusy)
@@ -4600,7 +4609,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 item.Title,
                 item.OutputPath,
                 item.IsChecked,
-                item.SkipInRender))
+                SkipInRender: false))
             .ToList();
 
     private void RestorePersistedQueueItems(IReadOnlyList<PersistedQueueItemCacheEntry>? queueItems, string? selectedItemSourcePath)
@@ -4633,7 +4642,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             };
             item.ShowPathInQueue = ShowQueuePaths;
             item.IsChecked = entry.IsChecked;
-            item.SkipInRender = entry.SkipInRender;
+            item.SkipInRender = false;
             AttachQueueItem(item);
             restoredItems.Add(item);
         }
