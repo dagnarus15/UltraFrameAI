@@ -8,7 +8,9 @@ public enum UiLanguage
 {
     English,
     Russian,
-    German
+    German,
+    Japanese,
+    Chinese
 }
 
 public static class LocalizedStrings
@@ -21,6 +23,8 @@ public static class LocalizedStrings
     private static readonly CultureInfo EnglishCulture = CultureInfo.GetCultureInfo("en");
     private static readonly CultureInfo RussianCulture = CultureInfo.GetCultureInfo("ru");
     private static readonly CultureInfo GermanCulture = CultureInfo.GetCultureInfo("de");
+    private static readonly CultureInfo JapaneseCulture = CultureInfo.GetCultureInfo("ja");
+    private static readonly CultureInfo ChineseCulture = CultureInfo.GetCultureInfo("zh-CN");
 
     private static UiLanguage _currentLanguage;
 
@@ -391,6 +395,8 @@ public static class LocalizedStrings
         {
             UiLanguage.Russian => $"Источники: {count} {GetRussianFolderWord(count)}",
             UiLanguage.German => $"Quellen: {count} {GetGermanFolderWord(count)}",
+            UiLanguage.Japanese => $"ソース: {count} 個のフォルダー",
+            UiLanguage.Chinese => $"来源：{count} 个文件夹",
             _ => $"Sources: {count} {GetEnglishFolderWord(count)}"
         };
     }
@@ -451,6 +457,8 @@ public static class LocalizedStrings
         {
             UiLanguage.Russian => $"{count} {GetRussianFileWord(count)}",
             UiLanguage.German => $"{count} {GetGermanFileWord(count)}",
+            UiLanguage.Japanese => $"{count} 個のファイル",
+            UiLanguage.Chinese => $"{count} 个文件",
             _ => $"{count} {GetEnglishFileWord(count)}"
         };
     }
@@ -482,6 +490,8 @@ public static class LocalizedStrings
     {
         UiLanguage.Russian => RussianCulture,
         UiLanguage.German => GermanCulture,
+        UiLanguage.Japanese => JapaneseCulture,
+        UiLanguage.Chinese => ChineseCulture,
         _ => EnglishCulture
     };
 

@@ -171,6 +171,19 @@ function New-FlagBitmap {
                 $g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(221, 0, 0))), 0, 21, 96, 21)
                 $g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 206, 0))), 0, 42, 96, 22)
             }
+            'ja' {
+                $g.Clear([System.Drawing.Color]::White)
+                $g.FillEllipse((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(188, 0, 45))), 33, 17, 30, 30)
+            }
+            'zh' {
+                $g.Clear([System.Drawing.Color]::FromArgb(222, 41, 16))
+                $starBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 222, 0))
+                $g.FillEllipse($starBrush, 13, 10, 12, 12)
+                $g.FillEllipse($starBrush, 31, 8, 5, 5)
+                $g.FillEllipse($starBrush, 39, 16, 5, 5)
+                $g.FillEllipse($starBrush, 39, 27, 5, 5)
+                $g.FillEllipse($starBrush, 31, 36, 5, 5)
+            }
             default {
                 throw "Unknown flag country: $Country"
             }
@@ -193,5 +206,7 @@ New-IconFile -Path (Join-Path $assetsDir 'UltraFrameAI.ico') -PngPath (Join-Path
 New-FlagBitmap -Path (Join-Path $imagesDir 'flag-en.png') -Country 'en'
 New-FlagBitmap -Path (Join-Path $imagesDir 'flag-ru.png') -Country 'ru'
 New-FlagBitmap -Path (Join-Path $imagesDir 'flag-de.png') -Country 'de'
+New-FlagBitmap -Path (Join-Path $imagesDir 'flag-ja.png') -Country 'ja'
+New-FlagBitmap -Path (Join-Path $imagesDir 'flag-zh.png') -Country 'zh'
 
 Write-Host "Generated assets in $assetsDir"

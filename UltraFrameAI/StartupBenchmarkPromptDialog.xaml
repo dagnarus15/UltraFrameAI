@@ -162,7 +162,7 @@
                                         </Style>
                                     </Button.Style>
                                     <DockPanel>
-                                        <TextBlock Text="EN" FontWeight="SemiBold" />
+                                        <Image Source="pack://application:,,,/images/flag-en.png" Width="18" Height="12" />
                                         <TextBlock Text="{x:Static local:LanguageDisplayNames.English}" Margin="10,0,0,0" />
                                     </DockPanel>
                                 </Button>
@@ -180,7 +180,7 @@
                                         </Style>
                                     </Button.Style>
                                     <DockPanel>
-                                        <TextBlock Text="RU" FontWeight="SemiBold" />
+                                        <Image Source="pack://application:,,,/images/flag-ru.png" Width="18" Height="12" />
                                         <TextBlock Text="{x:Static local:LanguageDisplayNames.Russian}" Margin="10,0,0,0" />
                                     </DockPanel>
                                 </Button>
@@ -198,8 +198,44 @@
                                         </Style>
                                     </Button.Style>
                                     <DockPanel>
-                                        <TextBlock Text="DE" FontWeight="SemiBold" />
+                                        <Image Source="pack://application:,,,/images/flag-de.png" Width="18" Height="12" />
                                         <TextBlock Text="{x:Static local:LanguageDisplayNames.German}" Margin="10,0,0,0" />
+                                    </DockPanel>
+                                </Button>
+                                <Button Command="{Binding SetLanguageCommand}"
+                                        CommandParameter="Japanese"
+                                        Click="LanguageChoice_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=Japanese}" Value="True">
+                                                    <Setter Property="Background" Value="#16243D" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <DockPanel>
+                                        <Image Source="pack://application:,,,/images/flag-ja.png" Width="18" Height="12" />
+                                        <TextBlock Text="{x:Static local:LanguageDisplayNames.Japanese}" Margin="10,0,0,0" />
+                                    </DockPanel>
+                                </Button>
+                                <Button Command="{Binding SetLanguageCommand}"
+                                        CommandParameter="Chinese"
+                                        Click="LanguageChoice_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=Chinese}" Value="True">
+                                                    <Setter Property="Background" Value="#16243D" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <DockPanel>
+                                        <Image Source="pack://application:,,,/images/flag-zh.png" Width="18" Height="12" />
+                                        <TextBlock Text="{x:Static local:LanguageDisplayNames.Chinese}" Margin="10,0,0,0" />
                                     </DockPanel>
                                 </Button>
                             </StackPanel>

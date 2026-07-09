@@ -22,7 +22,7 @@
     <value>Быстрый старт</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>Лучше всего подходит для анимации и аниме.</value>
+    <value>Лучше всего подходит для анимации и аниме. Рендер изображений ожидайте в будущих версиях.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Рабочая область</value>
@@ -1115,6 +1115,12 @@
   </data>
   <data name="HelpFaqAnswer7" xml:space="preserve">
     <value>Конвертация изображений появится в следующих версиях программы.</value>
+  </data>
+  <data name="HelpFaqQuestion8" xml:space="preserve">
+    <value>Я нашёл баг, что делать?</value>
+  </data>
+  <data name="HelpFaqAnswer8" xml:space="preserve">
+    <value>Пожалуйста, сообщите об этом на GitHub-странице программы.</value>
   </data>
   <data name="DonationDialogTitle" xml:space="preserve">
     <value>Поддержать проект</value>

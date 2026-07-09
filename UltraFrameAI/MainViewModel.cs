@@ -1144,6 +1144,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         UiLanguage.Russian => "pack://application:,,,/images/flag-ru.png",
         UiLanguage.German => "pack://application:,,,/images/flag-de.png",
+        UiLanguage.Japanese => "pack://application:,,,/images/flag-ja.png",
+        UiLanguage.Chinese => "pack://application:,,,/images/flag-zh.png",
         _ => "pack://application:,,,/images/flag-en.png"
     };
 

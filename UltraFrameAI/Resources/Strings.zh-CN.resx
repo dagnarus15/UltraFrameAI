@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -16,568 +16,568 @@
     <value>UltraFrame AI</value>
   </data>
   <data name="Subtitle" xml:space="preserve">
-    <value>Load a folder or a file to build the queue.</value>
+    <value>加载文件夹或文件来构建队列。</value>
   </data>
   <data name="QuickStartHint" xml:space="preserve">
-    <value>Quick start</value>
+    <value>快速启动</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>Works best with animation and anime. Image rendering is planned for future versions.</value>
+    <value>最适合动画和动漫。计划在未来版本中进行图像渲染。</value>
   </data>
   <data name="Workspace" xml:space="preserve">
-    <value>Workspace</value>
+    <value>工作空间</value>
   </data>
   <data name="DropZoneTitle" xml:space="preserve">
-    <value>Drop folder or video here</value>
+    <value>将文件夹或视频拖放到此处</value>
   </data>
   <data name="DropZoneHelp" xml:space="preserve">
-    <value>Or click Browse to choose a folder or a file.</value>
+    <value>或者单击“浏览”选择文件夹或文件。</value>
   </data>
   <data name="RootFolder" xml:space="preserve">
-    <value>Root folder</value>
+    <value>根文件夹</value>
   </data>
   <data name="Browse" xml:space="preserve">
-    <value>Browse</value>
+    <value>浏览</value>
   </data>
   <data name="BrowseFolder" xml:space="preserve">
-    <value>Folder</value>
+    <value>文件夹</value>
   </data>
   <data name="BrowseFile" xml:space="preserve">
-    <value>File</value>
+    <value>文件</value>
   </data>
   <data name="FfmpegSetupTitle" xml:space="preserve">
-    <value>FFmpeg not found</value>
+    <value>FFmpeg 未找到</value>
   </data>
   <data name="FfmpegSetupBody" xml:space="preserve">
-    <value>An external FFmpeg is required for video scanning, benchmarking, and rendering. We can download it automatically or you can point the app to a folder that already contains ffmpeg.exe and ffprobe.exe.</value>
+    <value>视频扫描、benchmarking 和渲染需要外部 FFmpeg。我们可以通过 automatically 下载它，或者您可以将应用程序指向已包含 ffmpeg.exe 和 ffprobe.exe 的文件夹。</value>
   </data>
   <data name="FfmpegSetupDownload" xml:space="preserve">
-    <value>Download FFmpeg</value>
+    <value>下载FFmpeg</value>
   </data>
   <data name="FfmpegSetupCloseApp" xml:space="preserve">
-    <value>Close app</value>
+    <value>关闭应用程序</value>
   </data>
   <data name="FfmpegSetupChooseFolder" xml:space="preserve">
-    <value>Choose folder</value>
+    <value>选择文件夹</value>
   </data>
   <data name="FfmpegFolderLabel" xml:space="preserve">
-    <value>FFmpeg folder</value>
+    <value>FFmpeg 文件夹</value>
   </data>
   <data name="FfmpegChangeFolder" xml:space="preserve">
-    <value>Choose folder</value>
+    <value>选择文件夹</value>
   </data>
   <data name="FfmpegDirectoryNotConfigured" xml:space="preserve">
-    <value>Not configured</value>
+    <value>未配置</value>
   </data>
   <data name="FfmpegSetupBrowseDialogTitle" xml:space="preserve">
-    <value>Select the folder that contains ffmpeg.exe and ffprobe.exe</value>
+    <value>选择包含 ffmpeg.exe 和 ffprobe.exe 的文件夹</value>
   </data>
   <data name="FfmpegSetupInstallDialogTitle" xml:space="preserve">
-    <value>Select the folder where FFmpeg should be installed</value>
+    <value>选择要安装FFmpeg的文件夹</value>
   </data>
   <data name="FfmpegInstallLocationTitle" xml:space="preserve">
-    <value>Where should FFmpeg be installed?</value>
+    <value>FFmpeg应该安装在哪里？</value>
   </data>
   <data name="FfmpegInstallLocationBody" xml:space="preserve">
-    <value>The archive is available for download. You can install FFmpeg next to the app or choose another folder.</value>
+    <value>该存档可供下载。您可以在应用程序旁边安装 FFmpeg 或选择其他文件夹。</value>
   </data>
   <data name="FfmpegInstallLocationHere" xml:space="preserve">
-    <value>Install next to the app</value>
+    <value>安装在应用程序旁边</value>
   </data>
   <data name="FfmpegInstallLocationChoose" xml:space="preserve">
-    <value>Choose folder</value>
+    <value>选择文件夹</value>
   </data>
   <data name="FfmpegSetupInvalidFolder" xml:space="preserve">
-    <value>The selected folder was not found.</value>
+    <value>未找到所选文件夹。</value>
   </data>
   <data name="FfmpegSetupMissingTools" xml:space="preserve">
-    <value>The selected folder does not contain ffmpeg.exe and ffprobe.exe.</value>
+    <value>所选文件夹不包含 ffmpeg.exe 和 ffprobe.exe。</value>
   </data>
   <data name="FfmpegSetupCannotWriteTitle" xml:space="preserve">
-    <value>Unable to save FFmpeg</value>
+    <value>无法保存FFmpeg</value>
   </data>
   <data name="FfmpegSetupCannotWriteBody" xml:space="preserve">
-    <value>FFmpeg could not be written into the app folder. Choose a folder manually or run the app from a writable location.</value>
+    <value>FFmpeg 无法写入应用程序文件夹。手动选择文件夹或从可写位置运行应用程序。</value>
   </data>
   <data name="FfmpegSetupDownloadFailedTitle" xml:space="preserve">
-    <value>Unable to download FFmpeg</value>
+    <value>无法下载FFmpeg</value>
   </data>
   <data name="FfmpegSetupDownloadFailedBody" xml:space="preserve">
-    <value>Automatic FFmpeg download failed.</value>
+    <value>Automatic FFmpeg 下载失败。</value>
   </data>
   <data name="FfmpegDownloadNetworkTitle" xml:space="preserve">
-    <value>Unable to connect</value>
+    <value>无法连接</value>
   </data>
   <data name="FfmpegDownloadNetworkBody" xml:space="preserve">
-    <value>The app could not connect to the FFmpeg download server. Check your internet connection and try again, or point the app to a folder with already downloaded files.</value>
+    <value>该应用程序无法连接到 FFmpeg 下载服务器。检查您的互联网连接并重试，或将应用程序指向包含已下载文件的文件夹。</value>
   </data>
   <data name="FfmpegDownloadUnavailableTitle" xml:space="preserve">
-    <value>Automatic download unavailable</value>
+    <value>Automatic 下载不可用</value>
   </data>
   <data name="FfmpegDownloadUnavailableBody" xml:space="preserve">
-    <value>The automatic FFmpeg download link is currently unavailable. You can open the download page in your browser and then point the app to the folder that contains ffmpeg.exe and ffprobe.exe.</value>
+    <value>automatic FFmpeg 下载链接当前不可用。您可以在浏览器中打开下载页面，然后将应用程序指向包含 ffmpeg.exe 和 ffprobe.exe 的文件夹。</value>
   </data>
   <data name="FfmpegDownloadRetry" xml:space="preserve">
-    <value>Retry</value>
+    <value>重试</value>
   </data>
   <data name="FfmpegDownloadOpenPage" xml:space="preserve">
-    <value>Open download page</value>
+    <value>打开下载页面</value>
   </data>
   <data name="FfmpegInstallProgressTitle" xml:space="preserve">
-    <value>Installing FFmpeg</value>
+    <value>安装FFmpeg</value>
   </data>
   <data name="FfmpegInstallProgressStarting" xml:space="preserve">
-    <value>Preparing installation...</value>
+    <value>正在准备安装...</value>
   </data>
   <data name="FfmpegInstallProgressDownloading" xml:space="preserve">
-    <value>Downloading FFmpeg...</value>
+    <value>正在下载 FFmpeg...</value>
   </data>
   <data name="FfmpegInstallProgressExtracting" xml:space="preserve">
-    <value>Extracting archive...</value>
+    <value>正在提取存档...</value>
   </data>
   <data name="FfmpegInstallProgressCopying" xml:space="preserve">
-    <value>Copying ffmpeg.exe and ffprobe.exe...</value>
+    <value>正在复制 ffmpeg.exe 和 ffprobe.exe...</value>
   </data>
   <data name="FfmpegInstallProgressFinalizing" xml:space="preserve">
-    <value>Saving path and finalizing installation...</value>
+    <value>保存路径并完成安装...</value>
   </data>
   <data name="FfmpegInstallProgressDone" xml:space="preserve">
-    <value>FFmpeg installed.</value>
+    <value>已安装 FFmpeg。</value>
   </data>
   <data name="FfmpegInstallSuccessTitle" xml:space="preserve">
-    <value>FFmpeg installed successfully!</value>
+    <value>FFmpeg 安装成功！</value>
   </data>
   <data name="FfmpegInstallSuccessBody" xml:space="preserve">
-    <value>UltraFrame AI is ready to enhance your videos.</value>
+    <value>UltraFrame AI 已准备好增强您的视频。</value>
   </data>
   <data name="FfmpegInstallSuccessLicense" xml:space="preserve">
-    <value>FFmpeg is licensed under GPL/LGPL.</value>
+    <value>FFmpeg 已获得 GPL/LGPL 的许可。</value>
   </data>
   <data name="FfmpegInstallSuccessDisclaimer" xml:space="preserve">
-    <value>This software is not affiliated with FFmpeg.</value>
+    <value>该软件不隶属于FFmpeg。</value>
   </data>
   <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
-    <value>Choose a video file</value>
+    <value>选择视频文件</value>
   </data>
   <data name="BrowseVideoFilesFilter" xml:space="preserve">
-    <value>Video files|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|All files|*.*</value>
+    <value>视频文件|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|所有文件|*.*</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>取消</value>
   </data>
   <data name="Stop" xml:space="preserve">
-    <value>Stop</value>
+    <value>停止</value>
   </data>
   <data name="ResetToLastFolder" xml:space="preserve">
-    <value>Reset to last folder</value>
+    <value>重置到最后一个文件夹</value>
   </data>
   <data name="RecentFolders" xml:space="preserve">
-    <value>Recent folders/files</value>
+    <value>最近的文件夹/文件</value>
   </data>
   <data name="OutputFolder" xml:space="preserve">
-    <value>Result folder</value>
+    <value>结果文件夹</value>
   </data>
   <data name="OutputFolderLabel" xml:space="preserve">
-    <value>Result folder:</value>
+    <value>结果文件夹：</value>
   </data>
   <data name="OutputLocationHint" xml:space="preserve">
-    <value>The result will appear in the "{0}" folder next to the file.</value>
+    <value>结果将出现在文件旁边的“{0}”文件夹中。</value>
   </data>
   <data name="OutputFolderNearFileLabel" xml:space="preserve">
-    <value>Result folder next to the file</value>
+    <value>文件旁边的结果文件夹</value>
   </data>
   <data name="Advanced" xml:space="preserve">
-    <value>Advanced</value>
+    <value>先进的</value>
   </data>
   <data name="Additional" xml:space="preserve">
-    <value>Settings</value>
+    <value>设置</value>
   </data>
   <data name="AdditionalHint" xml:space="preserve">
-    <value>Open settings.</value>
+    <value>打开设置。</value>
   </data>
   <data name="RenderWindowTitle" xml:space="preserve">
-    <value>Rendering</value>
+    <value>渲染</value>
   </data>
   <data name="RenderWindowHint" xml:space="preserve">
-    <value>Live preview and stage details.</value>
+    <value>实时预览和舞台细节。</value>
   </data>
   <data name="RenderSubstage" xml:space="preserve">
-    <value>Substage</value>
+    <value>台下</value>
   </data>
   <data name="RenderPreviewOriginal" xml:space="preserve">
-    <value>Original</value>
+    <value>原来的</value>
   </data>
   <data name="RenderPreviewResult" xml:space="preserve">
-    <value>Result</value>
+    <value>结果</value>
   </data>
   <data name="RenderPreviewResetZoom" xml:space="preserve">
-    <value>Reset zoom</value>
+    <value>重置变焦</value>
   </data>
   <data name="RenderPreviewSaveFrame" xml:space="preserve">
-    <value>Save frame</value>
+    <value>保存帧</value>
   </data>
   <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
-    <value>Compare current frame</value>
+    <value>比较当前帧</value>
   </data>
   <data name="RenderSkipFile" xml:space="preserve">
-    <value>Skip file</value>
+    <value>跳过文件</value>
   </data>
   <data name="RenderPause" xml:space="preserve">
-    <value>Pause</value>
+    <value>暂停</value>
   </data>
   <data name="RenderResume" xml:space="preserve">
-    <value>Resume</value>
+    <value>恢复</value>
   </data>
   <data name="RenderFinishAfterCurrent" xml:space="preserve">
-    <value>Finish after current file</value>
+    <value>在当前文件之后完成</value>
   </data>
   <data name="RenderFinishAfterCurrentQueued" xml:space="preserve">
-    <value>Finish after file is enabled</value>
+    <value>文件启用后完成</value>
   </data>
   <data name="RenderFinishAfterCurrentLog" xml:space="preserve">
-    <value>The current queue will stop after this file finishes.</value>
+    <value>该文件完成后，当前队列将停止。</value>
   </data>
   <data name="RenderFinishAfterCurrentCancelledLog" xml:space="preserve">
-    <value>Finish-after-current was cancelled. Rendering will continue normally.</value>
+    <value>当前已取消后完成。渲染将正常继续。</value>
   </data>
   <data name="PausedProcessExitedTitle" xml:space="preserve">
-    <value>Paused process exited</value>
+    <value>暂停的进程退出</value>
   </data>
   <data name="PausedProcessExitedMessage" xml:space="preserve">
-    <value>One of the background processes exited while rendering was paused.\nThe current file will be stopped, and the app will now try to continue it through recovery.</value>
+    <value>渲染暂停时，后台进程之一退出。\n 当前文件将停止，应用程序现在将尝试通过 recovery 继续它。</value>
   </data>
   <data name="PausedProcessExitedFileLabel" xml:space="preserve">
-    <value>Current file</value>
+    <value>当前文件</value>
   </data>
   <data name="PausedProcessExitedProcessLabel" xml:space="preserve">
-    <value>Exited process</value>
+    <value>退出进程</value>
   </data>
   <data name="PausedProcessExitedOk" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="PausedProcessExitedLog" xml:space="preserve">
-    <value>Paused process exited: {0}</value>
+    <value>暂停进程退出：{0}</value>
   </data>
   <data name="PausedProcessExitedAutoResumeStarting" xml:space="preserve">
-    <value>Trying to continue the interrupted file through recovery.</value>
+    <value>尝试通过recovery继续中断的文件。</value>
   </data>
   <data name="PausedProcessExitedAutoResumeFailed" xml:space="preserve">
-    <value>Could not continue the interrupted file automatically: {0}</value>
+    <value>无法继续中断的文件 auto：{0}</value>
   </data>
   <data name="RenderStopAll" xml:space="preserve">
-    <value>Stop all</value>
+    <value>全部停止</value>
   </data>
   <data name="OutputConflictTitle" xml:space="preserve">
-    <value>Output already exists</value>
+    <value>输出已存在</value>
   </data>
   <data name="OutputConflictMessage" xml:space="preserve">
-    <value>This result file already exists:\n{0}\nWhat would you like to do?</value>
+    <value>该结果文件已存在s:\n{0}\nWhat 您想要做什么吗？</value>
   </data>
   <data name="OutputConflictSkip" xml:space="preserve">
-    <value>Skip</value>
+    <value>跳过</value>
   </data>
   <data name="OutputConflictResume" xml:space="preserve">
-    <value>Resume</value>
+    <value>恢复</value>
   </data>
   <data name="OutputConflictReplace" xml:space="preserve">
-    <value>Replace</value>
+    <value>代替</value>
   </data>
   <data name="OutputConflictResumeAll" xml:space="preserve">
-    <value>Resume all</value>
+    <value>恢复全部</value>
   </data>
   <data name="OutputConflictSkipAll" xml:space="preserve">
-    <value>Skip all</value>
+    <value>全部跳过</value>
   </data>
   <data name="OutputConflictReplaceAll" xml:space="preserve">
-    <value>Replace all</value>
+    <value>全部替换</value>
   </data>
   <data name="ResumeUnavailableTitle" xml:space="preserve">
-    <value>Cannot resume file</value>
+    <value>无法恢复文件</value>
   </data>
   <data name="ResumeUnavailableMessage" xml:space="preserve">
-    <value>This file cannot be resumed from the saved state.\nYou can replace it or skip it.</value>
+    <value>该文件无法从保存状态恢复。\n您可以替换它或跳过它。</value>
   </data>
   <data name="ResumeUnavailableReasonHeader" xml:space="preserve">
-    <value>Reason</value>
+    <value>原因</value>
   </data>
   <data name="ResumeUnavailableReasonMissingOutput" xml:space="preserve">
-    <value>The unfinished result file was not found next to the expected result.</value>
+    <value>在预期结果旁边找不到未完成的结果文件。</value>
   </data>
   <data name="ResumeUnavailableReasonProbeUnavailable" xml:space="preserve">
-    <value>The unfinished file could not be checked with ffprobe, so it is not safe to resume it.</value>
+    <value>未完成的文件无法使用 ffprobe 检查，因此恢复它是不安全的。</value>
   </data>
   <data name="ResumeUnavailableReasonInvalidOutput" xml:space="preserve">
-    <value>The unfinished result file is damaged or no longer readable as video, so it cannot be resumed safely.</value>
+    <value>未完成的结果文件已损坏或无法再作为视频读取，因此无法安全地恢复。</value>
   </data>
   <data name="ResumeUnavailableReasonMissingState" xml:space="preserve">
-    <value>No valid unfinished render state was found, so the app does not know where to continue from.</value>
+    <value>未找到有效的未完成渲染状态，因此应用程序不知道从哪里继续。</value>
   </data>
   <data name="ResumeUnavailableReasonAlreadyComplete" xml:space="preserve">
-    <value>This file is already marked as completed, so resuming is no longer needed.</value>
+    <value>该文件已标记为已完成，因此不再需要继续。</value>
   </data>
   <data name="ResumeUnavailableReasonSourceMismatch" xml:space="preserve">
-    <value>The saved state belongs to a different source file and cannot be used for this render.</value>
+    <value>保存的状态属于不同的源文件，不能用于此渲染。</value>
   </data>
   <data name="ResumeUnavailableReasonSettingsChanged" xml:space="preserve">
-    <value>The render settings changed after the interruption, so resuming the old file would not be safe.</value>
+    <value>渲染设置在中断后发生更改，因此恢复旧文件并不安全。</value>
   </data>
   <data name="ResumeUnavailableReasonGeneric" xml:space="preserve">
-    <value>The saved state or unfinished file is not suitable for a safe resume.</value>
+    <value>已保存的状态或未完成的文件不适合安全恢复。</value>
   </data>
   <data name="ResumePreflightChecking" xml:space="preserve">
-    <value>Checking whether resume is possible</value>
+    <value>检查是否可以恢复</value>
   </data>
   <data name="ResumePreflightRecovering" xml:space="preserve">
-    <value>Recovering the readable part of the file</value>
+    <value>恢复文件的可读部分</value>
   </data>
   <data name="ResumePreflightLoadingFile" xml:space="preserve">
-    <value>Loading file</value>
+    <value>加载文件</value>
   </data>
   <data name="FileList" xml:space="preserve">
-    <value>File list</value>
+    <value>文件列表</value>
   </data>
   <data name="RenderFileListForRender" xml:space="preserve">
-    <value>Render file list</value>
+    <value>渲染文件列表</value>
   </data>
   <data name="LastRunResultsTitle" xml:space="preserve">
-    <value>Last run results</value>
+    <value>上次运行结果</value>
   </data>
   <data name="ProcessedFiles" xml:space="preserve">
-    <value>Processed files</value>
+    <value>已处理的文件</value>
   </data>
   <data name="AverageFps" xml:space="preserve">
-    <value>Avg FPS</value>
+    <value>平均 FPS</value>
   </data>
   <data name="Benchmark" xml:space="preserve">
     <value>Benchmark</value>
   </data>
   <data name="BenchmarkHint" xml:space="preserve">
-    <value>Run the benchmark to check your hardware and suggest recommended settings.</value>
+    <value>运行 benchmark 检查您的硬件并提出建议的设置。</value>
   </data>
   <data name="BenchmarkSelectedGpu" xml:space="preserve">
-    <value>Benchmark selected GPU</value>
+    <value>Benchmark 选择GPU</value>
   </data>
   <data name="BenchmarkSelectedGpuHint" xml:space="preserve">
-    <value>Run the benchmark for the currently selected GPU to fine-tune the recommended settings.</value>
+    <value>对当前选定的 GPU 运行 benchmark 以微调推荐设置。</value>
   </data>
   <data name="BenchmarkWindowTitle" xml:space="preserve">
     <value>Benchmark</value>
   </data>
   <data name="BenchmarkChartsWindowTitle" xml:space="preserve">
-    <value>Charts</value>
+    <value>图表</value>
   </data>
   <data name="BenchmarkChartsHint" xml:space="preserve">
-    <value>Open a separate window for speed and quality charts.</value>
+    <value>打开一个单独的窗口来显示速度和质量图表。</value>
   </data>
   <data name="BenchmarkChartsWindowHint" xml:space="preserve">
-    <value>Speed and quality charts at a glance.</value>
+    <value>速度和质量图表一目了然。</value>
   </data>
   <data name="BenchmarkChartsOpen" xml:space="preserve">
-    <value>Open charts</value>
+    <value>打开图表</value>
   </data>
   <data name="BenchmarkSourceLabel" xml:space="preserve">
-    <value>Source file:</value>
+    <value>源文件：</value>
   </data>
   <data name="BenchmarkSourceHint" xml:space="preserve">
-    <value>Choose the source file for the benchmark.</value>
+    <value>选择 benchmark 的源文件。</value>
   </data>
   <data name="BenchmarkSourceFileLabel" xml:space="preserve">
-    <value>Source file</value>
+    <value>源文件</value>
   </data>
   <data name="BenchmarkSourceFileHint" xml:space="preserve">
-    <value>The benchmark runs on a single video file, not a folder.</value>
+    <value>benchmark 在单个视频文件上运行，而不是文件夹。</value>
   </data>
   <data name="BenchmarkOutputLabel" xml:space="preserve">
-    <value>Benchmark output</value>
+    <value>Benchmark输出</value>
   </data>
   <data name="BenchmarkOutputHint" xml:space="preserve">
-    <value>This folder stores benchmark samples and reports.</value>
+    <value>此文件夹存储 benchmark 示例和报告。</value>
   </data>
   <data name="BenchmarkChooseSourceFileFirst" xml:space="preserve">
-    <value>Choose a source file first.</value>
+    <value>首先选择一个源文件。</value>
   </data>
   <data name="BenchmarkSampleSeconds" xml:space="preserve">
-    <value>Sample length (seconds)</value>
+    <value>样本长度（秒）</value>
   </data>
   <data name="BenchmarkQualityNote" xml:space="preserve">
-    <value>Quality uses a sampled-frame similarity score.</value>
+    <value>质量使用采样帧相似度得分。</value>
   </data>
   <data name="BenchmarkWinnerTitle" xml:space="preserve">
-    <value>Recommended winner</value>
+    <value>推荐获奖者</value>
   </data>
   <data name="BenchmarkFastestOverallLabel" xml:space="preserve">
-    <value>Fastest overall</value>
+    <value>整体最快</value>
   </data>
   <data name="BenchmarkWeightedRecommendationLabel" xml:space="preserve">
-    <value>Weighted recommendation</value>
+    <value>加权推荐</value>
   </data>
   <data name="BenchmarkBestQualityTimeLabel" xml:space="preserve">
-    <value>Best quality/time</value>
+    <value>最佳质量/时间</value>
   </data>
   <data name="BenchmarkRuntimeMode" xml:space="preserve">
-    <value>Runtime</value>
+    <value>运行时</value>
   </data>
   <data name="BenchmarkQualityTimeMode" xml:space="preserve">
-    <value>Quality/time</value>
+    <value>质量/时间</value>
   </data>
   <data name="BenchmarkCurrentStep" xml:space="preserve">
-    <value>Current step</value>
+    <value>当前步骤</value>
   </data>
   <data name="BenchmarkCurrentCase" xml:space="preserve">
-    <value>Current case</value>
+    <value>当前案例</value>
   </data>
   <data name="BenchmarkScatterTitle" xml:space="preserve">
-    <value>Speed / quality</value>
+    <value>速度/质量</value>
   </data>
   <data name="BenchmarkHistogramTitle" xml:space="preserve">
-    <value>Runtime comparison</value>
+    <value>运行时比较</value>
   </data>
   <data name="BenchmarkSortLabel" xml:space="preserve">
-    <value>Sort by:</value>
+    <value>排序方式：</value>
   </data>
   <data name="BenchmarkSortMetric" xml:space="preserve">
-    <value>Metric</value>
+    <value>公制</value>
   </data>
   <data name="BenchmarkSortName" xml:space="preserve">
-    <value>Name</value>
+    <value>姓名</value>
   </data>
   <data name="BenchmarkLegendCodecPreset" xml:space="preserve">
-    <value>Codec / preset</value>
+    <value>编解码器/预设</value>
   </data>
   <data name="BenchmarkLegendThreads" xml:space="preserve">
-    <value>Threads</value>
+    <value>线程数</value>
   </data>
   <data name="BenchmarkLegendTileSize" xml:space="preserve">
-    <value>Tile size</value>
+    <value>Tile尺寸</value>
   </data>
   <data name="BenchmarkLegendFastest" xml:space="preserve">
-    <value>Fastest</value>
+    <value>最快</value>
   </data>
   <data name="BenchmarkLegendBestQualityTime" xml:space="preserve">
-    <value>Best quality/time</value>
+    <value>最佳质量/时间</value>
   </data>
   <data name="LastRunSummaryTitle" xml:space="preserve">
-    <value>Last run results</value>
+    <value>上次运行结果</value>
   </data>
   <data name="BenchmarkLogSource" xml:space="preserve">
-    <value>Source:</value>
+    <value>来源：</value>
   </data>
   <data name="BenchmarkLogSample" xml:space="preserve">
-    <value>Sample:</value>
+    <value>样本：</value>
   </data>
   <data name="BenchmarkLogSampleStart" xml:space="preserve">
-    <value>Sample start:</value>
+    <value>示例开始：</value>
   </data>
   <data name="BenchmarkLogSampleDuration" xml:space="preserve">
-    <value>Sample duration:</value>
+    <value>样本持续时间：</value>
   </data>
   <data name="BenchmarkLogGroupSection" xml:space="preserve">
     <value>== {0} ==</value>
   </data>
   <data name="BenchmarkLogSummary" xml:space="preserve">
-    <value>== Summary ==</value>
+    <value>==总结==</value>
   </data>
   <data name="BenchmarkLogFastestOverall" xml:space="preserve">
-    <value>Fastest overall: {0}</value>
+    <value>整体最快：{0}</value>
   </data>
   <data name="BenchmarkLogBestCodecPreset" xml:space="preserve">
-    <value>Best codec/preset: {0}</value>
+    <value>最佳编解码器/预设：{0}</value>
   </data>
   <data name="BenchmarkLogBestUpscalerThreads" xml:space="preserve">
-    <value>Best upscaler threads: {0}</value>
+    <value>最佳升级线程：{0}</value>
   </data>
   <data name="BenchmarkLogBestTileSize" xml:space="preserve">
-    <value>Best tile size: {0}</value>
+    <value>最佳 tile 尺寸：{0}</value>
   </data>
   <data name="BenchmarkLogBestSettings" xml:space="preserve">
-    <value>== Best settings ==</value>
+    <value>==最佳设置==</value>
   </data>
   <data name="BenchmarkLogRecommendedFastPreset" xml:space="preserve">
-    <value>Recommended fast preset:</value>
+    <value>推荐的快速预设：</value>
   </data>
   <data name="BenchmarkLogMetricsSummary" xml:space="preserve">
-    <value>Metrics summary:</value>
+    <value>指标摘要：</value>
   </data>
   <data name="BenchmarkSummaryRecommendedFastPreset" xml:space="preserve">
-    <value>Recommended fast preset</value>
+    <value>推荐快速预设</value>
   </data>
   <data name="BenchmarkSummaryBestSettings" xml:space="preserve">
-    <value>Best settings</value>
+    <value>最佳设置</value>
   </data>
   <data name="BenchmarkSummaryMetricsSummary" xml:space="preserve">
-    <value>Metrics summary</value>
+    <value>指标摘要</value>
   </data>
   <data name="BenchmarkReportTableGroup" xml:space="preserve">
-    <value>Group</value>
+    <value>团体</value>
   </data>
   <data name="BenchmarkReportTableCase" xml:space="preserve">
-    <value>Case</value>
+    <value>案件</value>
   </data>
   <data name="BenchmarkReportTableCodec" xml:space="preserve">
-    <value>Codec</value>
+    <value>编解码器</value>
   </data>
   <data name="BenchmarkReportTablePreset" xml:space="preserve">
-    <value>Preset</value>
+    <value>预设</value>
   </data>
   <data name="BenchmarkReportTableThreads" xml:space="preserve">
-    <value>Threads</value>
+    <value>线程数</value>
   </data>
   <data name="BenchmarkReportTableTile" xml:space="preserve">
     <value>Tile</value>
   </data>
   <data name="BenchmarkReportTableTime" xml:space="preserve">
-    <value>Time</value>
+    <value>时间</value>
   </data>
   <data name="BenchmarkReportTableOutputMb" xml:space="preserve">
-    <value>Output MB</value>
+    <value>输出MB</value>
   </data>
   <data name="BenchmarkReportTableCpu" xml:space="preserve">
-    <value>CPU start/avg/peak</value>
+    <value>CPU 起始/平均/峰值</value>
   </data>
   <data name="BenchmarkReportTableRamGb" xml:space="preserve">
-    <value>RAM start/avg/peak (GB)</value>
+    <value>RAM 起始/平均/峰值 (GB)</value>
   </data>
   <data name="BenchmarkReportTableGpu" xml:space="preserve">
-    <value>GPU start/avg/peak</value>
+    <value>GPU 起始/平均/峰值</value>
   </data>
   <data name="BenchmarkReportTableVramGb" xml:space="preserve">
-    <value>VRAM start/avg/peak (GB)</value>
+    <value>VRAM 起始/平均/峰值 (GB)</value>
   </data>
   <data name="BenchmarkCaseCodecPreset" xml:space="preserve">
     <value>{0} / {1}</value>
   </data>
   <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
-    <value>Video files|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|All files|*.*</value>
+    <value>视频文件|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|所有文件|*.*</value>
   </data>
   <data name="BenchmarkErrorRequiresSource" xml:space="preserve">
-    <value>Benchmark mode requires --benchmark-source &lt;file-or-folder&gt;.</value>
+    <value>Benchmark 模式需要 --benchmark-source &lt;文件或文件夹&gt;。</value>
   </data>
   <data name="BenchmarkErrorNoVideoFilesFound" xml:space="preserve">
-    <value>No video files found in {0}</value>
+    <value>{0} 中找不到视频文件</value>
   </data>
   <data name="BenchmarkErrorSourceFileNotFound" xml:space="preserve">
-    <value>Source file not found: {0}</value>
+    <value>未找到源文件：{0}</value>
   </data>
   <data name="BenchmarkErrorUnableToCreateSampleClipWithExitCode" xml:space="preserve">
-    <value>Unable to create benchmark sample clip. ffmpeg exit code: {0}</value>
+    <value>无法创建 benchmark 示例剪辑。 ffmpeg 退出代码：{0}</value>
   </data>
   <data name="BenchmarkErrorUnableToCreateSampleClip" xml:space="preserve">
-    <value>Unable to create benchmark sample clip.</value>
+    <value>无法创建 benchmark 示例剪辑。</value>
   </data>
   <data name="BenchmarkErrorPipelineFailed" xml:space="preserve">
-    <value>Pipeline failed</value>
+    <value>管道失败</value>
   </data>
   <data name="BenchmarkErrorStartupCaseNoFrames" xml:space="preserve">
-    <value>Benchmark case stopped because no frames were processed in time.</value>
+    <value>Benchmark 案例因没有及时处理帧而停止。</value>
   </data>
   <data name="BenchmarkErrorStartupCaseStalled" xml:space="preserve">
-    <value>Benchmark case stopped because progress was stuck for too long.</value>
+    <value>Benchmark 案件因进度停滞太久而停止。</value>
   </data>
   <data name="BenchmarkErrorStartupCaseNoHeartbeat" xml:space="preserve">
-    <value>Benchmark case stopped because the pipeline stopped sending progress updates.</value>
+    <value>Benchmark 案例已停止，因为管道停止发送进度更新。</value>
   </data>
   <data name="BenchmarkShortCodecFast" xml:space="preserve">
-    <value>fast</value>
+    <value>快速地</value>
   </data>
   <data name="BenchmarkSuccess" xml:space="preserve">
     <value>OK</value>
@@ -586,533 +586,533 @@
     <value>FAIL</value>
   </data>
   <data name="BenchmarkNotAvailable" xml:space="preserve">
-    <value>n/a</value>
+    <value>不适用</value>
   </data>
   <data name="BenchmarkStatusStarting" xml:space="preserve">
-    <value>Starting benchmark</value>
+    <value>起始 benchmark</value>
   </data>
   <data name="BenchmarkStatusStarted" xml:space="preserve">
-    <value>Benchmark started.</value>
+    <value>Benchmark 启动。</value>
   </data>
   <data name="BenchmarkStatusFinished" xml:space="preserve">
-    <value>Benchmark finished</value>
+    <value>Benchmark 成品</value>
   </data>
   <data name="BenchmarkStatusCancelled" xml:space="preserve">
-    <value>Benchmark cancelled</value>
+    <value>Benchmark 已取消</value>
   </data>
   <data name="BenchmarkStatusCancelledUser" xml:space="preserve">
-    <value>Benchmark cancelled by user.</value>
+    <value>Benchmark 已被用户取消。</value>
   </data>
   <data name="BenchmarkStatusFailed" xml:space="preserve">
-    <value>Benchmark failed</value>
+    <value>Benchmark 失败</value>
   </data>
   <data name="BenchmarkStatusStartingDetailed" xml:space="preserve">
-    <value>Benchmark is starting.</value>
+    <value>Benchmark 正在启动。</value>
   </data>
   <data name="BenchmarkCaseStarted" xml:space="preserve">
-    <value>[{0}/{1}] {2} / {3} started.</value>
+    <value>[{0}/{1}] {2} / {3} 已启动。</value>
   </data>
   <data name="BenchmarkCaseCompleted" xml:space="preserve">
-    <value>[{0}/{1}] {2} / {3} done in {4:0.###} s.</value>
+    <value>[{0}/{1}] {2} / {3} 在 {4:0.###} 中完成。</value>
   </data>
   <data name="BenchmarkSummaryHeader" xml:space="preserve">
-    <value>Summary</value>
+    <value>概括</value>
   </data>
   <data name="BenchmarkSummaryFastestOverall" xml:space="preserve">
-    <value>Fastest overall</value>
+    <value>整体最快</value>
   </data>
   <data name="BenchmarkSummaryBestCodecPreset" xml:space="preserve">
-    <value>Best codec/preset</value>
+    <value>最佳编解码器/预设</value>
   </data>
   <data name="BenchmarkSummaryBestUpscalerThreads" xml:space="preserve">
-    <value>Best upscaler threads</value>
+    <value>最佳升级线程</value>
   </data>
   <data name="BenchmarkSummaryBestTileSize" xml:space="preserve">
-    <value>Best tile size</value>
+    <value>最佳tile尺寸</value>
   </data>
   <data name="BenchmarkShortCodecMed" xml:space="preserve">
-    <value>med</value>
+    <value>医学</value>
   </data>
   <data name="BenchmarkShortCodecSlow" xml:space="preserve">
-    <value>slow</value>
+    <value>慢的</value>
   </data>
   <data name="BenchmarkShortCodecVFast" xml:space="preserve">
-    <value>vfast</value>
+    <value>快速</value>
   </data>
   <data name="BenchmarkShortAFOff" xml:space="preserve">
-    <value>AF off</value>
+    <value>自动对焦关闭</value>
   </data>
   <data name="BenchmarkShortAFOn" xml:space="preserve">
-    <value>AF on</value>
+    <value>自动对焦开启</value>
   </data>
   <data name="BenchmarkShortAFAnime" xml:space="preserve">
-    <value>AF anime</value>
+    <value>AF动漫</value>
   </data>
   <data name="BenchmarkShortAFUltra" xml:space="preserve">
-    <value>AF ultra</value>
+    <value>AF超</value>
   </data>
   <data name="BenchmarkShortAFVideo" xml:space="preserve">
-    <value>AF video</value>
+    <value>自动对焦视频</value>
   </data>
   <data name="BenchmarkShortAFFaces" xml:space="preserve">
-    <value>AF faces</value>
+    <value>自动对焦面孔</value>
   </data>
   <data name="BenchmarkShortThreadsPrefix" xml:space="preserve">
-    <value>Thr</value>
+    <value>苏尔</value>
   </data>
   <data name="BenchmarkShortTilePrefix" xml:space="preserve">
     <value>Tile</value>
   </data>
   <data name="BenchmarkNoResults" xml:space="preserve">
-    <value>No benchmark results yet.</value>
+    <value>还没有 benchmark 结果。</value>
   </data>
   <data name="BenchmarkChartTimeAxis" xml:space="preserve">
-    <value>Time (s)</value>
+    <value>时间（秒）</value>
   </data>
   <data name="BenchmarkChartQualityAxis" xml:space="preserve">
-    <value>Quality score</value>
+    <value>质量得分</value>
   </data>
   <data name="BenchmarkStart" xml:space="preserve">
-    <value>Start benchmark</value>
+    <value>开始 benchmark</value>
   </data>
   <data name="BenchmarkStop" xml:space="preserve">
-    <value>Stop benchmark</value>
+    <value>停止 benchmark</value>
   </data>
   <data name="ScanningFolder" xml:space="preserve">
-    <value>Scanning folder...</value>
+    <value>正在扫描文件夹...</value>
   </data>
   <data name="ScanFolderProgress" xml:space="preserve">
-    <value>Checked {0}/{1} files</value>
+    <value>已检查 {0}/{1} 文件</value>
   </data>
   <data name="Codec" xml:space="preserve">
-    <value>Codec</value>
+    <value>编解码器</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>Format</value>
+    <value>格式</value>
   </data>
   <data name="Resolution" xml:space="preserve">
-    <value>Resolution</value>
+    <value>解决</value>
   </data>
   <data name="CustomTargetValue" xml:space="preserve">
-    <value>Custom value</value>
+    <value>定制值</value>
   </data>
   <data name="CustomTargetDialogTitle" xml:space="preserve">
-    <value>Custom resolution</value>
+    <value>自定义分辨率</value>
   </data>
   <data name="CustomTargetDialogPrompt" xml:space="preserve">
-    <value>Enter the result height in pixels. Minimum is 120.</value>
+    <value>输入结果高度（以像素为单位）。最低为 120。</value>
   </data>
   <data name="CustomTargetDialogValidation" xml:space="preserve">
-    <value>Enter a whole number of 120 or higher.</value>
+    <value>输入 120 或更大的整数。</value>
   </data>
   <data name="EncoderPreset" xml:space="preserve">
-    <value>Encoder preset</value>
+    <value>编码器预设</value>
   </data>
   <data name="EncoderPresetHint" xml:space="preserve">
-    <value>Controls how hard the video encoder works after upscaling. Faster presets usually use less time.</value>
+    <value>控制视频编码器在升级后的工作强度。更快的预设通常会花费更少的时间。</value>
   </data>
   <data name="EncoderPresetHelpTitle" xml:space="preserve">
-    <value>Encoder preset</value>
+    <value>编码器预设</value>
   </data>
   <data name="EncoderPresetHelpBody" xml:space="preserve">
-    <value>**fast**: uses the least encoder time and is best for quick checks or low-power machines.
-**medium**: balances encoding time and file size for most jobs.
-**slower**: spends more time per frame and usually gives more efficient compression and a slightly smaller file.
+    <value>**快速**：使用最短的编码器时间，最适合快速检查或低功耗机器。
+**中**：平衡大多数作业的编码时间和文件大小。
+**较慢**：每帧花费更多时间，通常会提供更有效的压缩和稍小的文件。
 
-Beyond speed, the preset changes how much effort the encoder spends on compression decisions. Slower presets often trade CPU time for smaller output and sometimes a bit more compression efficiency.</value>
+除了速度之外，预设还改变了编码器在压缩决策上花费的精力。较慢的预设通常会以 CPU 时间换取较小的输出，有时甚至会提高一点压缩效率。</value>
   </data>
   <data name="ContainerFutureLabel" xml:space="preserve">
-    <value>Container (more options will be available later)</value>
+    <value>容器（稍后将提供更多选项）</value>
   </data>
   <data name="Container" xml:space="preserve">
-    <value>Container</value>
+    <value>容器</value>
   </data>
   <data name="CodecHelpTitle" xml:space="preserve">
-    <value>Codec</value>
+    <value>编解码器</value>
   </data>
   <data name="CodecHelpBody" xml:space="preserve">
-    <value>A codec defines how the video is compressed.
+    <value>编解码器定义视频的压缩方式。
 
-**x264** - faster and broadly compatible.
-**x265** - usually makes the result file smaller, but takes longer.</value>
+**x264** - 更快且广泛兼容。
+**x265** - 通常会使结果文件更小，但需要更长的时间。</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
-    <value>Format</value>
+    <value>格式</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>Format here means the result resolution.
+    <value>这里的格式是指结果分辨率。
 
-**720p** - makes it HD.
-**1080p** - makes it Full HD.
-**1440p** - makes it QHD.
-**2160p** - renders 4K.
-**4320p** - renders 8K.</value>
+**720p** - 使其高清。
+**1080p** - 使其成为全高清。
+**1440p** - 使其成为 QHD。
+**2160p** - 渲染 4K。
+**4320p** - 渲染 8K。</value>
   </data>
   <data name="ContainerHelpTitle" xml:space="preserve">
-    <value>Container</value>
+    <value>容器</value>
   </data>
   <data name="ContainerHelpBody" xml:space="preserve">
-    <value>A container is the outer file wrapper for the video.
+    <value>容器是视频的外部文件包装器。
 
-Right now only **MKV** is available here.
-More container options will appear later.</value>
+目前这里仅提供**MKV**。
+稍后将出现更多容器选项。</value>
   </data>
   <data name="FFmpegThreads" xml:space="preserve">
-    <value>FFmpeg threads</value>
+    <value>FFmpeg 螺纹</value>
   </data>
   <data name="FfmpegThreadsHelpTitle" xml:space="preserve">
-    <value>FFmpeg threads</value>
+    <value>FFmpeg 螺纹</value>
   </data>
   <data name="FfmpegThreadsHelpBody" xml:space="preserve">
-    <value>This is the thread count for FFmpeg stages such as decoding, preparation, and encoding.
+    <value>这是 FFmpeg 阶段（例如解码、准备和编码）的线程计数。
 
-More threads can help on a strong CPU.
-If set too high, it can also add load without much real benefit.</value>
+更多线程可以帮助增强 CPU。
+如果设置得太高，它也会增加负载，但没有太多实际好处。</value>
   </data>
   <data name="UpscalerJobs" xml:space="preserve">
-    <value>Upscaler jobs</value>
+    <value>高级职位</value>
   </data>
   <data name="UpscalerJobsHelpTitle" xml:space="preserve">
-    <value>Upscaler jobs</value>
+    <value>高级职位</value>
   </data>
   <data name="UpscalerJobsHelpBody" xml:space="preserve">
-    <value>This field uses the format **A:B:C**. Three numbers are needed because RealESRGAN uses three internal pipeline queues during processing.
+    <value>该字段使用格式 **A:B:C**。需要三个数字，因为 RealESRGAN 在处理过程中使用三个内部管道队列。
 
-**The first number** is how many jobs are fed into the pipeline at once.
-**The second number** is how many jobs can stay in active processing.
-**The third number** is how many already processed jobs can wait for the next stage.
+**第一个数字**是一次将多少个作业输入管道。
+**第二个数字**是有多少作业可以处于活动处理状态。
+**第三个数字**是有多少已处理的作业可以等待下一阶段。
 
-Examples:
-**1:1:1** - the safest and lightest mode.
-**4:4:4** - a more balanced faster mode.
-**8:8:8** - an aggressive mode for a strong GPU with solid VRAM headroom.
+示例：
+**1:1:1** - 最安全、最轻便的模式。
+**4:4:4** - 更平衡的更快模式。
+**8:8:8** - 一种针对强大的 GPU 的激进模式，具有坚实的 VRAM 净空。
 
-Usually all three numbers are kept equal so the pipeline stays balanced.</value>
+通常所有三个数字保持相等，以便管道保持平衡。</value>
   </data>
   <data name="TileSize" xml:space="preserve">
-    <value>Tile size</value>
+    <value>Tile尺寸</value>
   </data>
   <data name="TileSizeHelpTitle" xml:space="preserve">
-    <value>Tile size</value>
+    <value>Tile尺寸</value>
   </data>
   <data name="TileSizeHelpBody" xml:space="preserve">
-    <value>A tile is the square image chunk that the upscaler processes at one time.
+    <value>tile 是升频器一次处理的方形图像块。
 
-Here, size means width and height in pixels:
-**128** = roughly **128x128**
-**256** = roughly **256x256**
-**1024** = roughly **1024x1024**
+这里，尺寸是指以像素为单位的宽度和高度：
+**128** = 大约 **128x128**
+**256** = 大约 **256x256**
+**1024** = 大约 **1024x1024**
 
-A larger tile is usually faster but needs more VRAM.
+较大的 tile 通常速度更快，但需要更多的 VRAM。
 A smaller tile is safer for weaker GPUs, but can be slower.</value>
   </data>
   <data name="GpuSelection" xml:space="preserve">
     <value>GPU</value>
   </data>
   <data name="GpuSelectionHint" xml:space="preserve">
-    <value>Auto picks the strongest detected GPU at startup.</value>
+    <value>Auto 在启动时选择最强的检测到的 GPU。</value>
   </data>
   <data name="GpuSelectionAuto" xml:space="preserve">
-    <value>Auto (strongest GPU)</value>
+    <value>Auto（最强GPU）</value>
   </data>
   <data name="GpuSelectionAutoWithName" xml:space="preserve">
     <value>Auto ({0})</value>
   </data>
   <data name="StartupBenchmarkPromptTitle" xml:space="preserve">
-    <value>Startup benchmark</value>
+    <value>启动 benchmark</value>
   </data>
   <data name="StartupBenchmarkPromptGreeting" xml:space="preserve">
-    <value>Welcome to UltraFrame AI.</value>
+    <value>欢迎来到UltraFrame AI。</value>
   </data>
   <data name="StartupBenchmarkPromptThanks" xml:space="preserve">
-    <value>Thank you for using my app. It grows thanks to your support.
-If you ever want to support the project, you can find that option in the help section behind the question mark at the top right.</value>
+    <value>感谢您使用我的应用程序。它的成长得益于您的支持。
+如果您想支持该项目，可以在右上角问号后面的帮助部分找到该选项。</value>
   </data>
   <data name="StartupBenchmarkPromptBody" xml:space="preserve">
-    <value>On the first start, UltraFrame AI can run a short benchmark on a One Piece sample clip, check whether this PC meets the practical minimum requirements, choose the fastest GPU, and suggest RealESRGAN settings. This may take a few minutes. If you skip it, you may run into conversion errors later. You can run this benchmark again later from Settings. Run it now?</value>
+    <value>首次启动时，UltraFrame AI 可以在 One Piece 样本剪辑上运行一段简短的 benchmark，检查此 PC 是否满足实际最低要求，选择最快的 GPU，并建议 RealESRGAN 设置。这可能需要几分钟。如果跳过它，稍后可能会遇到转换错误。您可以稍后从“设置”再次运行此 benchmark。现在运行吗？</value>
   </data>
   <data name="StartupBenchmarkPromptFootnote" xml:space="preserve">
-    <value>This first screen is only a preliminary estimate. The benchmark is mainly needed to find the best UltraFrame AI settings for this PC.</value>
+    <value>第一个屏幕只是初步估计。 benchmark 主要用于为该 PC 找到最佳 UltraFrame AI 设置。</value>
   </data>
   <data name="StartupBenchmarkNewHardwareTitle" xml:space="preserve">
-    <value>Benchmark for new devices</value>
+    <value>Benchmark 适用于新设备</value>
   </data>
   <data name="StartupBenchmarkNewHardwareGreeting" xml:space="preserve">
-    <value>We detected a new or changed device.</value>
+    <value>我们检测到新的或更改的设备。</value>
   </data>
   <data name="StartupBenchmarkNewHardwareBody" xml:space="preserve">
-    <value>UltraFrame AI updated the GPU selection to the strongest available option and recommends running the short benchmark again. This helps verify the new hardware, choose the best GPU, and refresh the recommended RealESRGAN settings. You can also run this benchmark later from Settings. Run it now?</value>
+    <value>UltraFrame AI 将 GPU 选择更新为最强的可用选项，并建议再次运行短期 benchmark。这有助于验证新硬件、选择最佳的 GPU 并刷新推荐的 RealESRGAN 设置。您也可以稍后从“设置”运行此 benchmark。现在运行吗？</value>
   </data>
   <data name="StartupBenchmarkPromptRun" xml:space="preserve">
-    <value>Run benchmark</value>
+    <value>运行benchmark</value>
   </data>
   <data name="StartupBenchmarkPromptSkip" xml:space="preserve">
-    <value>Skip for now</value>
+    <value>暂时跳过</value>
   </data>
   <data name="StartupBenchmarkUnavailableTitle" xml:space="preserve">
-    <value>Benchmark unavailable</value>
+    <value>Benchmark 不可用</value>
   </data>
   <data name="StartupBenchmarkUnavailableBody" xml:space="preserve">
-    <value>The benchmark could not start because no usable GPU or sample clip was found.</value>
+    <value>benchmark 无法启动，因为找不到可用的 GPU 或样本剪辑。</value>
   </data>
   <data name="StartupBenchmarkProgressTitle" xml:space="preserve">
     <value>Benchmark</value>
   </data>
   <data name="StartupBenchmarkProgressIntro" xml:space="preserve">
-    <value>We are checking your GPUs and tuning RealESRGAN settings on a short sample clip.</value>
+    <value>我们正在检查您的 GPU 并在一个简短的示例剪辑上调整 RealESRGAN 设置。</value>
   </data>
   <data name="StartupBenchmarkCurrentPhase" xml:space="preserve">
-    <value>Phase</value>
+    <value>阶段</value>
   </data>
   <data name="StartupBenchmarkCurrentCase" xml:space="preserve">
-    <value>Current case</value>
+    <value>当前案例</value>
   </data>
   <data name="StartupBenchmarkCurrentSettings" xml:space="preserve">
-    <value>Current settings</value>
+    <value>当前设置</value>
   </data>
   <data name="StartupBenchmarkCheckedCases" xml:space="preserve">
-    <value>Checked cases</value>
+    <value>检查案例</value>
   </data>
   <data name="StartupBenchmarkCurrentGpu" xml:space="preserve">
     <value>GPU</value>
   </data>
   <data name="StartupBenchmarkCancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>取消</value>
   </data>
   <data name="StartupBenchmarkResultsTitle" xml:space="preserve">
-    <value>Benchmark results</value>
+    <value>Benchmark 结果</value>
   </data>
   <data name="StartupBenchmarkResultsSummary" xml:space="preserve">
-    <value>Auto-tuning finished. The benchmark used {0} and prepared recommended settings for this PC.</value>
+    <value>Auto-调校完成。 benchmark 使用了 {0} 并为此 PC 准备了推荐设置。</value>
   </data>
   <data name="StartupBenchmarkResultsWeakSummary" xml:space="preserve">
-    <value>Weak spots detected: {0}.</value>
+    <value>检测到的弱点：{0}。</value>
   </data>
   <data name="StartupBenchmarkResultsApplied" xml:space="preserve">
-    <value>Recommended settings</value>
+    <value>推荐设置</value>
   </data>
   <data name="StartupBenchmarkResultsApply" xml:space="preserve">
-    <value>Apply recommended settings</value>
+    <value>应用推荐设置</value>
   </data>
   <data name="StartupBenchmarkResultsSkipApply" xml:space="preserve">
-    <value>Not now</value>
+    <value>现在不要</value>
   </data>
   <data name="GeneralHelpTitle" xml:space="preserve">
-    <value>Help</value>
+    <value>帮助</value>
   </data>
   <data name="GeneralHelpBody" xml:space="preserve">
-    <value>This is a quick help entry point. The full help center opens from the question mark in the top right corner.</value>
+    <value>这是一个快速帮助入口点。完整的帮助中心从右上角的问号打开。</value>
   </data>
   <data name="SettingsOverviewHelpTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>设置</value>
   </data>
   <data name="SettingsOverviewHelpBody" xml:space="preserve">
-    <value>This area contains the main program settings.
+    <value>该区域包含主程序设置。
 
-General: codec, resolution, container, GPU selection, and the main processing switches.
-Performance: encoder preset, thread counts, and rendering speed parameters.
+常规：编解码器、分辨率、容器、GPU 选择以及主要处理开关。
+性能：编码器预设、线程数和渲染速度参数。
 
-Changes are applied automatically, so there is no separate Save button.</value>
+更改会自动应用 auto，因此没有单独的“保存”按钮。</value>
   </data>
   <data name="HelpCenterIntro" xml:space="preserve">
-    <value>This window combines a quick usage guide, answers to common questions, and support information for the project.</value>
+    <value>该窗口结合了快速使用指南、常见问题解答以及项目的支持信息。</value>
   </data>
   <data name="HelpCenterAppVersionLabel" xml:space="preserve">
-    <value>App version:</value>
+    <value>应用程序版本：</value>
   </data>
   <data name="HelpCenterLibraryVersions" xml:space="preserve">
-    <value>Library versions</value>
+    <value>库版本</value>
   </data>
   <data name="HelpCenterLibraryVersionsBody" xml:space="preserve">
-    <value>This list shows the main libraries and bundled components used by the app.</value>
+    <value>此列表显示了应用程序使用的主要库和捆绑组件。</value>
   </data>
   <data name="HelpCenterHowToTab" xml:space="preserve">
-    <value>How to use</value>
+    <value>如何使用</value>
   </data>
   <data name="HelpCenterFaqTab" xml:space="preserve">
     <value>FAQ</value>
   </data>
   <data name="HelpCenterFaqTitle" xml:space="preserve">
-    <value>Frequently asked questions</value>
+    <value>常见问题</value>
   </data>
   <data name="HelpCenterHardwareTab" xml:space="preserve">
-    <value>Hardware check</value>
+    <value>硬件检查</value>
   </data>
   <data name="HelpCenterLinksTab" xml:space="preserve">
-    <value>Contacts and links</value>
+    <value>联系方式和链接</value>
   </data>
   <data name="HelpCenterDonateTab" xml:space="preserve">
-    <value>Support the project</value>
+    <value>支持项目</value>
   </data>
   <data name="HelpCenterHowToTitle" xml:space="preserve">
-    <value>How to use the app</value>
+    <value>如何使用该应用程序</value>
   </data>
   <data name="HelpCenterHowToBody" xml:space="preserve">
-    <value>1. Add a video file or a folder on the main screen.
-2. Open settings if you want to adjust resolution, codec, GPU, or other options.
-3. If the app offers the startup benchmark, it is usually a good idea to run it. It checks your hardware and suggests recommended settings.
-4. Start rendering. While rendering, the separate render window shows the current stage, preview, elapsed time, ETA, and FPS.
-5. If rendering is interrupted, use "Resume render" for unfinished files when possible.
-6. After the queue finishes, the app shows a summary window with per-file results.</value>
+    <value>1. 在主屏幕上添加视频文件或文件夹。
+2. 如果要调整分辨率、编解码器、GPU 或其他选项，请打开设置。
+3. 如果应用程序提供启动 benchmark，通常最好运行它。它会检查您的硬件并建议推荐的设置。
+4. 开始渲染。渲染时，单独的渲染窗口会显示当前阶段、预览、已用时间、ETA 和 FPS。
+5. 如果渲染中断，请尽可能对未完成的文件使用“恢复渲染”。
+6. 队列完成后，应用程序将显示一个摘要窗口，其中包含每个文件的结果。</value>
   </data>
   <data name="HelpCenterDetectedDevicesTitle" xml:space="preserve">
-    <value>Detected devices</value>
+    <value>检测到的设备</value>
   </data>
   <data name="HelpCenterLinksTitle" xml:space="preserve">
-    <value>Contacts and links</value>
+    <value>联系方式和链接</value>
   </data>
   <data name="HelpCenterLinksContacts" xml:space="preserve">
-    <value>Ways to reach out</value>
+    <value>联系方式</value>
   </data>
   <data name="HelpCenterLinksSources" xml:space="preserve">
-    <value>Used sources and repositories</value>
+    <value>使用的源和存储库</value>
   </data>
   <data name="HelpFaqQuestion1" xml:space="preserve">
-    <value>Why is the startup benchmark useful?</value>
+    <value>为什么启动 benchmark 有用？</value>
   </data>
   <data name="HelpFaqAnswer1" xml:space="preserve">
-    <value>It checks whether the PC is strong enough for the app, compares available GPUs, and suggests practical RealESRGAN settings for this machine.</value>
+    <value>它检查 PC 是否足够强大以支持该应用程序，比较可用的 GPU，并为该机器建议实用的 RealESRGAN 设置。</value>
   </data>
   <data name="HelpFaqQuestion2" xml:space="preserve">
-    <value>What should I do if rendering stops unexpectedly?</value>
+    <value>如果渲染意外停止怎么办？</value>
   </data>
   <data name="HelpFaqAnswer2" xml:space="preserve">
-    <value>If an unfinished result is still there, try the resume option. The app checks whether recovery is possible and continues from the valid part when it can.</value>
+    <value>如果仍有未完成的结果，请尝试恢复选项。该应用程序检查 recovery 是否可行，并在可行时从有效部分继续。</value>
   </data>
   <data name="HelpFaqQuestion3" xml:space="preserve">
-    <value>Why can rendering be slow?</value>
+    <value>为什么渲染会很慢？</value>
   </data>
   <data name="HelpFaqAnswer3" xml:space="preserve">
-    <value>Speed mostly depends on your GPU, available VRAM, tile size, RealESRGAN thread settings, and encoder preset. More careful or higher-quality settings usually take longer.</value>
+    <value>速度主要取决于您的 GPU、可用的 VRAM、tile 尺寸、RealESRGAN 螺纹设置和编码器预设。更仔细或更高质量的设置通常需要更长的时间。</value>
   </data>
   <data name="HelpFaqQuestion4" xml:space="preserve">
-    <value>When should I resume, and when should I overwrite?</value>
+    <value>我什么时候应该恢复，什么时候应该覆盖？</value>
   </data>
   <data name="HelpFaqAnswer4" xml:space="preserve">
-    <value>Resume is best after an interruption or crash when there is already an unfinished result. Overwrite is better when you changed render settings or want to start the file again from scratch.</value>
+    <value>当已经有未完成的结果时，最好在中断或崩溃后继续。当您更改渲染设置或想要从头开始重新启动文件时，覆盖效果更好。</value>
   </data>
   <data name="HelpFaqQuestion5" xml:space="preserve">
-    <value>Where can I run the benchmark again later?</value>
+    <value>稍后在哪里可以再次运行benchmark？</value>
   </data>
   <data name="HelpFaqAnswer5" xml:space="preserve">
-    <value>You can start it again from Settings with the Benchmark button. At the end, it shows recommended settings and asks whether you want to apply them.</value>
+    <value>您可以使用 Benchmark 按钮从“设置”再次启动它。最后，它会显示推荐的设置并询问您是否要应用它们。</value>
   </data>
   <data name="HelpFaqQuestion6" xml:space="preserve">
-    <value>Why do non-animated videos sometimes look worse?</value>
+    <value>为什么非动画视频有时看起来更糟糕？</value>
   </data>
   <data name="HelpFaqAnswer6" xml:space="preserve">
-    <value>RealESRGAN was trained mainly on animation, so other videos can sometimes pick up animation-like details during upscaling.</value>
+    <value>RealESRGAN 主要针对动画进行训练，因此其他视频有时可以在放大过程中拾取类似动画的细节。</value>
   </data>
   <data name="HelpFaqQuestion7" xml:space="preserve">
-    <value>Why can't I convert images here if RealESRGAN can do that?</value>
+    <value>如果 RealESRGAN 可以转换图像，为什么我不能在这里转换图像？</value>
   </data>
   <data name="HelpFaqAnswer7" xml:space="preserve">
-    <value>Image conversion is planned for future versions of the app.</value>
+    <value>计划在应用程序的未来版本中进行图像转换。</value>
   </data>
   <data name="HelpFaqQuestion8" xml:space="preserve">
-    <value>I found a bug. What should I do?</value>
+    <value>我发现了一个错误。我应该怎么办？</value>
   </data>
   <data name="HelpFaqAnswer8" xml:space="preserve">
-    <value>Please report it on the program's GitHub page.</value>
+    <value>请在该计划的 GitHub 页面上报告。</value>
   </data>
   <data name="DonationDialogTitle" xml:space="preserve">
-    <value>Support the project</value>
+    <value>支持项目</value>
   </data>
   <data name="DonationDialogIntro" xml:space="preserve">
-    <value>dagnaruscode.eu is the author's website.</value>
+    <value>dagnaruscode.eu是作者的网站。</value>
   </data>
   <data name="DonationDialogBenefits" xml:space="preserve">
-    <value>There you can support the author with a coffee and help the further development of this and other programs.</value>
+    <value>在那里，您可以为作者提供一杯咖啡支持，并帮助该程序和其他程序的进一步开发。</value>
   </data>
   <data name="DonationDialogFooter" xml:space="preserve">
-    <value>This is completely optional. The app will continue to work even if you do not contribute.</value>
+    <value>这是完全可选的。即使您不做出贡献，该应用程序也将继续运行。</value>
   </data>
   <data name="DonationEntryAuthorSiteSummary" xml:space="preserve">
-    <value>Author website and support page.</value>
+    <value>作者网站和支持页面。</value>
   </data>
   <data name="DonationEntryAuthorSiteDetails" xml:space="preserve">
-    <value>Support the author with a coffee and help further development.</value>
+    <value>支持作者喝杯咖啡，帮助进一步发展。</value>
   </data>
   <data name="DonationEntryAuthorSiteAction" xml:space="preserve">
-    <value>Open dagnaruscode.eu</value>
+    <value>打开dagnaruscode.eu</value>
   </data>
   <data name="RenderSessionResultsTitle" xml:space="preserve">
-    <value>Enhancement results</value>
+    <value>增强结果</value>
   </data>
   <data name="RenderSessionResultsSummary" xml:space="preserve">
-    <value>Conversion finished in {0}.</value>
+    <value>转换完成于{0}。</value>
   </data>
   <data name="RenderSessionResultsItemComplete" xml:space="preserve">
-    <value>Rendering finished in {0}.</value>
+    <value>渲染完成于{0}。</value>
   </data>
   <data name="RenderSessionResultsItemFps" xml:space="preserve">
-    <value>Average render FPS: {0}</value>
+    <value>平均渲染 FPS：{0}</value>
   </data>
   <data name="RenderSessionResultsDonatePrefix" xml:space="preserve">
-    <value>I would be grateful for your </value>
+    <value>我将不胜感激</value>
   </data>
   <data name="RenderSessionResultsDonateLink" xml:space="preserve">
-    <value>financial support</value>
+    <value>财政支持</value>
   </data>
   <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
     <value>.</value>
   </data>
   <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
-    <value>Selected GPU</value>
+    <value>已选 GPU</value>
   </data>
   <data name="StartupBenchmarkResultsThreads" xml:space="preserve">
-    <value>RealESRGAN jobs</value>
+    <value>RealESRGAN 的职位</value>
   </data>
   <data name="StartupBenchmarkResultsPreset" xml:space="preserve">
-    <value>Encoder preset</value>
+    <value>编码器预设</value>
   </data>
   <data name="StartupBenchmarkResultsTile" xml:space="preserve">
-    <value>Tile size</value>
+    <value>Tile尺寸</value>
   </data>
   <data name="StartupBenchmarkResultsThroughput" xml:space="preserve">
-    <value>Estimated throughput</value>
+    <value>预计吞吐量</value>
   </data>
   <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
-    <value>Best benchmark cases</value>
+    <value>最佳 benchmark 案例</value>
   </data>
   <data name="StartupBenchmarkResultsTopCaseFormat" xml:space="preserve">
-    <value>{0}: {1} / {2} / {3} / tile {4} - {5:0.##} s</value>
+    <value>{0}：{1} / {2} / {3} / tile {4} - {5:0.##}</value>
   </data>
   <data name="StartupBenchmarkResultsRecommendationsTitle" xml:space="preserve">
-    <value>Recommendations</value>
+    <value>建议</value>
   </data>
   <data name="StartupBenchmarkResultsWeakWarning" xml:space="preserve">
-    <value>Your GPU looks quite weak for heavy upscaling. Rendering should still work, but expect long runtimes.</value>
+    <value>您的 GPU 看起来对于大幅升级来说相当弱。渲染应该仍然可以工作，但预计运行时间较长。</value>
   </data>
   <data name="StartupBenchmarkResultsOkay" xml:space="preserve">
-    <value>Your GPU looks healthy for this workload.</value>
+    <value>您的 GPU 看起来适合此工作负载。</value>
   </data>
   <data name="StartupBenchmarkPhaseGpu" xml:space="preserve">
-    <value>GPU check</value>
+    <value>GPU 检查</value>
   </data>
   <data name="StartupBenchmarkPhaseBalanced" xml:space="preserve">
-    <value>Balanced</value>
+    <value>均衡</value>
   </data>
   <data name="StartupBenchmarkPhaseFast" xml:space="preserve">
-    <value>Fast</value>
+    <value>快速地</value>
   </data>
   <data name="StartupBenchmarkPhaseSafe" xml:space="preserve">
-    <value>Safe</value>
+    <value>安全的</value>
   </data>
   <data name="StartupBenchmarkPhaseQuality" xml:space="preserve">
-    <value>Quality</value>
+    <value>质量</value>
   </data>
   <data name="StartupBenchmarkPhaseThreadsRun" xml:space="preserve">
-    <value>Threads {0}, run {1}</value>
+    <value>线程 {0}，运行 {1}</value>
   </data>
   <data name="StartupBenchmarkPhaseTile" xml:space="preserve">
     <value>Tile {0}</value>
   </data>
   <data name="StartupBenchmarkPhasePreset" xml:space="preserve">
-    <value>Preset {0}</value>
+    <value>预设 {0}</value>
   </data>
   <data name="HardwareAssessmentTitle" xml:space="preserve">
-    <value>Hardware check</value>
+    <value>硬件检查</value>
   </data>
   <data name="HardwareGpuTitle" xml:space="preserve">
     <value>GPU</value>
@@ -1127,556 +1127,556 @@ Changes are applied automatically, so there is no separate Save button.</value>
     <value>RAM</value>
   </data>
   <data name="HardwareEnough" xml:space="preserve">
-    <value>Enough</value>
+    <value>足够的</value>
   </data>
   <data name="HardwareWeak" xml:space="preserve">
-    <value>Weak</value>
+    <value>虚弱的</value>
   </data>
   <data name="HardwareTooLow" xml:space="preserve">
-    <value>Too low</value>
+    <value>太低</value>
   </data>
   <data name="HardwareDeviceMemoryDetail" xml:space="preserve">
-    <value>Video memory: {0} GB</value>
+    <value>显存：{0} GB</value>
   </data>
   <data name="HardwareDeviceMemoryUnknown" xml:space="preserve">
-    <value>Video memory size could not be detected</value>
+    <value>无法检测视频内存大小</value>
   </data>
   <data name="HardwareNoDevicesFound" xml:space="preserve">
-    <value>No devices found</value>
+    <value>未找到设备</value>
   </data>
   <data name="HardwareNoDevicesFoundDetail" xml:space="preserve">
-    <value>The app could not retrieve the GPU list on this system.</value>
+    <value>应用程序无法检索此系统上的 GPU 列表。</value>
   </data>
   <data name="HardwareGpuMissingDetail" xml:space="preserve">
-    <value>No supported GPU was detected. The benchmark is strongly recommended because conversion may fail. Minimum: {0}. Comfortable target: {1}.</value>
+    <value>未检测到支持的 GPU。强烈建议使用 benchmark，因为转换可能会失败。最小值：{0}。舒适目标：{1}。</value>
   </data>
   <data name="HardwareGpuStaticEnoughDetail" xml:space="preserve">
-    <value>{0} was detected. The benchmark is still recommended for a real compatibility check. Comfortable target: {1}.</value>
+    <value>检测到 {0}。仍然建议使用 benchmark 进行真正的兼容性检查。舒适目标：{1}。</value>
   </data>
   <data name="HardwareGpuStaticLowDetail" xml:space="preserve">
-    <value>{0} looks weak for this app, so conversion may fail or run very poorly. The benchmark is strongly recommended.</value>
+    <value>{0} 对于此应用程序来说看起来很弱，因此转换可能会失败或运行得很差。强烈推荐 benchmark。</value>
   </data>
   <data name="HardwareGpuEnoughDetail" xml:space="preserve">
-    <value>{0} looks usable for UltraFrame AI. The startup benchmark reached about {1:0.0} FPS on a practical in-app scenario. Comfortable target: {2}.</value>
+    <value>{0} 看起来可用于 UltraFrame AI。初创公司 benchmark 在实际的应用内场景中达到了大约 {1:0.0} FPS。舒适目标：{2}。</value>
   </data>
   <data name="HardwareGpuWeakDetail" xml:space="preserve">
-    <value>{0} can run UltraFrame AI, but the startup benchmark only reached about {1:0.0} FPS on a practical in-app scenario. That is below the practical minimum. Minimum: at least {2:0.0}+ FPS and something like {3}. Comfortable target: {4}.</value>
+    <value>{0}可以运行UltraFrame AI，但启动benchmark在实际应用内场景上仅达到{1:0.0} FPS左右。这低于实际的最小值。最小值：至少 {2:0.0}+ FPS 以及类似 {3} 的内容。舒适目标：{4}。</value>
   </data>
   <data name="HardwareGpuMinimumNvidia" xml:space="preserve">
-    <value>GeForce GTX 1050 Ti or similar</value>
+    <value>GeForce GTX 1050 Ti 或类似产品</value>
   </data>
   <data name="HardwareGpuComfortableNvidia" xml:space="preserve">
-    <value>GeForce RTX 2060 / RTX 3060 or better</value>
+    <value>GeForce RTX 2060 / RTX 3060 或更高</value>
   </data>
   <data name="HardwareGpuMinimumAmd" xml:space="preserve">
-    <value>Radeon RX 560 4 GB or similar</value>
+    <value>Radeon RX 560 4 GB 或类似产品</value>
   </data>
   <data name="HardwareGpuComfortableAmd" xml:space="preserve">
-    <value>Radeon RX 6600 or better</value>
+    <value>Radeon RX 6600 或更高</value>
   </data>
   <data name="HardwareGpuMinimumIntel" xml:space="preserve">
-    <value>Intel Arc A380 or similar</value>
+    <value>Intel Arc A380 或类似产品</value>
   </data>
   <data name="HardwareGpuComfortableIntel" xml:space="preserve">
-    <value>Intel Arc A750 or better</value>
+    <value>Intel Arc A750 或更高</value>
   </data>
   <data name="HardwareGpuMinimumGeneric" xml:space="preserve">
-    <value>a discrete GPU around GeForce GTX 1050 Ti or Radeon RX 560 level</value>
+    <value>GeForce GTX 1050 Ti 或 Radeon RX 560 级别左右的独立 GPU</value>
   </data>
   <data name="HardwareGpuComfortableGeneric" xml:space="preserve">
-    <value>a discrete GPU around GeForce RTX 2060 / Radeon RX 6600 level or better</value>
+    <value>GeForce RTX 2060 / Radeon RX 6600 级别或更高级别的独立 GPU</value>
   </data>
   <data name="HardwareVramMinimumDetail" xml:space="preserve">
-    <value>Detected about {0:0.#} GB VRAM. That should be enough for the minimum. Minimum: 4 GB. A comfortable target is {1:0.#}+ GB.</value>
+    <value>检测到{0:0.#}国标VRAM。这对于最低限度来说应该足够了。最低：4 GB。舒适的目标是 {1:0.#}+ GB。</value>
   </data>
   <data name="HardwareVramEnoughDetail" xml:space="preserve">
-    <value>Detected about {0:0.#} GB VRAM. That is enough. A comfortable target is {1:0.#}+ GB.</value>
+    <value>检测到{0:0.#}国标VRAM。这就够了。舒适的目标是 {1:0.#}+ GB。</value>
   </data>
   <data name="HardwareVramLowDetail" xml:space="preserve">
-    <value>Detected about {0:0.#} GB VRAM. That is below the minimum. Minimum: {1:0.#} GB. A comfortable target is {2:0.#}+ GB.</value>
+    <value>检测到{0:0.#}国标VRAM。这低于最低限度。最低：{1:0.#} GB。舒适的目标是 {2:0.#}+ GB。</value>
   </data>
   <data name="HardwareVramBenchmarkMinimumDetail" xml:space="preserve">
-    <value>The startup benchmark showed about {1:0.#} GB of additional peak VRAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB VRAM. That should be enough for this app. Practical minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+    <value>启动 benchmark 显示 UltraFrame AI 在推荐设置上使用了约 {1:0.#} GB 的额外峰值 VRAM。检测到{0:0.#}国标VRAM。对于这个应用程序来说这应该足够了。 UltraFrame AI 的实用最小值：{2:0.#} GB。舒适的目标是 {3:0.#}+ GB。</value>
   </data>
   <data name="HardwareVramBenchmarkEnoughDetail" xml:space="preserve">
-    <value>The startup benchmark showed about {1:0.#} GB of additional peak VRAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB VRAM. That is enough for this app. A comfortable target is {3:0.#}+ GB.</value>
+    <value>启动 benchmark 显示 UltraFrame AI 在推荐设置上使用了约 {1:0.#} GB 的额外峰值 VRAM。检测到{0:0.#}国标VRAM。对于这个应用程序来说这已经足够了。舒适的目标是 {3:0.#}+ GB。</value>
   </data>
   <data name="HardwareVramBenchmarkLowDetail" xml:space="preserve">
-    <value>The startup benchmark showed about {1:0.#} GB of additional peak VRAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB VRAM. That is below the practical minimum for this app. Minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+    <value>启动 benchmark 显示 UltraFrame AI 在推荐设置上使用了约 {1:0.#} GB 的额外峰值 VRAM。检测到{0:0.#}国标VRAM。这低于该应用程序的实际最低要求。 UltraFrame AI 的最低值：{2:0.#} GB。舒适的目标是 {3:0.#}+ GB。</value>
   </data>
   <data name="HardwareCpuMinimumDetail" xml:space="preserve">
-    <value>Detected {0} logical CPU threads. That should be enough for basic UltraFrame AI work. Practical minimum: 4 threads. A comfortable target is {1}+ threads.</value>
+    <value>检测到 {0} 逻辑 CPU 线程。这对于基本的 UltraFrame AI 工作来说应该足够了。实际最少：4 个线程。一个合适的目标是 {1}+ 线程。</value>
   </data>
   <data name="HardwareCpuEnoughDetail" xml:space="preserve">
-    <value>Detected {0} logical CPU threads. That is enough for UltraFrame AI. A comfortable target is {1}+ threads.</value>
+    <value>检测到 {0} 逻辑 CPU 线程。这对于 UltraFrame AI 来说就足够了。一个合适的目标是 {1}+ 线程。</value>
   </data>
   <data name="HardwareCpuLowDetail" xml:space="preserve">
-    <value>Detected {0} logical CPU threads. That is below the practical minimum for UltraFrame AI. Minimum: {1} threads. A comfortable target is {2}+ threads.</value>
+    <value>检测到 {0} 逻辑 CPU 线程。这低于 UltraFrame AI 的实际最小值。最小值：{1} 螺纹。一个合适的目标是 {2}+ 线程。</value>
   </data>
   <data name="HardwareRamMinimumDetail" xml:space="preserve">
-    <value>Detected about {0:0.#} GB RAM. That should be enough for the minimum. Minimum: 8 GB. A comfortable target is {1:0.#}+ GB.</value>
+    <value>检测到{0:0.#}国标RAM。这对于最低限度来说应该足够了。最低：8 GB。舒适的目标是 {1:0.#}+ GB。</value>
   </data>
   <data name="HardwareRamEnoughDetail" xml:space="preserve">
-    <value>Detected about {0:0.#} GB RAM. That is enough. A comfortable target is {1:0.#}+ GB.</value>
+    <value>检测到{0:0.#}国标RAM。这就够了。舒适的目标是 {1:0.#}+ GB。</value>
   </data>
   <data name="HardwareRamLowDetail" xml:space="preserve">
-    <value>Detected about {0:0.#} GB RAM. That is below the minimum. Minimum: {1:0.#} GB. A comfortable target is {2:0.#}+ GB.</value>
+    <value>检测到{0:0.#}国标RAM。这低于最低限度。最低：{1:0.#} GB。舒适的目标是 {2:0.#}+ GB。</value>
   </data>
   <data name="HardwareRamBenchmarkMinimumDetail" xml:space="preserve">
-    <value>The startup benchmark showed about {1:0.#} GB of additional peak RAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB RAM. That should be enough for this app. Practical minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+    <value>启动 benchmark 显示 UltraFrame AI 在推荐设置上使用了约 {1:0.#} GB 的额外峰值 RAM。检测到{0:0.#}国标RAM。对于这个应用程序来说这应该足够了。 UltraFrame AI 的实用最小值：{2:0.#} GB。舒适的目标是 {3:0.#}+ GB。</value>
   </data>
   <data name="HardwareRamBenchmarkEnoughDetail" xml:space="preserve">
-    <value>The startup benchmark showed about {1:0.#} GB of additional peak RAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB RAM. That is enough for this app. A comfortable target is {3:0.#}+ GB.</value>
+    <value>启动 benchmark 显示 UltraFrame AI 在推荐设置上使用了约 {1:0.#} GB 的额外峰值 RAM。检测到{0:0.#}国标RAM。对于这个应用程序来说这已经足够了。舒适的目标是 {3:0.#}+ GB。</value>
   </data>
   <data name="HardwareRamBenchmarkLowDetail" xml:space="preserve">
-    <value>The startup benchmark showed about {1:0.#} GB of additional peak RAM used by UltraFrame AI on the recommended settings. Detected about {0:0.#} GB RAM. That is below the practical minimum for this app. Minimum for UltraFrame AI: {2:0.#} GB. A comfortable target is {3:0.#}+ GB.</value>
+    <value>启动 benchmark 显示 UltraFrame AI 在推荐设置上使用了约 {1:0.#} GB 的额外峰值 RAM。检测到{0:0.#}国标RAM。这低于该应用程序的实际最低要求。 UltraFrame AI 的最低值：{2:0.#} GB。舒适的目标是 {3:0.#}+ GB。</value>
   </data>
   <data name="UpscalerBackend" xml:space="preserve">
-    <value>Upscaler</value>
+    <value>升级者</value>
   </data>
   <data name="UpscalerBackendHint" xml:space="preserve">
-    <value>Choose the upscaler backend. Use External for your own pipe-compatible wrapper.</value>
+    <value>选择升级后端。使用外部作为您自己的管道兼容包装器。</value>
   </data>
   <data name="UpscalerBackendRealEsrgan" xml:space="preserve">
-    <value>RealESRGAN (built-in)</value>
+    <value>RealESRGAN（内置）</value>
   </data>
   <data name="UpscalerBackendStableSr" xml:space="preserve">
-    <value>StableSR (external)</value>
+    <value>StableSR（外部）</value>
   </data>
   <data name="UpscalerBackendSupir" xml:space="preserve">
-    <value>SUPIR (external)</value>
+    <value>SUPIR（外部）</value>
   </data>
   <data name="RefinerBackend" xml:space="preserve">
-    <value>Refiner</value>
+    <value>精炼师</value>
   </data>
   <data name="RefinerBackendHint" xml:space="preserve">
-    <value>Optional cleanup step after the upscaler and before encoding.</value>
+    <value>升频器之后和编码之前的可选清理步骤。</value>
   </data>
   <data name="RefinerBackendNone" xml:space="preserve">
-    <value>None</value>
+    <value>没有任何</value>
   </data>
   <data name="RefinerBackendStableSr" xml:space="preserve">
-    <value>StableSR (external)</value>
+    <value>StableSR（外部）</value>
   </data>
   <data name="RefinerBackendSupir" xml:space="preserve">
-    <value>SUPIR (external)</value>
+    <value>SUPIR（外部）</value>
   </data>
   <data name="EnableStableSr" xml:space="preserve">
-    <value>Enable StableSR (requires manual setup)</value>
+    <value>启用StableSR（需要手动设置）</value>
   </data>
   <data name="EnableSupir" xml:space="preserve">
-    <value>Enable SUPIR (experimental, external)</value>
+    <value>启用 SUPIR（实验性，外部）</value>
   </data>
   <data name="ExternalUpscalerHint" xml:space="preserve">
-    <value>Use this for a user-provided wrapper that reads raw BGR24 frames from stdin and writes raw BGR24 frames to stdout.</value>
+    <value>将此用于用户提供的包装器，该包装器从 stdin 读取原始 BGR24 帧并将原始 BGR24 帧写入 stdout。</value>
   </data>
   <data name="ExternalUpscalerStableSrHint" xml:space="preserve">
-    <value>StableSR must be installed and wrapped manually. Point this to your own pipe-compatible StableSR launcher.</value>
+    <value>StableSR 必须手动安装和缠绕。将其指向您自己的兼容管道的 StableSR 启动器。</value>
   </data>
   <data name="ExternalUpscalerSupirHint" xml:space="preserve">
-    <value>SUPIR must be installed and wrapped manually. Point this to your own pipe-compatible SUPIR launcher.</value>
+    <value>SUPIR 必须手动安装和缠绕。将其指向您自己的兼容管道的 SUPIR 启动器。</value>
   </data>
   <data name="ExternalRefinerHint" xml:space="preserve">
-    <value>The selected external tool will refine already upscaled frames before they are sent to the encoder.</value>
+    <value>所选的外部工具将在将已放大的帧发送到编码器之前对其进行优化。</value>
   </data>
   <data name="ExternalRefinerStableSrHint" xml:space="preserve">
-    <value>StableSR will run as an external refinement step after the built-in upscaler. Manual setup is required.</value>
+    <value>StableSR 将在内置升频器之后作为外部细化步骤运行。需要手动设置。</value>
   </data>
   <data name="ExternalRefinerSupirHint" xml:space="preserve">
-    <value>SUPIR will run as an experimental external refinement step after the built-in upscaler.</value>
+    <value>SUPIR 将在内置升频器之后作为实验性外部细化步骤运行。</value>
   </data>
   <data name="ExternalUpscalerPath" xml:space="preserve">
-    <value>Executable path</value>
+    <value>可执行路径</value>
   </data>
   <data name="ExternalUpscalerWorkingDirectory" xml:space="preserve">
-    <value>Working directory (optional)</value>
+    <value>工作目录（可选）</value>
   </data>
   <data name="ExternalUpscalerModelDir" xml:space="preserve">
-    <value>Model directory (optional)</value>
+    <value>模型目录（可选）</value>
   </data>
   <data name="ExternalUpscalerArgumentsTemplate" xml:space="preserve">
-    <value>Arguments template</value>
+    <value>参数模板</value>
   </data>
   <data name="ExternalUpscalerHelpTitle" xml:space="preserve">
-    <value>External upscaler API</value>
+    <value>外部升级器 API</value>
   </data>
   <data name="ExternalUpscalerHelpBody" xml:space="preserve">
-    <value>External backends must work as pipe wrappers: read raw BGR24 frames from stdin and write raw BGR24 frames to stdout. Available placeholders in the arguments template: {width}, {height}, {frameBudget}, {channels}, {scale}, {input}, {output}, {modelDir}, {modelDirQ}, {threads}, {threadsQ}, {tileSize}, {gpuId}. Example wrapper-style template: -p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -s {scale} -m {modelDirQ} -j {threadsQ}</value>
+    <value>外部后端必须作为管道包装器工作：从 stdin 读取原始 BGR24 帧并将原始 BGR24 帧写入 stdout。参数模板中可用的占位符：{width}、{height}、{frameBudget}、{channels}、{scale}、{input}、{output}、{modelDir}、{modelDirQ}、 {threads}、{threadsQ}、{tileSize}、{gpuId}。包装样式模板示例： -p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -s {scale} -m {modelDirQ} -j {threadsQ}</value>
   </data>
   <data name="ExternalUpscalerPathRequired" xml:space="preserve">
-    <value>External upscaler executable path is not set.</value>
+    <value>未设置外部升频器可执行路径。</value>
   </data>
   <data name="ExternalUpscalerArgumentsRequired" xml:space="preserve">
-    <value>External upscaler arguments template is empty.</value>
+    <value>外部升频器参数模板为空。</value>
   </data>
   <data name="OverwriteExistingOutput" xml:space="preserve">
-    <value>Overwrite existing result files</value>
+    <value>覆盖现有结果文件</value>
   </data>
   <data name="OverwriteExistingOutputHelpTitle" xml:space="preserve">
-    <value>Overwrite result files</value>
+    <value>覆盖结果文件</value>
   </data>
   <data name="OverwriteExistingOutputHelpBody" xml:space="preserve">
-    <value>If enabled, an existing result file is replaced automatically.
+    <value>如果启用，则会自动替换现有结果文件 auto。
 
-If disabled, the app asks what to do for each conflict:
-skip,
-replace,
-skip all,
-replace all.
+如果禁用，应用程序会询问如何处理每个冲突：
+跳过，
+更换,
+跳过所有，
+全部替换。
 
-That choice applies only to the current render session.</value>
+该选择仅适用于当前渲染会话。</value>
   </data>
   <data name="PreserveIncompleteOutput" xml:space="preserve">
-    <value>Keep incomplete result file</value>
+    <value>保留不完整的结果文件</value>
   </data>
   <data name="PreserveIncompleteOutputHint" xml:space="preserve">
-    <value>Leave unfinished result files in place instead of deleting them.</value>
+    <value>将未完成的结果文件保留在原处，而不是删除它们。</value>
   </data>
   <data name="PreserveIncompleteOutputHelpTitle" xml:space="preserve">
-    <value>Incomplete result file</value>
+    <value>结果文件不完整</value>
   </data>
   <data name="PreserveIncompleteOutputHelpBody" xml:space="preserve">
-    <value>If enabled, an unfinished result file is kept when rendering stops or fails.
-This can help with troubleshooting or future recovery.</value>
+    <value>如果启用，当渲染停止或失败时，将保留未完成的结果文件。
+这可以帮助排除故障或将来 recovery。</value>
   </data>
   <data name="RepairBrokenTimestamps" xml:space="preserve">
-    <value>Repair broken timestamps</value>
+    <value>修复损坏的时间戳</value>
   </data>
   <data name="RepairBrokenTimestampsHint" xml:space="preserve">
-    <value>Fix isolated broken timeline spikes from damaged sources so playback does not jump or stall later.</value>
+    <value>修复来自损坏源的孤立的损坏时间线尖峰，以便稍后播放不会跳转或停止。</value>
   </data>
   <data name="RepairBrokenTimestampsHelpTitle" xml:space="preserve">
-    <value>Repair broken timestamps</value>
+    <value>修复损坏的时间戳</value>
   </data>
   <data name="RepairBrokenTimestampsHelpBody" xml:space="preserve">
-    <value>Use this when the source file has a damaged spot with a sudden timestamp spike. The app will smooth only obvious isolated jumps so playback stays stable.
+    <value>当源文件有损坏且时间戳突然激增时使用此选项。该应用程序只会平滑明显的孤立跳跃，以便播放保持稳定。
 
-This helps with broken rips where one bad segment can throw later timing off.
+这有助于解决断裂的问题，其中一个坏的部分可能会导致稍后的计时中断。
 
-Turn it off if you want to preserve the source timeline exactly as-is, including a broken jump.</value>
+如果您想按原样保留源时间线（包括中断的跳转），请将其关闭。</value>
   </data>
   <data name="StartBatch" xml:space="preserve">
-    <value>Start all</value>
+    <value>全部开始</value>
   </data>
   <data name="StartSelected" xml:space="preserve">
-    <value>Start chosen</value>
+    <value>开始选择</value>
   </data>
   <data name="OpenOutputFolder" xml:space="preserve">
-    <value>Open result folder</value>
+    <value>打开结果文件夹</value>
   </data>
   <data name="OpenResultFolder" xml:space="preserve">
-    <value>Open folder</value>
+    <value>打开文件夹</value>
   </data>
   <data name="DeleteItem" xml:space="preserve">
-    <value>Delete item</value>
+    <value>删除项目</value>
   </data>
   <data name="DeleteSelected" xml:space="preserve">
-    <value>Delete selected</value>
+    <value>删除所选内容</value>
   </data>
   <data name="DeleteAll" xml:space="preserve">
-    <value>Delete all</value>
+    <value>全部删除</value>
   </data>
   <data name="DeleteAllConfirmTitle" xml:space="preserve">
-    <value>Clear the list?</value>
+    <value>清除列表吗？</value>
   </data>
   <data name="DeleteAllConfirmMessage" xml:space="preserve">
-    <value>Your source videos will stay where they are. Continue?</value>
+    <value>您的源视频将保留在原处。继续？</value>
   </data>
   <data name="CurrentStage" xml:space="preserve">
-    <value>Current stage</value>
+    <value>现阶段</value>
   </data>
   <data name="Elapsed" xml:space="preserve">
-    <value>Elapsed</value>
+    <value>过去</value>
   </data>
   <data name="ETA" xml:space="preserve">
     <value>ETA</value>
   </data>
   <data name="ProgressDetails" xml:space="preserve">
-    <value>Progress details</value>
+    <value>进展详情</value>
   </data>
   <data name="StepDuration" xml:space="preserve">
-    <value>Step duration</value>
+    <value>步骤持续时间</value>
   </data>
   <data name="ProcessingFps" xml:space="preserve">
-    <value>Processing FPS</value>
+    <value>正在处理 FPS</value>
   </data>
   <data name="Queue" xml:space="preserve">
-    <value>Queue</value>
+    <value>队列</value>
   </data>
   <data name="QueueQueued" xml:space="preserve">
-    <value>Ready</value>
+    <value>准备好</value>
   </data>
   <data name="QueueWaiting" xml:space="preserve">
-    <value>Waiting to start</value>
+    <value>等待开始</value>
   </data>
   <data name="Log" xml:space="preserve">
-    <value>Log</value>
+    <value>日志</value>
   </data>
   <data name="LogTime" xml:space="preserve">
-    <value>Time</value>
+    <value>时间</value>
   </data>
   <data name="LogMessage" xml:space="preserve">
-    <value>Message</value>
+    <value>信息</value>
   </data>
   <data name="ScanCurrentFile" xml:space="preserve">
-    <value>Current file</value>
+    <value>当前文件</value>
   </data>
   <data name="ScanFoundVideos" xml:space="preserve">
-    <value>Found videos</value>
+    <value>找到视频</value>
   </data>
   <data name="UnableToResolveTimestamps" xml:space="preserve">
-    <value>Unable to resolve timestamps.</value>
+    <value>无法解析时间戳。</value>
   </data>
   <data name="UnableToBuildTimeline" xml:space="preserve">
-    <value>Unable to build timeline.</value>
+    <value>无法建立时间表。</value>
   </data>
   <data name="NoFramesExtracted" xml:space="preserve">
-    <value>No frames were extracted.</value>
+    <value>没有提取任何帧。</value>
   </data>
   <data name="Language" xml:space="preserve">
-    <value>Language</value>
+    <value>语言</value>
   </data>
   <data name="Apply" xml:space="preserve">
-    <value>Apply</value>
+    <value>申请</value>
   </data>
   <data name="Ok" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="BackgroundColor" xml:space="preserve">
-    <value>Background color</value>
+    <value>背景颜色</value>
   </data>
   <data name="BackgroundColorDialogTitle" xml:space="preserve">
-    <value>Background color</value>
+    <value>背景颜色</value>
   </data>
   <data name="BackgroundColorDialogBody" xml:space="preserve">
-    <value>Choose the global app background color. It is applied immediately to every window behind the cards.</value>
+    <value>选择全局应用程序背景颜色。它会立即应用于卡片后面的每个窗口。</value>
   </data>
   <data name="BackgroundColorSpectrum" xml:space="preserve">
-    <value>Spectrum</value>
+    <value>光谱</value>
   </data>
   <data name="BackgroundColorPresets" xml:space="preserve">
-    <value>Main colors</value>
+    <value>主要颜色</value>
   </data>
   <data name="BackgroundColorActive" xml:space="preserve">
-    <value>Active color</value>
+    <value>活性颜色</value>
   </data>
   <data name="BackgroundColorPrevious" xml:space="preserve">
-    <value>Previous color</value>
+    <value>以前的颜色</value>
   </data>
   <data name="BackgroundColorDefault" xml:space="preserve">
-    <value>Default color</value>
+    <value>默认颜色</value>
   </data>
   <data name="BackgroundColorHex" xml:space="preserve">
-    <value>HEX color</value>
+    <value>十六进制颜色</value>
   </data>
   <data name="SettingsTabGeneral" xml:space="preserve">
-    <value>General</value>
+    <value>一般的</value>
   </data>
   <data name="SettingsTabPerformance" xml:space="preserve">
-    <value>Performance</value>
+    <value>表现</value>
   </data>
   <data name="SettingsTabBackends" xml:space="preserve">
-    <value>Backends</value>
+    <value>后端</value>
   </data>
   <data name="SettingsTabAppearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>外貌</value>
   </data>
   <data name="QueueIndex" xml:space="preserve">
     <value>#</value>
   </data>
   <data name="QueueItem" xml:space="preserve">
-    <value>Item</value>
+    <value>物品</value>
   </data>
   <data name="QueueStage" xml:space="preserve">
-    <value>Stage</value>
+    <value>阶段</value>
   </data>
   <data name="QueueProgress" xml:space="preserve">
-    <value>Progress</value>
+    <value>进步</value>
   </data>
   <data name="QueueElapsed" xml:space="preserve">
-    <value>Elapsed</value>
+    <value>过去</value>
   </data>
   <data name="QueueETA" xml:space="preserve">
     <value>ETA</value>
   </data>
   <data name="QueueOutput" xml:space="preserve">
-    <value>Output</value>
+    <value>输出</value>
   </data>
   <data name="QueueStatus" xml:space="preserve">
-    <value>Status</value>
+    <value>地位</value>
   </data>
   <data name="QueueStatusNew" xml:space="preserve">
-    <value>New</value>
+    <value>新的</value>
   </data>
   <data name="QueueStatusInterrupted" xml:space="preserve">
-    <value>Interrupted</value>
+    <value>被打断</value>
   </data>
   <data name="QueueStatusCompleted" xml:space="preserve">
-    <value>Completed</value>
+    <value>完全的</value>
   </data>
   <data name="QueuePath" xml:space="preserve">
-    <value>Path</value>
+    <value>小路</value>
   </data>
   <data name="QueueShowPaths" xml:space="preserve">
-    <value>Show paths</value>
+    <value>显示路径</value>
   </data>
   <data name="QueueSourceSingle" xml:space="preserve">
-    <value>Source: {0}</value>
+    <value>来源：{0}</value>
   </data>
   <data name="QueueSourceMultiple" xml:space="preserve">
-    <value>Sources: {0} folders</value>
+    <value>来源：{0} 文件夹</value>
   </data>
   <data name="ScanCurrentFolder" xml:space="preserve">
-    <value>Current folder</value>
+    <value>当前文件夹</value>
   </data>
   <data name="LogReady" xml:space="preserve">
-    <value>Ready to go</value>
+    <value>准备出发</value>
   </data>
   <data name="LogIdle" xml:space="preserve">
-    <value>Idle</value>
+    <value>闲置的</value>
   </data>
   <data name="LogNoItemSelected" xml:space="preserve">
-    <value>Nothing selected yet</value>
+    <value>尚未选择任何内容</value>
   </data>
   <data name="LogPickFolderHint" xml:space="preserve">
-    <value>Choose a folder or a video file to get started.</value>
+    <value>选择一个文件夹或视频文件即可开始。</value>
   </data>
   <data name="LogWaitingForInput" xml:space="preserve">
-    <value>Waiting for your folder.</value>
+    <value>等待你的文件夹。</value>
   </data>
   <data name="LogItemCount" xml:space="preserve">
-    <value>{0} file(s)</value>
+    <value>{0} 文件</value>
   </data>
   <data name="LogScanningFiles" xml:space="preserve">
-    <value>Scanning the folder...</value>
+    <value>正在扫描文件夹...</value>
   </data>
   <data name="LogFoundVideoFiles" xml:space="preserve">
-    <value>Found {0} video file(s) so far.</value>
+    <value>到目前为止已找到 {0} 视频文件。</value>
   </data>
   <data name="LogScanFailed" xml:space="preserve">
-    <value>I couldn't finish the scan: {0}</value>
+    <value>我无法完成扫描：{0}</value>
   </data>
   <data name="LogRootNotFound" xml:space="preserve">
-    <value>I couldn't find that folder: {0}</value>
+    <value>我找不到该文件夹​​：{0}</value>
   </data>
   <data name="LogStartingBatch" xml:space="preserve">
-    <value>Starting the batch...</value>
+    <value>开始批量...</value>
   </data>
   <data name="LogStartingSelectedBatch" xml:space="preserve">
-    <value>Starting chosen files...</value>
+    <value>开始选择的文件...</value>
   </data>
   <data name="LogBatchFinished" xml:space="preserve">
-    <value>All done for now.</value>
+    <value>暂时一切都完成了。</value>
   </data>
   <data name="LogCancelled" xml:space="preserve">
-    <value>Stopped.</value>
+    <value>停了。</value>
   </data>
   <data name="LogBatchFailed" xml:space="preserve">
-    <value>The batch stopped with an error: {0}</value>
+    <value>批次因错误而停止：{0}</value>
   </data>
   <data name="LogSelectVideoFolder" xml:space="preserve">
-    <value>Choose the folder or file that contains your videos.</value>
+    <value>选择包含您的视频的文件夹或文件。</value>
   </data>
   <data name="LogSelectOutputFolder" xml:space="preserve">
-    <value>Choose where the output should go.</value>
+    <value>选择输出的位置。</value>
   </data>
   <data name="CloseDuringRenderTitle" xml:space="preserve">
-    <value>Stop for now and exit?</value>
+    <value>暂时停下来退出？</value>
   </data>
   <data name="CloseDuringRenderMessage" xml:space="preserve">
-    <value>Work is still running. If you close now, the current job will be canceled and you'll need to start this file again. Exit anyway?</value>
+    <value>工作仍在进行。如果您现在关闭，当前作业将被取消，您需要再次启动该文件。还是退出？</value>
   </data>
   <data name="CloseDuringRenderStop" xml:space="preserve">
-    <value>Stop rendering</value>
+    <value>停止渲染</value>
   </data>
   <data name="CloseDuringRenderKeep" xml:space="preserve">
-    <value>Keep rendering</value>
+    <value>继续渲染</value>
   </data>
   <data name="LogNoItemsFound" xml:space="preserve">
-    <value>Nothing found yet</value>
+    <value>尚未找到任何内容</value>
   </data>
   <data name="LogPreparing" xml:space="preserve">
-    <value>Preparing</value>
+    <value>准备中</value>
   </data>
   <data name="LogPreparingFrames" xml:space="preserve">
-    <value>Preparing frames</value>
+    <value>准备框架</value>
   </data>
   <data name="LogSearchingFirstPng" xml:space="preserve">
-    <value>Searching for the first frame</value>
+    <value>搜索第一帧</value>
   </data>
   <data name="LogWaitingFirstUpscaledFrame" xml:space="preserve">
-    <value>Waiting for the first result frame</value>
+    <value>等待第一个结果帧</value>
   </data>
   <data name="LogProbingSource" xml:space="preserve">
-    <value>Probing source file</value>
+    <value>探测源文件</value>
   </data>
   <data name="LogReadingVideoInfo" xml:space="preserve">
-    <value>Reading video info</value>
+    <value>读取视频信息</value>
   </data>
   <data name="LogCheckingCache" xml:space="preserve">
-    <value>Checking stream state</value>
+    <value>检查流状态</value>
   </data>
   <data name="LogTimestampCacheLoaded" xml:space="preserve">
-    <value>Timestamp cache loaded</value>
+    <value>时间戳缓存已加载</value>
   </data>
   <data name="LogTimestampCacheSaved" xml:space="preserve">
-    <value>Timestamp cache saved</value>
+    <value>时间戳缓存已保存</value>
   </data>
   <data name="LogProcessing" xml:space="preserve">
-    <value>Processing...</value>
+    <value>加工...</value>
   </data>
   <data name="LogStartingItem" xml:space="preserve">
-    <value>Starting {0}</value>
+    <value>起始 {0}</value>
   </data>
   <data name="LogBatchComplete" xml:space="preserve">
-    <value>Batch complete</value>
+    <value>批次完成</value>
   </data>
   <data name="LogExtractingFrames" xml:space="preserve">
-    <value>Reconstructing details...</value>
+    <value>重建细节...</value>
   </data>
   <data name="LogUpscalingFrames" xml:space="preserve">
-    <value>Enhancing textures...</value>
+    <value>增强纹理...</value>
   </data>
   <data name="LogInvalidVideoInfo" xml:space="preserve">
-    <value>I couldn't read the video info.</value>
+    <value>我无法读取视频信息。</value>
   </data>
   <data name="LogEncodeComplete" xml:space="preserve">
-    <value>Encoding complete</value>
+    <value>编码完成</value>
   </data>
   <data name="LogOutputExists" xml:space="preserve">
-    <value>Output is already there, so I'll skip it</value>
+    <value>输出已经存在，所以我将跳过它</value>
   </data>
   <data name="LogSkippingEncode" xml:space="preserve">
-    <value>Skipping encode</value>
+    <value>跳过编码</value>
   </data>
   <data name="LogItemComplete" xml:space="preserve">
-    <value>Item complete</value>
+    <value>项目完成</value>
   </data>
   <data name="LogFinishedItem" xml:space="preserve">
-    <value>Finished {0}</value>
+    <value>成品{0}</value>
   </data>
   <data name="LogExtractionComplete" xml:space="preserve">
-    <value>Extraction complete</value>
+    <value>提取完成</value>
   </data>
   <data name="LogExtractedFrames" xml:space="preserve">
-    <value>Extracted {0} frames</value>
+    <value>提取的 {0} 帧</value>
   </data>
   <data name="LogUpscaleComplete" xml:space="preserve">
-    <value>Upscale complete</value>
+    <value>高档齐全</value>
   </data>
   <data name="LogUpscaledFrames" xml:space="preserve">
-    <value>Upscaled {0} frames</value>
+    <value>升级版 {0} 框架</value>
   </data>
   <data name="LogEncodingVideo" xml:space="preserve">
-    <value>Finalizing...</value>
+    <value>正在敲定...</value>
   </data>
   <data name="LogWroteFile" xml:space="preserve">
-    <value>Saved {0}</value>
+    <value>已保存 {0}</value>
   </data>
   <data name="LogItemSummary" xml:space="preserve">
-    <value>Item {0}/{1} | elapsed {2}</value>
+    <value>商品 {0}/{1} |已过 {2}</value>
   </data>
   <data name="LogNoFramesExtracted" xml:space="preserve">
-    <value>No frames were extracted.</value>
+    <value>没有提取任何帧。</value>
   </data>
 </root>

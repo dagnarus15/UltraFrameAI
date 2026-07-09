@@ -22,7 +22,7 @@
     <value>Schnellstart</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>Am besten für Animationen und Anime geeignet.</value>
+    <value>Am besten für Animationen und Anime geeignet. Bild-Rendering ist für zukünftige Versionen geplant.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Arbeitsbereich</value>
@@ -1115,6 +1115,12 @@ Leistung: Encoder-Preset, Thread-Anzahlen und Parameter für die Rendergeschwind
   </data>
   <data name="HelpFaqAnswer7" xml:space="preserve">
     <value>Die Bildkonvertierung ist für kommende Versionen der App geplant.</value>
+  </data>
+  <data name="HelpFaqQuestion8" xml:space="preserve">
+    <value>Ich habe einen Fehler gefunden. Was soll ich tun?</value>
+  </data>
+  <data name="HelpFaqAnswer8" xml:space="preserve">
+    <value>Bitte melden Sie ihn auf der GitHub-Seite des Programms.</value>
   </data>
   <data name="DonationDialogTitle" xml:space="preserve">
     <value>Projekt unterstützen</value>

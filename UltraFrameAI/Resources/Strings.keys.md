@@ -317,6 +317,8 @@ This file is generated from `Resources/Strings.resx`.
 - `HelpFaqAnswer6`
 - `HelpFaqQuestion7`
 - `HelpFaqAnswer7`
+- `HelpFaqQuestion8`
+- `HelpFaqAnswer8`
 - `DonationDialogTitle`
 - `DonationDialogIntro`
 - `DonationDialogBenefits`

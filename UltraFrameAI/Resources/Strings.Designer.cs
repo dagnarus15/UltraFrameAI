@@ -352,6 +352,8 @@ public static class Strings
     public static string HelpFaqAnswer6 => GetRequired(nameof(HelpFaqAnswer6));
     public static string HelpFaqQuestion7 => GetRequired(nameof(HelpFaqQuestion7));
     public static string HelpFaqAnswer7 => GetRequired(nameof(HelpFaqAnswer7));
+    public static string HelpFaqQuestion8 => GetRequired(nameof(HelpFaqQuestion8));
+    public static string HelpFaqAnswer8 => GetRequired(nameof(HelpFaqAnswer8));
     public static string DonationDialogTitle => GetRequired(nameof(DonationDialogTitle));
     public static string DonationDialogIntro => GetRequired(nameof(DonationDialogIntro));
     public static string DonationDialogBenefits => GetRequired(nameof(DonationDialogBenefits));

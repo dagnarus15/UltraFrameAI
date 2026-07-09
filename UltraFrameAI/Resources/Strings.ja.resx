@@ -1,0 +1,1682 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>UltraFrame AI</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>フォルダーまたはファイルをロードしてキューを構築します。</value>
+  </data>
+  <data name="QuickStartHint" xml:space="preserve">
+    <value>クイックスタート</value>
+  </data>
+  <data name="RealEsrganAnimeHint" xml:space="preserve">
+    <value>アニメーションやアニメに最適です。画像のレンダリングは将来のバージョンで予定されています。</value>
+  </data>
+  <data name="Workspace" xml:space="preserve">
+    <value>ワークスペース</value>
+  </data>
+  <data name="DropZoneTitle" xml:space="preserve">
+    <value>ここにフォルダーまたはビデオをドロップします</value>
+  </data>
+  <data name="DropZoneHelp" xml:space="preserve">
+    <value>または、「参照」をクリックしてフォルダーまたはファイルを選択します。</value>
+  </data>
+  <data name="RootFolder" xml:space="preserve">
+    <value>ルートフォルダー</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>ブラウズ</value>
+  </data>
+  <data name="BrowseFolder" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="BrowseFile" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="FfmpegSetupTitle" xml:space="preserve">
+    <value>FFmpeg が見つかりません</value>
+  </data>
+  <data name="FfmpegSetupBody" xml:space="preserve">
+    <value>ビデオ スキャン、benchmark およびレンダリングには、外部 FFmpeg が必要です。 auto 的にダウンロードすることも、ffmpeg.exe と ffprobe.exe が既に含まれているフォルダーをアプリに指定することもできます。</value>
+  </data>
+  <data name="FfmpegSetupDownload" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
+  <data name="FfmpegSetupCloseApp" xml:space="preserve">
+    <value>アプリを閉じる</value>
+  </data>
+  <data name="FfmpegSetupChooseFolder" xml:space="preserve">
+    <value>フォルダーを選択してください</value>
+  </data>
+  <data name="FfmpegFolderLabel" xml:space="preserve">
+    <value>FFmpegフォルダ</value>
+  </data>
+  <data name="FfmpegChangeFolder" xml:space="preserve">
+    <value>フォルダーを選択してください</value>
+  </data>
+  <data name="FfmpegDirectoryNotConfigured" xml:space="preserve">
+    <value>未設定</value>
+  </data>
+  <data name="FfmpegSetupBrowseDialogTitle" xml:space="preserve">
+    <value>ffmpeg.exe と ffprobe.exe が含まれるフォルダーを選択します</value>
+  </data>
+  <data name="FfmpegSetupInstallDialogTitle" xml:space="preserve">
+    <value>FFmpegをインストールするフォルダーを選択してください</value>
+  </data>
+  <data name="FfmpegInstallLocationTitle" xml:space="preserve">
+    <value>FFmpeg はどこにインストールすればよいですか?</value>
+  </data>
+  <data name="FfmpegInstallLocationBody" xml:space="preserve">
+    <value>アーカイブはダウンロードできます。 FFmpeg をアプリの隣にインストールすることも、別のフォルダーを選択することもできます。</value>
+  </data>
+  <data name="FfmpegInstallLocationHere" xml:space="preserve">
+    <value>アプリの隣にインストール</value>
+  </data>
+  <data name="FfmpegInstallLocationChoose" xml:space="preserve">
+    <value>フォルダーを選択してください</value>
+  </data>
+  <data name="FfmpegSetupInvalidFolder" xml:space="preserve">
+    <value>選択したフォルダーが見つかりませんでした。</value>
+  </data>
+  <data name="FfmpegSetupMissingTools" xml:space="preserve">
+    <value>選択したフォルダーには ffmpeg.exe と ffprobe.exe が含まれていません。</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteTitle" xml:space="preserve">
+    <value>FFmpeg を保存できません</value>
+  </data>
+  <data name="FfmpegSetupCannotWriteBody" xml:space="preserve">
+    <value>FFmpeg をアプリフォルダーに書き込めませんでした。フォルダーを手動で選択するか、書き込み可能な場所からアプリを実行します。</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedTitle" xml:space="preserve">
+    <value>FFmpegをダウンロードできません</value>
+  </data>
+  <data name="FfmpegSetupDownloadFailedBody" xml:space="preserve">
+    <value>Automatic FFmpeg ダウンロードに失敗しました。</value>
+  </data>
+  <data name="FfmpegDownloadNetworkTitle" xml:space="preserve">
+    <value>接続できません</value>
+  </data>
+  <data name="FfmpegDownloadNetworkBody" xml:space="preserve">
+    <value>アプリは FFmpeg ダウンロード サーバーに接続できませんでした。インターネット接続を確認して再試行するか、既にダウンロードされたファイルが含まれるフォルダーをアプリで指定してください。</value>
+  </data>
+  <data name="FfmpegDownloadUnavailableTitle" xml:space="preserve">
+    <value>Automatic ダウンロードは利用できません</value>
+  </data>
+  <data name="FfmpegDownloadUnavailableBody" xml:space="preserve">
+    <value>automatic FFmpeg ダウンロード リンクは現在利用できません。ブラウザでダウンロード ページを開き、アプリで ffmpeg.exe と ffprobe.exe が含まれるフォルダーを指定できます。</value>
+  </data>
+  <data name="FfmpegDownloadRetry" xml:space="preserve">
+    <value>リトライ</value>
+  </data>
+  <data name="FfmpegDownloadOpenPage" xml:space="preserve">
+    <value>ダウンロードページを開く</value>
+  </data>
+  <data name="FfmpegInstallProgressTitle" xml:space="preserve">
+    <value>FFmpegのインストール</value>
+  </data>
+  <data name="FfmpegInstallProgressStarting" xml:space="preserve">
+    <value>インストールを準備しています...</value>
+  </data>
+  <data name="FfmpegInstallProgressDownloading" xml:space="preserve">
+    <value>FFmpegをダウンロード中...</value>
+  </data>
+  <data name="FfmpegInstallProgressExtracting" xml:space="preserve">
+    <value>アーカイブを抽出しています...</value>
+  </data>
+  <data name="FfmpegInstallProgressCopying" xml:space="preserve">
+    <value>ffmpeg.exe と ffprobe.exe をコピーしています...</value>
+  </data>
+  <data name="FfmpegInstallProgressFinalizing" xml:space="preserve">
+    <value>パスを保存し、インストールを完了しています...</value>
+  </data>
+  <data name="FfmpegInstallProgressDone" xml:space="preserve">
+    <value>FFmpegがインストールされています。</value>
+  </data>
+  <data name="FfmpegInstallSuccessTitle" xml:space="preserve">
+    <value>FFmpeg は正常にインストールされました。</value>
+  </data>
+  <data name="FfmpegInstallSuccessBody" xml:space="preserve">
+    <value>UltraFrame AI はビデオを強化する準備ができています。</value>
+  </data>
+  <data name="FfmpegInstallSuccessLicense" xml:space="preserve">
+    <value>FFmpeg は GPL/LGPL に基づいてライセンスされています。</value>
+  </data>
+  <data name="FfmpegInstallSuccessDisclaimer" xml:space="preserve">
+    <value>このソフトウェアはFFmpegとは提携していません。</value>
+  </data>
+  <data name="BrowseVideoFileDialogTitle" xml:space="preserve">
+    <value>ビデオファイルを選択してください</value>
+  </data>
+  <data name="BrowseVideoFilesFilter" xml:space="preserve">
+    <value>ビデオ ファイル|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|すべてのファイル|*.*</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="ResetToLastFolder" xml:space="preserve">
+    <value>最後のフォルダーにリセット</value>
+  </data>
+  <data name="RecentFolders" xml:space="preserve">
+    <value>最近使用したフォルダー/ファイル</value>
+  </data>
+  <data name="OutputFolder" xml:space="preserve">
+    <value>結果フォルダー</value>
+  </data>
+  <data name="OutputFolderLabel" xml:space="preserve">
+    <value>結果フォルダー:</value>
+  </data>
+  <data name="OutputLocationHint" xml:space="preserve">
+    <value>結果は、ファイルの隣の「{0}」フォルダーに表示されます。</value>
+  </data>
+  <data name="OutputFolderNearFileLabel" xml:space="preserve">
+    <value>ファイルの隣の結果フォルダー</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>高度な</value>
+  </data>
+  <data name="Additional" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="AdditionalHint" xml:space="preserve">
+    <value>設定を開きます。</value>
+  </data>
+  <data name="RenderWindowTitle" xml:space="preserve">
+    <value>レンダリング</value>
+  </data>
+  <data name="RenderWindowHint" xml:space="preserve">
+    <value>ライブプレビューとステージの詳細。</value>
+  </data>
+  <data name="RenderSubstage" xml:space="preserve">
+    <value>サブステージ</value>
+  </data>
+  <data name="RenderPreviewOriginal" xml:space="preserve">
+    <value>オリジナル</value>
+  </data>
+  <data name="RenderPreviewResult" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="RenderPreviewResetZoom" xml:space="preserve">
+    <value>ズームをリセットする</value>
+  </data>
+  <data name="RenderPreviewSaveFrame" xml:space="preserve">
+    <value>フレームを保存</value>
+  </data>
+  <data name="RenderPreviewCompareCurrentFrame" xml:space="preserve">
+    <value>現在のフレームを比較する</value>
+  </data>
+  <data name="RenderSkipFile" xml:space="preserve">
+    <value>スキップファイル</value>
+  </data>
+  <data name="RenderPause" xml:space="preserve">
+    <value>一時停止</value>
+  </data>
+  <data name="RenderResume" xml:space="preserve">
+    <value>再開する</value>
+  </data>
+  <data name="RenderFinishAfterCurrent" xml:space="preserve">
+    <value>現在のファイルの後で終了</value>
+  </data>
+  <data name="RenderFinishAfterCurrentQueued" xml:space="preserve">
+    <value>ファイルが有効になったら終了します</value>
+  </data>
+  <data name="RenderFinishAfterCurrentLog" xml:space="preserve">
+    <value>このファイルが終了すると、現在のキューは停止します。</value>
+  </data>
+  <data name="RenderFinishAfterCurrentCancelledLog" xml:space="preserve">
+    <value>フィニッシュアフターカレントはキャンセルされました。レンダリングは通常どおり続行されます。</value>
+  </data>
+  <data name="PausedProcessExitedTitle" xml:space="preserve">
+    <value>一時停止されたプロセスが終了しました</value>
+  </data>
+  <data name="PausedProcessExitedMessage" xml:space="preserve">
+    <value>レンダリングの一時停止中にバックグラウンド プロセスの 1 つが終了しました。\n現在のファイルは停止され、アプリは recovery まで処理を続行しようとします。</value>
+  </data>
+  <data name="PausedProcessExitedFileLabel" xml:space="preserve">
+    <value>現在のファイル</value>
+  </data>
+  <data name="PausedProcessExitedProcessLabel" xml:space="preserve">
+    <value>終了したプロセス</value>
+  </data>
+  <data name="PausedProcessExitedOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="PausedProcessExitedLog" xml:space="preserve">
+    <value>一時停止されたプロセスが終了しました: {0}</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeStarting" xml:space="preserve">
+    <value>recovery を通じて中断されたファイルを続行しようとしています。</value>
+  </data>
+  <data name="PausedProcessExitedAutoResumeFailed" xml:space="preserve">
+    <value>中断されたファイル auto を自動的に続行できませんでした: {0}</value>
+  </data>
+  <data name="RenderStopAll" xml:space="preserve">
+    <value>全部やめて</value>
+  </data>
+  <data name="OutputConflictTitle" xml:space="preserve">
+    <value>出力はすでに存在します</value>
+  </data>
+  <data name="OutputConflictMessage" xml:space="preserve">
+    <value>この結果ファイルはすでに存在しますs:\n{0}\nWhatを実行しますか?</value>
+  </data>
+  <data name="OutputConflictSkip" xml:space="preserve">
+    <value>スキップ</value>
+  </data>
+  <data name="OutputConflictResume" xml:space="preserve">
+    <value>再開する</value>
+  </data>
+  <data name="OutputConflictReplace" xml:space="preserve">
+    <value>交換する</value>
+  </data>
+  <data name="OutputConflictResumeAll" xml:space="preserve">
+    <value>すべて再開</value>
+  </data>
+  <data name="OutputConflictSkipAll" xml:space="preserve">
+    <value>すべてスキップ</value>
+  </data>
+  <data name="OutputConflictReplaceAll" xml:space="preserve">
+    <value>すべて置き換える</value>
+  </data>
+  <data name="ResumeUnavailableTitle" xml:space="preserve">
+    <value>ファイルを再開できません</value>
+  </data>
+  <data name="ResumeUnavailableMessage" xml:space="preserve">
+    <value>このファイルは保存された状態から再開できません。\n置き換えることも、スキップすることもできます。</value>
+  </data>
+  <data name="ResumeUnavailableReasonHeader" xml:space="preserve">
+    <value>理由</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingOutput" xml:space="preserve">
+    <value>予期した結果の隣に未完成の結果ファイルが見つかりませんでした。</value>
+  </data>
+  <data name="ResumeUnavailableReasonProbeUnavailable" xml:space="preserve">
+    <value>未完成のファイルは ffprobe でチェックできなかったため、再開するのは安全ではありません。</value>
+  </data>
+  <data name="ResumeUnavailableReasonInvalidOutput" xml:space="preserve">
+    <value>未完成の結果ファイルは破損しているか、ビデオとして読み取れないため、安全に再開できません。</value>
+  </data>
+  <data name="ResumeUnavailableReasonMissingState" xml:space="preserve">
+    <value>有効な未完了のレンダリング状態が見つからないため、アプリはどこから続行すればよいのかわかりません。</value>
+  </data>
+  <data name="ResumeUnavailableReasonAlreadyComplete" xml:space="preserve">
+    <value>このファイルはすでに完了としてマークされているため、再開する必要はありません。</value>
+  </data>
+  <data name="ResumeUnavailableReasonSourceMismatch" xml:space="preserve">
+    <value>保存された状態は別のソース ファイルに属しているため、このレンダリングには使用できません。</value>
+  </data>
+  <data name="ResumeUnavailableReasonSettingsChanged" xml:space="preserve">
+    <value>中断後にレンダリング設定が変更されたため、古いファイルを再開するのは安全ではありません。</value>
+  </data>
+  <data name="ResumeUnavailableReasonGeneric" xml:space="preserve">
+    <value>保存された状態または未完成のファイルは、安全な再開には適していません。</value>
+  </data>
+  <data name="ResumePreflightChecking" xml:space="preserve">
+    <value>再開可能か確認中</value>
+  </data>
+  <data name="ResumePreflightRecovering" xml:space="preserve">
+    <value>ファイルの読み取り可能な部分を回復する</value>
+  </data>
+  <data name="ResumePreflightLoadingFile" xml:space="preserve">
+    <value>ファイルをロード中</value>
+  </data>
+  <data name="FileList" xml:space="preserve">
+    <value>ファイルリスト</value>
+  </data>
+  <data name="RenderFileListForRender" xml:space="preserve">
+    <value>レンダリングファイルリスト</value>
+  </data>
+  <data name="LastRunResultsTitle" xml:space="preserve">
+    <value>前回の実行結果</value>
+  </data>
+  <data name="ProcessedFiles" xml:space="preserve">
+    <value>処理されたファイル</value>
+  </data>
+  <data name="AverageFps" xml:space="preserve">
+    <value>平均 FPS</value>
+  </data>
+  <data name="Benchmark" xml:space="preserve">
+    <value>Benchmark</value>
+  </data>
+  <data name="BenchmarkHint" xml:space="preserve">
+    <value>benchmark を実行してハードウェアを確認し、推奨設定を提案します。</value>
+  </data>
+  <data name="BenchmarkSelectedGpu" xml:space="preserve">
+    <value>Benchmark 選択済み GPU</value>
+  </data>
+  <data name="BenchmarkSelectedGpuHint" xml:space="preserve">
+    <value>現在選択されている GPU に対して benchmark を実行して、推奨設定を微調整します。</value>
+  </data>
+  <data name="BenchmarkWindowTitle" xml:space="preserve">
+    <value>Benchmark</value>
+  </data>
+  <data name="BenchmarkChartsWindowTitle" xml:space="preserve">
+    <value>チャート</value>
+  </data>
+  <data name="BenchmarkChartsHint" xml:space="preserve">
+    <value>別のウィンドウを開いて速度と品質のグラフを表示します。</value>
+  </data>
+  <data name="BenchmarkChartsWindowHint" xml:space="preserve">
+    <value>一目でわかる速度と品質のグラフ。</value>
+  </data>
+  <data name="BenchmarkChartsOpen" xml:space="preserve">
+    <value>チャートを開く</value>
+  </data>
+  <data name="BenchmarkSourceLabel" xml:space="preserve">
+    <value>ソースファイル:</value>
+  </data>
+  <data name="BenchmarkSourceHint" xml:space="preserve">
+    <value>benchmark のソース ファイルを選択します。</value>
+  </data>
+  <data name="BenchmarkSourceFileLabel" xml:space="preserve">
+    <value>ソースファイル</value>
+  </data>
+  <data name="BenchmarkSourceFileHint" xml:space="preserve">
+    <value>benchmark はフォルダーではなく、単一のビデオ ファイル上で実行されます。</value>
+  </data>
+  <data name="BenchmarkOutputLabel" xml:space="preserve">
+    <value>Benchmark出力</value>
+  </data>
+  <data name="BenchmarkOutputHint" xml:space="preserve">
+    <value>このフォルダーには、benchmark のサンプルとレポートが保存されます。</value>
+  </data>
+  <data name="BenchmarkChooseSourceFileFirst" xml:space="preserve">
+    <value>最初にソース ファイルを選択します。</value>
+  </data>
+  <data name="BenchmarkSampleSeconds" xml:space="preserve">
+    <value>サンプルの長さ (秒)</value>
+  </data>
+  <data name="BenchmarkQualityNote" xml:space="preserve">
+    <value>品質には、サンプリングされたフレームの類似性スコアが使用されます。</value>
+  </data>
+  <data name="BenchmarkWinnerTitle" xml:space="preserve">
+    <value>推薦された優勝者</value>
+  </data>
+  <data name="BenchmarkFastestOverallLabel" xml:space="preserve">
+    <value>全体的に最速</value>
+  </data>
+  <data name="BenchmarkWeightedRecommendationLabel" xml:space="preserve">
+    <value>重み付けされた推奨事項</value>
+  </data>
+  <data name="BenchmarkBestQualityTimeLabel" xml:space="preserve">
+    <value>最高の品質/時間</value>
+  </data>
+  <data name="BenchmarkRuntimeMode" xml:space="preserve">
+    <value>ランタイム</value>
+  </data>
+  <data name="BenchmarkQualityTimeMode" xml:space="preserve">
+    <value>品質/時間</value>
+  </data>
+  <data name="BenchmarkCurrentStep" xml:space="preserve">
+    <value>現在のステップ</value>
+  </data>
+  <data name="BenchmarkCurrentCase" xml:space="preserve">
+    <value>現在のケース</value>
+  </data>
+  <data name="BenchmarkScatterTitle" xml:space="preserve">
+    <value>スピード/品質</value>
+  </data>
+  <data name="BenchmarkHistogramTitle" xml:space="preserve">
+    <value>実行時の比較</value>
+  </data>
+  <data name="BenchmarkSortLabel" xml:space="preserve">
+    <value>並べ替え：</value>
+  </data>
+  <data name="BenchmarkSortMetric" xml:space="preserve">
+    <value>メトリック</value>
+  </data>
+  <data name="BenchmarkSortName" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="BenchmarkLegendCodecPreset" xml:space="preserve">
+    <value>コーデック/プリセット</value>
+  </data>
+  <data name="BenchmarkLegendThreads" xml:space="preserve">
+    <value>スレッド</value>
+  </data>
+  <data name="BenchmarkLegendTileSize" xml:space="preserve">
+    <value>Tileサイズ</value>
+  </data>
+  <data name="BenchmarkLegendFastest" xml:space="preserve">
+    <value>最速</value>
+  </data>
+  <data name="BenchmarkLegendBestQualityTime" xml:space="preserve">
+    <value>最高の品質/時間</value>
+  </data>
+  <data name="LastRunSummaryTitle" xml:space="preserve">
+    <value>前回の実行結果</value>
+  </data>
+  <data name="BenchmarkLogSource" xml:space="preserve">
+    <value>ソース：</value>
+  </data>
+  <data name="BenchmarkLogSample" xml:space="preserve">
+    <value>サンプル：</value>
+  </data>
+  <data name="BenchmarkLogSampleStart" xml:space="preserve">
+    <value>サンプルの開始:</value>
+  </data>
+  <data name="BenchmarkLogSampleDuration" xml:space="preserve">
+    <value>サンプル期間:</value>
+  </data>
+  <data name="BenchmarkLogGroupSection" xml:space="preserve">
+    <value>== {0} ==</value>
+  </data>
+  <data name="BenchmarkLogSummary" xml:space="preserve">
+    <value>== 概要 ==</value>
+  </data>
+  <data name="BenchmarkLogFastestOverall" xml:space="preserve">
+    <value>全体の最速: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestCodecPreset" xml:space="preserve">
+    <value>最適なコーデック/プリセット: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestUpscalerThreads" xml:space="preserve">
+    <value>最高のアップスケーラー スレッド: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestTileSize" xml:space="preserve">
+    <value>最適なtileサイズ: {0}</value>
+  </data>
+  <data name="BenchmarkLogBestSettings" xml:space="preserve">
+    <value>== 最適な設定 ==</value>
+  </data>
+  <data name="BenchmarkLogRecommendedFastPreset" xml:space="preserve">
+    <value>推奨される高速プリセット:</value>
+  </data>
+  <data name="BenchmarkLogMetricsSummary" xml:space="preserve">
+    <value>メトリクスの概要:</value>
+  </data>
+  <data name="BenchmarkSummaryRecommendedFastPreset" xml:space="preserve">
+    <value>推奨される高速プリセット</value>
+  </data>
+  <data name="BenchmarkSummaryBestSettings" xml:space="preserve">
+    <value>最適な設定</value>
+  </data>
+  <data name="BenchmarkSummaryMetricsSummary" xml:space="preserve">
+    <value>メトリクスの概要</value>
+  </data>
+  <data name="BenchmarkReportTableGroup" xml:space="preserve">
+    <value>グループ</value>
+  </data>
+  <data name="BenchmarkReportTableCase" xml:space="preserve">
+    <value>場合</value>
+  </data>
+  <data name="BenchmarkReportTableCodec" xml:space="preserve">
+    <value>コーデック</value>
+  </data>
+  <data name="BenchmarkReportTablePreset" xml:space="preserve">
+    <value>プリセット</value>
+  </data>
+  <data name="BenchmarkReportTableThreads" xml:space="preserve">
+    <value>スレッド</value>
+  </data>
+  <data name="BenchmarkReportTableTile" xml:space="preserve">
+    <value>Tile</value>
+  </data>
+  <data name="BenchmarkReportTableTime" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="BenchmarkReportTableOutputMb" xml:space="preserve">
+    <value>出力MB</value>
+  </data>
+  <data name="BenchmarkReportTableCpu" xml:space="preserve">
+    <value>CPU 開始/平均/ピーク</value>
+  </data>
+  <data name="BenchmarkReportTableRamGb" xml:space="preserve">
+    <value>RAM 開始/平均/ピーク (GB)</value>
+  </data>
+  <data name="BenchmarkReportTableGpu" xml:space="preserve">
+    <value>GPU 開始/平均/ピーク</value>
+  </data>
+  <data name="BenchmarkReportTableVramGb" xml:space="preserve">
+    <value>VRAM 開始/平均/ピーク (GB)</value>
+  </data>
+  <data name="BenchmarkCaseCodecPreset" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="BenchmarkVideoFilesFilter" xml:space="preserve">
+    <value>ビデオ ファイル|*.mkv;*.mp4;*.mov;*.m4v;*.avi;*.webm;*.ts;*.m2ts;*.flv;*.wmv|すべてのファイル|*.*</value>
+  </data>
+  <data name="BenchmarkErrorRequiresSource" xml:space="preserve">
+    <value>Benchmark モードには --benchmark-source &lt;ファイルまたはフォルダー&gt; が必要です。</value>
+  </data>
+  <data name="BenchmarkErrorNoVideoFilesFound" xml:space="preserve">
+    <value>{0} にビデオ ファイルが見つかりません</value>
+  </data>
+  <data name="BenchmarkErrorSourceFileNotFound" xml:space="preserve">
+    <value>ソース ファイルが見つかりません: {0}</value>
+  </data>
+  <data name="BenchmarkErrorUnableToCreateSampleClipWithExitCode" xml:space="preserve">
+    <value>benchmark サンプル クリップを作成できません。 ffmpeg終了コード: {0}</value>
+  </data>
+  <data name="BenchmarkErrorUnableToCreateSampleClip" xml:space="preserve">
+    <value>benchmark サンプル クリップを作成できません。</value>
+  </data>
+  <data name="BenchmarkErrorPipelineFailed" xml:space="preserve">
+    <value>パイプラインが失敗しました</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseNoFrames" xml:space="preserve">
+    <value>時間内にフレームが処理されなかったため、Benchmark ケースは停止しました。</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseStalled" xml:space="preserve">
+    <value>進行状況が長時間滞りすぎたため、Benchmark ケースが停止しました。</value>
+  </data>
+  <data name="BenchmarkErrorStartupCaseNoHeartbeat" xml:space="preserve">
+    <value>パイプラインが進行状況の更新の送信を停止したため、Benchmark ケースは停止しました。</value>
+  </data>
+  <data name="BenchmarkShortCodecFast" xml:space="preserve">
+    <value>速い</value>
+  </data>
+  <data name="BenchmarkSuccess" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="BenchmarkFailure" xml:space="preserve">
+    <value>FAIL</value>
+  </data>
+  <data name="BenchmarkNotAvailable" xml:space="preserve">
+    <value>該当なし</value>
+  </data>
+  <data name="BenchmarkStatusStarting" xml:space="preserve">
+    <value>benchmark を開始します</value>
+  </data>
+  <data name="BenchmarkStatusStarted" xml:space="preserve">
+    <value>Benchmarkが始まりました。</value>
+  </data>
+  <data name="BenchmarkStatusFinished" xml:space="preserve">
+    <value>Benchmark 終了しました</value>
+  </data>
+  <data name="BenchmarkStatusCancelled" xml:space="preserve">
+    <value>Benchmark キャンセルされました</value>
+  </data>
+  <data name="BenchmarkStatusCancelledUser" xml:space="preserve">
+    <value>Benchmark はユーザーによってキャンセルされました。</value>
+  </data>
+  <data name="BenchmarkStatusFailed" xml:space="preserve">
+    <value>Benchmark が失敗しました</value>
+  </data>
+  <data name="BenchmarkStatusStartingDetailed" xml:space="preserve">
+    <value>Benchmark が起動しています。</value>
+  </data>
+  <data name="BenchmarkCaseStarted" xml:space="preserve">
+    <value>[{0}/{1}] {2} / {3} を開始しました。</value>
+  </data>
+  <data name="BenchmarkCaseCompleted" xml:space="preserve">
+    <value>[{0}/{1}] {2} / {3} は {4:0.###} で実行されます。</value>
+  </data>
+  <data name="BenchmarkSummaryHeader" xml:space="preserve">
+    <value>まとめ</value>
+  </data>
+  <data name="BenchmarkSummaryFastestOverall" xml:space="preserve">
+    <value>全体的に最速</value>
+  </data>
+  <data name="BenchmarkSummaryBestCodecPreset" xml:space="preserve">
+    <value>最適なコーデック/プリセット</value>
+  </data>
+  <data name="BenchmarkSummaryBestUpscalerThreads" xml:space="preserve">
+    <value>最高のアップスケーラー スレッド</value>
+  </data>
+  <data name="BenchmarkSummaryBestTileSize" xml:space="preserve">
+    <value>最適なtileサイズ</value>
+  </data>
+  <data name="BenchmarkShortCodecMed" xml:space="preserve">
+    <value>医学</value>
+  </data>
+  <data name="BenchmarkShortCodecSlow" xml:space="preserve">
+    <value>遅い</value>
+  </data>
+  <data name="BenchmarkShortCodecVFast" xml:space="preserve">
+    <value>ヴファスト</value>
+  </data>
+  <data name="BenchmarkShortAFOff" xml:space="preserve">
+    <value>AFオフ</value>
+  </data>
+  <data name="BenchmarkShortAFOn" xml:space="preserve">
+    <value>AFオン</value>
+  </data>
+  <data name="BenchmarkShortAFAnime" xml:space="preserve">
+    <value>AFアニメ</value>
+  </data>
+  <data name="BenchmarkShortAFUltra" xml:space="preserve">
+    <value>AFウルトラ</value>
+  </data>
+  <data name="BenchmarkShortAFVideo" xml:space="preserve">
+    <value>AFビデオ</value>
+  </data>
+  <data name="BenchmarkShortAFFaces" xml:space="preserve">
+    <value>AF顔</value>
+  </data>
+  <data name="BenchmarkShortThreadsPrefix" xml:space="preserve">
+    <value>Thr</value>
+  </data>
+  <data name="BenchmarkShortTilePrefix" xml:space="preserve">
+    <value>Tile</value>
+  </data>
+  <data name="BenchmarkNoResults" xml:space="preserve">
+    <value>benchmark の結果はまだありません。</value>
+  </data>
+  <data name="BenchmarkChartTimeAxis" xml:space="preserve">
+    <value>時間(秒)</value>
+  </data>
+  <data name="BenchmarkChartQualityAxis" xml:space="preserve">
+    <value>品質スコア</value>
+  </data>
+  <data name="BenchmarkStart" xml:space="preserve">
+    <value>benchmarkを開始</value>
+  </data>
+  <data name="BenchmarkStop" xml:space="preserve">
+    <value>benchmarkを停止します</value>
+  </data>
+  <data name="ScanningFolder" xml:space="preserve">
+    <value>フォルダーをスキャン中...</value>
+  </data>
+  <data name="ScanFolderProgress" xml:space="preserve">
+    <value>{0}/{1} ファイルをチェックしました</value>
+  </data>
+  <data name="Codec" xml:space="preserve">
+    <value>コーデック</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>形式</value>
+  </data>
+  <data name="Resolution" xml:space="preserve">
+    <value>解決</value>
+  </data>
+  <data name="CustomTargetValue" xml:space="preserve">
+    <value>カスタム値</value>
+  </data>
+  <data name="CustomTargetDialogTitle" xml:space="preserve">
+    <value>カスタム解像度</value>
+  </data>
+  <data name="CustomTargetDialogPrompt" xml:space="preserve">
+    <value>結果の高さをピクセル単位で入力します。最小値は 120 です。</value>
+  </data>
+  <data name="CustomTargetDialogValidation" xml:space="preserve">
+    <value>120 以上の整数を入力してください。</value>
+  </data>
+  <data name="EncoderPreset" xml:space="preserve">
+    <value>エンコーダーのプリセット</value>
+  </data>
+  <data name="EncoderPresetHint" xml:space="preserve">
+    <value>アップスケーリング後のビデオ エンコーダーの動作の強さを制御します。通常、プリセットが高速であれば、使用する時間は短くなります。</value>
+  </data>
+  <data name="EncoderPresetHelpTitle" xml:space="preserve">
+    <value>エンコーダーのプリセット</value>
+  </data>
+  <data name="EncoderPresetHelpBody" xml:space="preserve">
+    <value>**高速**: エンコーダの使用時間が最小限であり、クイック チェックや低電力マシンに最適です。
+**中**: ほとんどのジョブのエンコード時間とファイル サイズのバランスをとります。
+**遅い**: フレームあたりの時間が長くなり、通常はより効率的な圧縮が行われ、ファイルがわずかに小さくなります。
+
+プリセットは速度以外にも、エンコーダーが圧縮の決定に費やす労力を変更します。低速のプリセットでは、多くの場合、CPU 時間を犠牲にして出力を小さくし、場合によっては圧縮効率を少し高めます。</value>
+  </data>
+  <data name="ContainerFutureLabel" xml:space="preserve">
+    <value>コンテナ (さらに多くのオプションが後で利用可能になります)</value>
+  </data>
+  <data name="Container" xml:space="preserve">
+    <value>容器</value>
+  </data>
+  <data name="CodecHelpTitle" xml:space="preserve">
+    <value>コーデック</value>
+  </data>
+  <data name="CodecHelpBody" xml:space="preserve">
+    <value>コーデックはビデオの圧縮方法を定義します。
+
+**x264** - より高速で幅広い互換性があります。
+**x265** - 通常、結果ファイルは小さくなりますが、時間がかかります。</value>
+  </data>
+  <data name="FormatHelpTitle" xml:space="preserve">
+    <value>形式</value>
+  </data>
+  <data name="FormatHelpBody" xml:space="preserve">
+    <value>ここでのフォーマットとは結果の解像度を意味します。
+
+**720p** - HD になります。
+**1080p** - フル HD になります。
+**1440p** - QHD になります。
+**2160p** - 4K をレンダリングします。
+**4320p** - 8K をレンダリングします。</value>
+  </data>
+  <data name="ContainerHelpTitle" xml:space="preserve">
+    <value>容器</value>
+  </data>
+  <data name="ContainerHelpBody" xml:space="preserve">
+    <value>コンテナは、ビデオの外側のファイル ラッパーです。
+
+現在、ここでは **MKV** のみが入手可能です。
+さらに多くのコンテナー オプションが後で表示されます。</value>
+  </data>
+  <data name="FFmpegThreads" xml:space="preserve">
+    <value>FFmpeg スレッド</value>
+  </data>
+  <data name="FfmpegThreadsHelpTitle" xml:space="preserve">
+    <value>FFmpeg スレッド</value>
+  </data>
+  <data name="FfmpegThreadsHelpBody" xml:space="preserve">
+    <value>これは、デコード、準備、エンコードなどの FFmpeg ステージのスレッド数です。
+
+より多くのスレッドが強力な CPU に役立ちます。
+設定が高すぎると、実際のメリットはほとんどなく、負荷が増加する可能性もあります。</value>
+  </data>
+  <data name="UpscalerJobs" xml:space="preserve">
+    <value>高級業者の求人</value>
+  </data>
+  <data name="UpscalerJobsHelpTitle" xml:space="preserve">
+    <value>高級業者の求人</value>
+  </data>
+  <data name="UpscalerJobsHelpBody" xml:space="preserve">
+    <value>このフィールドは **A:B:C** 形式を使用します。 RealESRGAN は処理中に 3 つの内部パイプライン キューを使用するため、3 つの数値が必要です。
+
+**最初の数字**は、一度にパイプラインに供給されるジョブの数です。
+**2 番目の数値**は、アクティブな処理を維持できるジョブの数です。
+**3 番目の数字**は、すでに処理されたジョブが次のステージまで待機できる数です。
+
+例:
+**1:1:1** - 最も安全で最も軽いモード。
+**4:4:4** - よりバランスのとれた高速モード。
+**8:8:8** - 安定した VRAM ヘッドルームを備えた強力な GPU のアグレッシブ モード。
+
+通常、パイプラインのバランスが保たれるように、3 つの数値はすべて等しく保たれます。</value>
+  </data>
+  <data name="TileSize" xml:space="preserve">
+    <value>Tileサイズ</value>
+  </data>
+  <data name="TileSizeHelpTitle" xml:space="preserve">
+    <value>Tileサイズ</value>
+  </data>
+  <data name="TileSizeHelpBody" xml:space="preserve">
+    <value>tile は、アップスケーラーが一度に処理する正方形の画像チャンクです。
+
+ここで、サイズはピクセル単位の幅と高さを意味します。
+**128** = おおよそ **128x128**
+**256** = およそ **256x256**
+**1024** = およそ **1024x1024**
+
+通常、tile が大きいほど高速になりますが、より多くの VRAM が必要になります。
+弱い GPU にとっては、小さい tile の方が安全ですが、速度が遅くなる可能性があります。</value>
+  </data>
+  <data name="GpuSelection" xml:space="preserve">
+    <value>GPU</value>
+  </data>
+  <data name="GpuSelectionHint" xml:space="preserve">
+    <value>Auto は、起動時に検出された最も強力な GPU を選択します。</value>
+  </data>
+  <data name="GpuSelectionAuto" xml:space="preserve">
+    <value>Auto (最強のGPU)</value>
+  </data>
+  <data name="GpuSelectionAutoWithName" xml:space="preserve">
+    <value>Auto ({0})</value>
+  </data>
+  <data name="StartupBenchmarkPromptTitle" xml:space="preserve">
+    <value>起動 benchmark</value>
+  </data>
+  <data name="StartupBenchmarkPromptGreeting" xml:space="preserve">
+    <value>UltraFrame AIへようこそ。</value>
+  </data>
+  <data name="StartupBenchmarkPromptThanks" xml:space="preserve">
+    <value>私のアプリをご利用いただきありがとうございます。皆様のご支援のおかげで成長します。
+プロジェクトをサポートしたい場合は、右上の疑問符の後ろのヘルプ セクションでそのオプションを見つけることができます。</value>
+  </data>
+  <data name="StartupBenchmarkPromptBody" xml:space="preserve">
+    <value>最初の起動時に、UltraFrame AI は One Piece サンプル クリップで短い benchmark を実行し、この PC が実用的な最小要件を満たしているかどうかを確認し、最速の GPU を選択し、RealESRGAN 設定を提案します。これには数分かかる場合があります。これをスキップすると、後で変換エラーが発生する可能性があります。この benchmark は、後で [設定] から再度実行できます。今すぐ実行しますか?</value>
+  </data>
+  <data name="StartupBenchmarkPromptFootnote" xml:space="preserve">
+    <value>この最初の画面は暫定的な見積もりにすぎません。 benchmark は主に、この PC に最適な UltraFrame AI 設定を見つけるために必要です。</value>
+  </data>
+  <data name="StartupBenchmarkNewHardwareTitle" xml:space="preserve">
+    <value>新しいデバイスの場合は Benchmark</value>
+  </data>
+  <data name="StartupBenchmarkNewHardwareGreeting" xml:space="preserve">
+    <value>新しいデバイスまたは変更されたデバイスが検出されました。</value>
+  </data>
+  <data name="StartupBenchmarkNewHardwareBody" xml:space="preserve">
+    <value>UltraFrame AI は、GPU の選択を利用可能な最も強力なオプションに更新し、短い benchmark を再度実行することをお勧めします。これは、新しいハードウェアを検証し、最適な GPU を選択し、推奨される RealESRGAN 設定を更新するのに役立ちます。この benchmark は、後で [設定] から実行することもできます。今すぐ実行しますか?</value>
+  </data>
+  <data name="StartupBenchmarkPromptRun" xml:space="preserve">
+    <value>benchmarkを実行します</value>
+  </data>
+  <data name="StartupBenchmarkPromptSkip" xml:space="preserve">
+    <value>今のところスキップしてください</value>
+  </data>
+  <data name="StartupBenchmarkUnavailableTitle" xml:space="preserve">
+    <value>Benchmark は利用できません</value>
+  </data>
+  <data name="StartupBenchmarkUnavailableBody" xml:space="preserve">
+    <value>使用可能な GPU またはサンプル クリップが見つからなかったため、benchmark を開始できませんでした。</value>
+  </data>
+  <data name="StartupBenchmarkProgressTitle" xml:space="preserve">
+    <value>Benchmark</value>
+  </data>
+  <data name="StartupBenchmarkProgressIntro" xml:space="preserve">
+    <value>GPU をチェックし、短いサンプル クリップで RealESRGAN 設定を調整しています。</value>
+  </data>
+  <data name="StartupBenchmarkCurrentPhase" xml:space="preserve">
+    <value>段階</value>
+  </data>
+  <data name="StartupBenchmarkCurrentCase" xml:space="preserve">
+    <value>現在のケース</value>
+  </data>
+  <data name="StartupBenchmarkCurrentSettings" xml:space="preserve">
+    <value>現在の設定</value>
+  </data>
+  <data name="StartupBenchmarkCheckedCases" xml:space="preserve">
+    <value>確認済みのケース</value>
+  </data>
+  <data name="StartupBenchmarkCurrentGpu" xml:space="preserve">
+    <value>GPU</value>
+  </data>
+  <data name="StartupBenchmarkCancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="StartupBenchmarkResultsTitle" xml:space="preserve">
+    <value>Benchmarkの結果</value>
+  </data>
+  <data name="StartupBenchmarkResultsSummary" xml:space="preserve">
+    <value>Auto-チューニングが完了しました。 benchmark は {0} を使用し、この PC の推奨設定を用意しました。</value>
+  </data>
+  <data name="StartupBenchmarkResultsWeakSummary" xml:space="preserve">
+    <value>弱点が検出されました: {0}。</value>
+  </data>
+  <data name="StartupBenchmarkResultsApplied" xml:space="preserve">
+    <value>推奨設定</value>
+  </data>
+  <data name="StartupBenchmarkResultsApply" xml:space="preserve">
+    <value>推奨設定を適用する</value>
+  </data>
+  <data name="StartupBenchmarkResultsSkipApply" xml:space="preserve">
+    <value>今じゃない</value>
+  </data>
+  <data name="GeneralHelpTitle" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
+  <data name="GeneralHelpBody" xml:space="preserve">
+    <value>これはクイック ヘルプのエントリ ポイントです。右上隅の疑問符から完全なヘルプ センターが開きます。</value>
+  </data>
+  <data name="SettingsOverviewHelpTitle" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="SettingsOverviewHelpBody" xml:space="preserve">
+    <value>この領域には、メインのプログラム設定が含まれます。
+
+一般: コーデック、解像度、コンテナ、GPU の選択、および主要な処理スイッチ。
+パフォーマンス: エンコーダーのプリセット、スレッド数、レンダリング速度パラメーター。
+
+変更は auto 自動的に適用されるため、個別の [保存] ボタンはありません。</value>
+  </data>
+  <data name="HelpCenterIntro" xml:space="preserve">
+    <value>このウィンドウには、クイック使用ガイド、一般的な質問への回答、プロジェクトのサポート情報がまとめられています。</value>
+  </data>
+  <data name="HelpCenterAppVersionLabel" xml:space="preserve">
+    <value>アプリのバージョン:</value>
+  </data>
+  <data name="HelpCenterLibraryVersions" xml:space="preserve">
+    <value>ライブラリのバージョン</value>
+  </data>
+  <data name="HelpCenterLibraryVersionsBody" xml:space="preserve">
+    <value>このリストには、アプリで使用される主要なライブラリとバンドルされたコンポーネントが表示されます。</value>
+  </data>
+  <data name="HelpCenterHowToTab" xml:space="preserve">
+    <value>使用方法</value>
+  </data>
+  <data name="HelpCenterFaqTab" xml:space="preserve">
+    <value>FAQ</value>
+  </data>
+  <data name="HelpCenterFaqTitle" xml:space="preserve">
+    <value>よくある質問</value>
+  </data>
+  <data name="HelpCenterHardwareTab" xml:space="preserve">
+    <value>ハードウェアチェック</value>
+  </data>
+  <data name="HelpCenterLinksTab" xml:space="preserve">
+    <value>連絡先とリンク</value>
+  </data>
+  <data name="HelpCenterDonateTab" xml:space="preserve">
+    <value>プロジェクトをサポートする</value>
+  </data>
+  <data name="HelpCenterHowToTitle" xml:space="preserve">
+    <value>アプリの使い方</value>
+  </data>
+  <data name="HelpCenterHowToBody" xml:space="preserve">
+    <value>1. メイン画面にビデオファイルまたはフォルダーを追加します。
+2. 解像度、コーデック、GPU、またはその他のオプションを調整する場合は、設定を開きます。
+3. アプリが benchmark というスタートアップを提供する場合、通常はそれを実行することをお勧めします。ハードウェアをチェックし、推奨設定を提案します。
+4. レンダリングを開始します。レンダリング中、別のレンダリング ウィンドウに現在のステージ、プレビュー、経過時間、ETA、および FPS が表示されます。
+5. レンダリングが中断された場合は、可能な限り未完了のファイルに対して「レンダリングの再開」を使用してください。
+6. キューが終了すると、アプリはファイルごとの結果を示す概要ウィンドウを表示します。</value>
+  </data>
+  <data name="HelpCenterDetectedDevicesTitle" xml:space="preserve">
+    <value>検出されたデバイス</value>
+  </data>
+  <data name="HelpCenterLinksTitle" xml:space="preserve">
+    <value>連絡先とリンク</value>
+  </data>
+  <data name="HelpCenterLinksContacts" xml:space="preserve">
+    <value>連絡を取る方法</value>
+  </data>
+  <data name="HelpCenterLinksSources" xml:space="preserve">
+    <value>使用したソースとリポジトリ</value>
+  </data>
+  <data name="HelpFaqQuestion1" xml:space="preserve">
+    <value>スタートアップ benchmark が役立つのはなぜですか?</value>
+  </data>
+  <data name="HelpFaqAnswer1" xml:space="preserve">
+    <value>PC がアプリに対して十分な強度があるかどうかをチェックし、利用可能な GPU を比較し、このマシンに実用的な RealESRGAN 設定を提案します。</value>
+  </data>
+  <data name="HelpFaqQuestion2" xml:space="preserve">
+    <value>レンダリングが予期せず停止した場合はどうすればよいですか?</value>
+  </data>
+  <data name="HelpFaqAnswer2" xml:space="preserve">
+    <value>未完了の結果がまだ残っている場合は、再開オプションを試してください。アプリは recovery が可能かどうかを確認し、可能であれば有効な部分から続行します。</value>
+  </data>
+  <data name="HelpFaqQuestion3" xml:space="preserve">
+    <value>レンダリングが遅くなるのはなぜですか?</value>
+  </data>
+  <data name="HelpFaqAnswer3" xml:space="preserve">
+    <value>速度は主に、GPU、利用可能な VRAM、tile サイズ、RealESRGAN スレッド設定、およびエンコーダー プリセットによって決まります。より慎重な設定やより高品質な設定には通常、さらに時間がかかります。</value>
+  </data>
+  <data name="HelpFaqQuestion4" xml:space="preserve">
+    <value>いつ再開し、いつ上書きすればよいですか?</value>
+  </data>
+  <data name="HelpFaqAnswer4" xml:space="preserve">
+    <value>再開は、中断またはクラッシュ後、すでに未完成の結果がある場合に最適です。レンダリング設定を変更した場合、またはファイルを最初からやり直す場合は、上書きの方が適しています。</value>
+  </data>
+  <data name="HelpFaqQuestion5" xml:space="preserve">
+    <value>後でどこで benchmark を再度実行できますか?</value>
+  </data>
+  <data name="HelpFaqAnswer5" xml:space="preserve">
+    <value>Benchmarkボタンを使用して設定から再度開始できます。最後に、推奨設定が表示され、それを適用するかどうかを尋ねられます。</value>
+  </data>
+  <data name="HelpFaqQuestion6" xml:space="preserve">
+    <value>アニメーション以外のビデオの見た目が悪くなる場合があるのはなぜですか?</value>
+  </data>
+  <data name="HelpFaqAnswer6" xml:space="preserve">
+    <value>RealESRGAN は主にアニメーションを中心にトレーニングされているため、アップスケーリング中に他のビデオがアニメーションのような詳細を拾うことがあります。</value>
+  </data>
+  <data name="HelpFaqQuestion7" xml:space="preserve">
+    <value>RealESRGAN で画像を変換できるのに、なぜここでは画像を変換できないのでしょうか?</value>
+  </data>
+  <data name="HelpFaqAnswer7" xml:space="preserve">
+    <value>画像変換はアプリの将来のバージョンで計画されています。</value>
+  </data>
+  <data name="HelpFaqQuestion8" xml:space="preserve">
+    <value>バグを見つけました。どうすればいいですか？</value>
+  </data>
+  <data name="HelpFaqAnswer8" xml:space="preserve">
+    <value>番組のGitHubページよりご報告ください。</value>
+  </data>
+  <data name="DonationDialogTitle" xml:space="preserve">
+    <value>プロジェクトをサポートする</value>
+  </data>
+  <data name="DonationDialogIntro" xml:space="preserve">
+    <value>dagnaruscode.eu は作者の Web サイトです。</value>
+  </data>
+  <data name="DonationDialogBenefits" xml:space="preserve">
+    <value>そこでは、コーヒーを飲みながら作者をサポートし、このプログラムや他のプログラムのさらなる開発を支援することができます。</value>
+  </data>
+  <data name="DonationDialogFooter" xml:space="preserve">
+    <value>これは完全にオプションです。あなたが貢献しなくても、アプリは引き続き動作します。</value>
+  </data>
+  <data name="DonationEntryAuthorSiteSummary" xml:space="preserve">
+    <value>著者のWebサイトとサポートページ。</value>
+  </data>
+  <data name="DonationEntryAuthorSiteDetails" xml:space="preserve">
+    <value>コーヒーを飲みながら作者をサポートし、さらなる開発を支援してください。</value>
+  </data>
+  <data name="DonationEntryAuthorSiteAction" xml:space="preserve">
+    <value>dagnaruscode.euを開く</value>
+  </data>
+  <data name="RenderSessionResultsTitle" xml:space="preserve">
+    <value>強化結果</value>
+  </data>
+  <data name="RenderSessionResultsSummary" xml:space="preserve">
+    <value>{0}で変換が終了しました。</value>
+  </data>
+  <data name="RenderSessionResultsItemComplete" xml:space="preserve">
+    <value>{0}でレンダリングが終了しました。</value>
+  </data>
+  <data name="RenderSessionResultsItemFps" xml:space="preserve">
+    <value>平均レンダリング FPS: {0}</value>
+  </data>
+  <data name="RenderSessionResultsDonatePrefix" xml:space="preserve">
+    <value>よろしくお願いします</value>
+  </data>
+  <data name="RenderSessionResultsDonateLink" xml:space="preserve">
+    <value>経済的支援</value>
+  </data>
+  <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
+    <value>選択済み GPU</value>
+  </data>
+  <data name="StartupBenchmarkResultsThreads" xml:space="preserve">
+    <value>RealESRGAN ジョブ</value>
+  </data>
+  <data name="StartupBenchmarkResultsPreset" xml:space="preserve">
+    <value>エンコーダーのプリセット</value>
+  </data>
+  <data name="StartupBenchmarkResultsTile" xml:space="preserve">
+    <value>Tileサイズ</value>
+  </data>
+  <data name="StartupBenchmarkResultsThroughput" xml:space="preserve">
+    <value>推定スループット</value>
+  </data>
+  <data name="StartupBenchmarkResultsTopCases" xml:space="preserve">
+    <value>最高のbenchmarkケース</value>
+  </data>
+  <data name="StartupBenchmarkResultsTopCaseFormat" xml:space="preserve">
+    <value>{0}: {1} / {2} / {3} / tile {4} - {5:0.##}</value>
+  </data>
+  <data name="StartupBenchmarkResultsRecommendationsTitle" xml:space="preserve">
+    <value>推奨事項</value>
+  </data>
+  <data name="StartupBenchmarkResultsWeakWarning" xml:space="preserve">
+    <value>GPU は、激しいアップスケーリングには非常に弱いようです。レンダリングは引き続き機能するはずですが、実行時間が長くなることが予想されます。</value>
+  </data>
+  <data name="StartupBenchmarkResultsOkay" xml:space="preserve">
+    <value>GPU はこのワークロードに対して正常に見えます。</value>
+  </data>
+  <data name="StartupBenchmarkPhaseGpu" xml:space="preserve">
+    <value>GPUチェック</value>
+  </data>
+  <data name="StartupBenchmarkPhaseBalanced" xml:space="preserve">
+    <value>バランスの取れた</value>
+  </data>
+  <data name="StartupBenchmarkPhaseFast" xml:space="preserve">
+    <value>速い</value>
+  </data>
+  <data name="StartupBenchmarkPhaseSafe" xml:space="preserve">
+    <value>安全</value>
+  </data>
+  <data name="StartupBenchmarkPhaseQuality" xml:space="preserve">
+    <value>品質</value>
+  </data>
+  <data name="StartupBenchmarkPhaseThreadsRun" xml:space="preserve">
+    <value>スレッド {0}、実行 {1}</value>
+  </data>
+  <data name="StartupBenchmarkPhaseTile" xml:space="preserve">
+    <value>Tile {0}</value>
+  </data>
+  <data name="StartupBenchmarkPhasePreset" xml:space="preserve">
+    <value>プリセット {0}</value>
+  </data>
+  <data name="HardwareAssessmentTitle" xml:space="preserve">
+    <value>ハードウェアチェック</value>
+  </data>
+  <data name="HardwareGpuTitle" xml:space="preserve">
+    <value>GPU</value>
+  </data>
+  <data name="HardwareVramTitle" xml:space="preserve">
+    <value>VRAM</value>
+  </data>
+  <data name="HardwareCpuTitle" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="HardwareRamTitle" xml:space="preserve">
+    <value>RAM</value>
+  </data>
+  <data name="HardwareEnough" xml:space="preserve">
+    <value>十分</value>
+  </data>
+  <data name="HardwareWeak" xml:space="preserve">
+    <value>弱い</value>
+  </data>
+  <data name="HardwareTooLow" xml:space="preserve">
+    <value>低すぎる</value>
+  </data>
+  <data name="HardwareDeviceMemoryDetail" xml:space="preserve">
+    <value>ビデオメモリ: {0} GB</value>
+  </data>
+  <data name="HardwareDeviceMemoryUnknown" xml:space="preserve">
+    <value>ビデオメモリサイズを検出できませんでした</value>
+  </data>
+  <data name="HardwareNoDevicesFound" xml:space="preserve">
+    <value>デバイスが見つかりません</value>
+  </data>
+  <data name="HardwareNoDevicesFoundDetail" xml:space="preserve">
+    <value>アプリはこのシステムで GPU リストを取得できませんでした。</value>
+  </data>
+  <data name="HardwareGpuMissingDetail" xml:space="preserve">
+    <value>サポートされている GPU が検出されませんでした。変換が失敗する可能性があるため、benchmark を強くお勧めします。最小値: {0}。快適ターゲット：{1}。</value>
+  </data>
+  <data name="HardwareGpuStaticEnoughDetail" xml:space="preserve">
+    <value>{0}が検出されました。実際の互換性チェックには、やはり benchmark をお勧めします。快適ターゲット：{1}。</value>
+  </data>
+  <data name="HardwareGpuStaticLowDetail" xml:space="preserve">
+    <value>{0} はこのアプリには弱いように見えるため、変換が失敗するか、非常にうまく動作しない可能性があります。 benchmark を強くお勧めします。</value>
+  </data>
+  <data name="HardwareGpuEnoughDetail" xml:space="preserve">
+    <value>{0}はUltraFrame AIでも使えそうです。スタートアップ benchmark は、実際のアプリ内シナリオで約 {1:0.0} FPS に達しました。快適ターゲット：{2}。</value>
+  </data>
+  <data name="HardwareGpuWeakDetail" xml:space="preserve">
+    <value>{0} は UltraFrame AI を実行できますが、実際のアプリ内シナリオでは、スタートアップ benchmark は {1:0.0} FPS 程度にしか到達しませんでした。これは実用的な最小値を下回っています。最小値: 少なくとも {2:0.0}+ FPS および {3} のようなもの。快適ターゲット：{4}。</value>
+  </data>
+  <data name="HardwareGpuMinimumNvidia" xml:space="preserve">
+    <value>GeForce GTX 1050 Ti または同等のもの</value>
+  </data>
+  <data name="HardwareGpuComfortableNvidia" xml:space="preserve">
+    <value>GeForce RTX 2060 / RTX 3060 以降</value>
+  </data>
+  <data name="HardwareGpuMinimumAmd" xml:space="preserve">
+    <value>Radeon RX 560 4 GB または同等のもの</value>
+  </data>
+  <data name="HardwareGpuComfortableAmd" xml:space="preserve">
+    <value>Radeon RX 6600以上</value>
+  </data>
+  <data name="HardwareGpuMinimumIntel" xml:space="preserve">
+    <value>Intel Arc A380 または同等のもの</value>
+  </data>
+  <data name="HardwareGpuComfortableIntel" xml:space="preserve">
+    <value>Intel Arc A750 以降</value>
+  </data>
+  <data name="HardwareGpuMinimumGeneric" xml:space="preserve">
+    <value>GeForce GTX 1050 Ti または Radeon RX 560 レベルのディスクリート GPU</value>
+  </data>
+  <data name="HardwareGpuComfortableGeneric" xml:space="preserve">
+    <value>GeForce RTX 2060 / Radeon RX 6600 レベル以上のディスクリート GPU</value>
+  </data>
+  <data name="HardwareVramMinimumDetail" xml:space="preserve">
+    <value>{0:0.#} GB VRAM について検出されました。最低限これだけあれば十分でしょう。最小: 4 GB。快適なターゲットは {1:0.#}+ GB です。</value>
+  </data>
+  <data name="HardwareVramEnoughDetail" xml:space="preserve">
+    <value>{0:0.#} GB VRAM について検出されました。それで十分です。快適なターゲットは {1:0.#}+ GB です。</value>
+  </data>
+  <data name="HardwareVramLowDetail" xml:space="preserve">
+    <value>{0:0.#} GB VRAM について検出されました。それは最低値を下回っています。最小: {1:0.#} GB。快適なターゲットは{2:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareVramBenchmarkMinimumDetail" xml:space="preserve">
+    <value>スタートアップ benchmark は、推奨設定で UltraFrame AI によって使用される約 {1:0.#} GB の追加ピーク VRAM を示しました。 {0:0.#} GB VRAM について検出されました。このアプリにはこれで十分です。 UltraFrame AI の実質的な最小値: {2:0.#} GB。快適なターゲットは{3:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareVramBenchmarkEnoughDetail" xml:space="preserve">
+    <value>スタートアップ benchmark は、推奨設定で UltraFrame AI によって使用される約 {1:0.#} GB の追加ピーク VRAM を示しました。 {0:0.#} GB VRAM について検出されました。このアプリにはこれで十分です。快適なターゲットは{3:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareVramBenchmarkLowDetail" xml:space="preserve">
+    <value>スタートアップ benchmark は、推奨設定で UltraFrame AI によって使用される約 {1:0.#} GB の追加ピーク VRAM を示しました。 {0:0.#} GB VRAM について検出されました。これは、このアプリの実用的な最小値を下回ります。 UltraFrame AI の最小値: {2:0.#} GB。快適なターゲットは{3:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareCpuMinimumDetail" xml:space="preserve">
+    <value>{0} 論理 CPU スレッドが検出されました。基本的な UltraFrame AI の作業にはこれで十分です。実際の最小値: 4 スレッド。快適なターゲットは {1}+ スレッドです。</value>
+  </data>
+  <data name="HardwareCpuEnoughDetail" xml:space="preserve">
+    <value>{0} 論理 CPU スレッドが検出されました。 UltraFrame AI にはこれで十分です。快適なターゲットは {1}+ スレッドです。</value>
+  </data>
+  <data name="HardwareCpuLowDetail" xml:space="preserve">
+    <value>{0} 論理 CPU スレッドが検出されました。これは、UltraFrame AI の実用的な最小値を下回ります。最小: {1} スレッド。快適なターゲットは {2}+ スレッドです。</value>
+  </data>
+  <data name="HardwareRamMinimumDetail" xml:space="preserve">
+    <value>{0:0.#} GB RAM について検出されました。最低限これだけあれば十分でしょう。最小: 8 GB。快適なターゲットは {1:0.#}+ GB です。</value>
+  </data>
+  <data name="HardwareRamEnoughDetail" xml:space="preserve">
+    <value>{0:0.#} GB RAM について検出されました。それで十分です。快適なターゲットは {1:0.#}+ GB です。</value>
+  </data>
+  <data name="HardwareRamLowDetail" xml:space="preserve">
+    <value>{0:0.#} GB RAM について検出されました。それは最低値を下回っています。最小: {1:0.#} GB。快適なターゲットは{2:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareRamBenchmarkMinimumDetail" xml:space="preserve">
+    <value>スタートアップ benchmark は、推奨設定で UltraFrame AI によって使用される約 {1:0.#} GB の追加ピーク RAM を示しました。 {0:0.#} GB RAM について検出されました。このアプリにはこれで十分です。 UltraFrame AI の実質的な最小値: {2:0.#} GB。快適なターゲットは{3:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareRamBenchmarkEnoughDetail" xml:space="preserve">
+    <value>スタートアップ benchmark は、推奨設定で UltraFrame AI によって使用される約 {1:0.#} GB の追加ピーク RAM を示しました。 {0:0.#} GB RAM について検出されました。このアプリにはこれで十分です。快適なターゲットは{3:0.#}+ GBです。</value>
+  </data>
+  <data name="HardwareRamBenchmarkLowDetail" xml:space="preserve">
+    <value>スタートアップ benchmark は、推奨設定で UltraFrame AI によって使用される約 {1:0.#} GB の追加ピーク RAM を示しました。 {0:0.#} GB RAM について検出されました。これは、このアプリの実用的な最小値を下回ります。 UltraFrame AI の最小値: {2:0.#} GB。快適なターゲットは{3:0.#}+ GBです。</value>
+  </data>
+  <data name="UpscalerBackend" xml:space="preserve">
+    <value>高級業者</value>
+  </data>
+  <data name="UpscalerBackendHint" xml:space="preserve">
+    <value>アップスケーラー バックエンドを選択します。独自のパイプ互換ラッパーには「外部」を使用します。</value>
+  </data>
+  <data name="UpscalerBackendRealEsrgan" xml:space="preserve">
+    <value>RealESRGAN（内蔵）</value>
+  </data>
+  <data name="UpscalerBackendStableSr" xml:space="preserve">
+    <value>StableSR (外部)</value>
+  </data>
+  <data name="UpscalerBackendSupir" xml:space="preserve">
+    <value>SUPIR (外部)</value>
+  </data>
+  <data name="RefinerBackend" xml:space="preserve">
+    <value>リファイナー</value>
+  </data>
+  <data name="RefinerBackendHint" xml:space="preserve">
+    <value>アップスケーラーの後、エンコード前のオプションのクリーンアップ ステップ。</value>
+  </data>
+  <data name="RefinerBackendNone" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="RefinerBackendStableSr" xml:space="preserve">
+    <value>StableSR (外部)</value>
+  </data>
+  <data name="RefinerBackendSupir" xml:space="preserve">
+    <value>SUPIR (外部)</value>
+  </data>
+  <data name="EnableStableSr" xml:space="preserve">
+    <value>StableSR を有効にする (手動セットアップが必要)</value>
+  </data>
+  <data name="EnableSupir" xml:space="preserve">
+    <value>SUPIR を有効にする (実験的、外部)</value>
+  </data>
+  <data name="ExternalUpscalerHint" xml:space="preserve">
+    <value>これは、生の BGR24 フレームを stdin から読み取り、生の BGR24 フレームを stdout に書き込むユーザー提供のラッパーに使用します。</value>
+  </data>
+  <data name="ExternalUpscalerStableSrHint" xml:space="preserve">
+    <value>StableSR は手動でインストールしてラップする必要があります。これを独自のパイプ互換の StableSR ランチャーにポイントします。</value>
+  </data>
+  <data name="ExternalUpscalerSupirHint" xml:space="preserve">
+    <value>SUPIR は手動でインストールしてラップする必要があります。これを独自のパイプ互換の SUPIR ランチャーにポイントします。</value>
+  </data>
+  <data name="ExternalRefinerHint" xml:space="preserve">
+    <value>選択した外部ツールは、エンコーダに送信される前に、すでにアップスケールされたフレームを調整します。</value>
+  </data>
+  <data name="ExternalRefinerStableSrHint" xml:space="preserve">
+    <value>StableSR は、組み込みアップスケーラーの後に外部改良ステップとして実行されます。手動設定が必要です。</value>
+  </data>
+  <data name="ExternalRefinerSupirHint" xml:space="preserve">
+    <value>SUPIR は、組み込みアップスケーラーの後に実験的な外部改良ステップとして実行されます。</value>
+  </data>
+  <data name="ExternalUpscalerPath" xml:space="preserve">
+    <value>実行可能パス</value>
+  </data>
+  <data name="ExternalUpscalerWorkingDirectory" xml:space="preserve">
+    <value>作業ディレクトリ (オプション)</value>
+  </data>
+  <data name="ExternalUpscalerModelDir" xml:space="preserve">
+    <value>モデルディレクトリ (オプション)</value>
+  </data>
+  <data name="ExternalUpscalerArgumentsTemplate" xml:space="preserve">
+    <value>引数テンプレート</value>
+  </data>
+  <data name="ExternalUpscalerHelpTitle" xml:space="preserve">
+    <value>外部アップスケーラー API</value>
+  </data>
+  <data name="ExternalUpscalerHelpBody" xml:space="preserve">
+    <value>外部バックエンドはパイプ ラッパーとして機能する必要があります。生の BGR24 フレームを stdin から読み取り、生の BGR24 フレームを stdout に書き込みます。 Available placeholders in the arguments template: {width}, {height}, {frameBudget}, {channels}, {scale}, {input}, {output}, {modelDir}, {modelDirQ}, {threads}、{threadsQ}、{tileSize}、{gpuId}。 Example wrapper-style template: -p -W {width} -H {height} -N {frameBudget} -c {channels} -i {input} -o {output} -s {scale} -m {modelDirQ} -j {threadsQ}</value>
+  </data>
+  <data name="ExternalUpscalerPathRequired" xml:space="preserve">
+    <value>外部アップスケーラの実行可能パスが設定されていません。</value>
+  </data>
+  <data name="ExternalUpscalerArgumentsRequired" xml:space="preserve">
+    <value>外部アップスケーラ引数テンプレートが空です。</value>
+  </data>
+  <data name="OverwriteExistingOutput" xml:space="preserve">
+    <value>既存の結果ファイルを上書きする</value>
+  </data>
+  <data name="OverwriteExistingOutputHelpTitle" xml:space="preserve">
+    <value>結果ファイルを上書きする</value>
+  </data>
+  <data name="OverwriteExistingOutputHelpBody" xml:space="preserve">
+    <value>有効にすると、既存の結果ファイルが auto 的に置き換えられます。
+
+無効にすると、アプリは各競合に対して何を行うかを尋ねます。
+スキップして、
+交換して、
+全部スキップして、
+全部交換します。
+
+この選択は、現在のレンダリング セッションにのみ適用されます。</value>
+  </data>
+  <data name="PreserveIncompleteOutput" xml:space="preserve">
+    <value>不完全な結果ファイルを保持する</value>
+  </data>
+  <data name="PreserveIncompleteOutputHint" xml:space="preserve">
+    <value>未完了の結果ファイルは削除せずにそのままにしておきます。</value>
+  </data>
+  <data name="PreserveIncompleteOutputHelpTitle" xml:space="preserve">
+    <value>不完全な結果ファイル</value>
+  </data>
+  <data name="PreserveIncompleteOutputHelpBody" xml:space="preserve">
+    <value>有効にすると、レンダリングが停止または失敗したときに、未完成の結果ファイルが保持されます。
+これは、トラブルシューティングや将来の recovery に役立ちます。</value>
+  </data>
+  <data name="RepairBrokenTimestamps" xml:space="preserve">
+    <value>壊れたタイムスタンプを修復する</value>
+  </data>
+  <data name="RepairBrokenTimestampsHint" xml:space="preserve">
+    <value>破損したソースから孤立した破損したタイムライン スパイクを修正し、後で再生がジャンプしたり停止したりしないようにします。</value>
+  </data>
+  <data name="RepairBrokenTimestampsHelpTitle" xml:space="preserve">
+    <value>壊れたタイムスタンプを修復する</value>
+  </data>
+  <data name="RepairBrokenTimestampsHelpBody" xml:space="preserve">
+    <value>これは、ソース ファイルにタイムスタンプが急上昇する破損箇所がある場合に使用します。アプリは明らかな孤立したジャンプのみを滑らかにするため、再生は安定します。
+
+これは、1 つの不良セグメントによって後のタイミングが狂う可能性がある壊れたリップに役立ちます。
+
+壊れたジャンプも含め、ソース タイムラインをそのままの状態で保持したい場合は、これをオフにします。</value>
+  </data>
+  <data name="StartBatch" xml:space="preserve">
+    <value>すべてを開始する</value>
+  </data>
+  <data name="StartSelected" xml:space="preserve">
+    <value>開始が選択されました</value>
+  </data>
+  <data name="OpenOutputFolder" xml:space="preserve">
+    <value>結果フォルダーを開く</value>
+  </data>
+  <data name="OpenResultFolder" xml:space="preserve">
+    <value>フォルダーを開く</value>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>項目の削除</value>
+  </data>
+  <data name="DeleteSelected" xml:space="preserve">
+    <value>選択したものを削除</value>
+  </data>
+  <data name="DeleteAll" xml:space="preserve">
+    <value>すべて削除</value>
+  </data>
+  <data name="DeleteAllConfirmTitle" xml:space="preserve">
+    <value>リストをクリアしますか?</value>
+  </data>
+  <data name="DeleteAllConfirmMessage" xml:space="preserve">
+    <value>ソースビデオはそのまま残ります。続く？</value>
+  </data>
+  <data name="CurrentStage" xml:space="preserve">
+    <value>現在の段階</value>
+  </data>
+  <data name="Elapsed" xml:space="preserve">
+    <value>経過</value>
+  </data>
+  <data name="ETA" xml:space="preserve">
+    <value>ETA</value>
+  </data>
+  <data name="ProgressDetails" xml:space="preserve">
+    <value>進捗状況の詳細</value>
+  </data>
+  <data name="StepDuration" xml:space="preserve">
+    <value>ステップ持続時間</value>
+  </data>
+  <data name="ProcessingFps" xml:space="preserve">
+    <value>FPSを処理中</value>
+  </data>
+  <data name="Queue" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="QueueQueued" xml:space="preserve">
+    <value>準備ができて</value>
+  </data>
+  <data name="QueueWaiting" xml:space="preserve">
+    <value>開始を待っています</value>
+  </data>
+  <data name="Log" xml:space="preserve">
+    <value>ログ</value>
+  </data>
+  <data name="LogTime" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="LogMessage" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="ScanCurrentFile" xml:space="preserve">
+    <value>現在のファイル</value>
+  </data>
+  <data name="ScanFoundVideos" xml:space="preserve">
+    <value>見つかったビデオ</value>
+  </data>
+  <data name="UnableToResolveTimestamps" xml:space="preserve">
+    <value>タイムスタンプを解決できません。</value>
+  </data>
+  <data name="UnableToBuildTimeline" xml:space="preserve">
+    <value>タイムラインを構築できません。</value>
+  </data>
+  <data name="NoFramesExtracted" xml:space="preserve">
+    <value>フレームは抽出されませんでした。</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>適用する</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="BackgroundColor" xml:space="preserve">
+    <value>背景色</value>
+  </data>
+  <data name="BackgroundColorDialogTitle" xml:space="preserve">
+    <value>背景色</value>
+  </data>
+  <data name="BackgroundColorDialogBody" xml:space="preserve">
+    <value>グローバル アプリの背景色を選択します。これは、カードの後ろのすべてのウィンドウに即座に適用されます。</value>
+  </data>
+  <data name="BackgroundColorSpectrum" xml:space="preserve">
+    <value>スペクトラム</value>
+  </data>
+  <data name="BackgroundColorPresets" xml:space="preserve">
+    <value>メインカラー</value>
+  </data>
+  <data name="BackgroundColorActive" xml:space="preserve">
+    <value>アクティブカラー</value>
+  </data>
+  <data name="BackgroundColorPrevious" xml:space="preserve">
+    <value>前の色</value>
+  </data>
+  <data name="BackgroundColorDefault" xml:space="preserve">
+    <value>デフォルトの色</value>
+  </data>
+  <data name="BackgroundColorHex" xml:space="preserve">
+    <value>16進数の色</value>
+  </data>
+  <data name="SettingsTabGeneral" xml:space="preserve">
+    <value>一般的な</value>
+  </data>
+  <data name="SettingsTabPerformance" xml:space="preserve">
+    <value>パフォーマンス</value>
+  </data>
+  <data name="SettingsTabBackends" xml:space="preserve">
+    <value>バックエンド</value>
+  </data>
+  <data name="SettingsTabAppearance" xml:space="preserve">
+    <value>外観</value>
+  </data>
+  <data name="QueueIndex" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="QueueItem" xml:space="preserve">
+    <value>アイテム</value>
+  </data>
+  <data name="QueueStage" xml:space="preserve">
+    <value>ステージ</value>
+  </data>
+  <data name="QueueProgress" xml:space="preserve">
+    <value>進捗</value>
+  </data>
+  <data name="QueueElapsed" xml:space="preserve">
+    <value>経過</value>
+  </data>
+  <data name="QueueETA" xml:space="preserve">
+    <value>ETA</value>
+  </data>
+  <data name="QueueOutput" xml:space="preserve">
+    <value>出力</value>
+  </data>
+  <data name="QueueStatus" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="QueueStatusNew" xml:space="preserve">
+    <value>新しい</value>
+  </data>
+  <data name="QueueStatusInterrupted" xml:space="preserve">
+    <value>中断されました</value>
+  </data>
+  <data name="QueueStatusCompleted" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="QueuePath" xml:space="preserve">
+    <value>パス</value>
+  </data>
+  <data name="QueueShowPaths" xml:space="preserve">
+    <value>パスを表示する</value>
+  </data>
+  <data name="QueueSourceSingle" xml:space="preserve">
+    <value>出典: {0}</value>
+  </data>
+  <data name="QueueSourceMultiple" xml:space="preserve">
+    <value>ソース: {0} フォルダー</value>
+  </data>
+  <data name="ScanCurrentFolder" xml:space="preserve">
+    <value>現在のフォルダー</value>
+  </data>
+  <data name="LogReady" xml:space="preserve">
+    <value>準備完了</value>
+  </data>
+  <data name="LogIdle" xml:space="preserve">
+    <value>アイドル状態</value>
+  </data>
+  <data name="LogNoItemSelected" xml:space="preserve">
+    <value>まだ何も選択されていません</value>
+  </data>
+  <data name="LogPickFolderHint" xml:space="preserve">
+    <value>開始するには、フォルダーまたはビデオ ファイルを選択してください。</value>
+  </data>
+  <data name="LogWaitingForInput" xml:space="preserve">
+    <value>フォルダーを待っています。</value>
+  </data>
+  <data name="LogItemCount" xml:space="preserve">
+    <value>{0} ファイル</value>
+  </data>
+  <data name="LogScanningFiles" xml:space="preserve">
+    <value>フォルダーをスキャンしています...</value>
+  </data>
+  <data name="LogFoundVideoFiles" xml:space="preserve">
+    <value>これまでに {0} のビデオ ファイルが見つかりました。</value>
+  </data>
+  <data name="LogScanFailed" xml:space="preserve">
+    <value>スキャンを完了できませんでした: {0}</value>
+  </data>
+  <data name="LogRootNotFound" xml:space="preserve">
+    <value>フォルダーが見つかりませんでした: {0}</value>
+  </data>
+  <data name="LogStartingBatch" xml:space="preserve">
+    <value>バッチを開始しています...</value>
+  </data>
+  <data name="LogStartingSelectedBatch" xml:space="preserve">
+    <value>選択したファイルを開始しています...</value>
+  </data>
+  <data name="LogBatchFinished" xml:space="preserve">
+    <value>今のところすべて完了しました。</value>
+  </data>
+  <data name="LogCancelled" xml:space="preserve">
+    <value>止まった。</value>
+  </data>
+  <data name="LogBatchFailed" xml:space="preserve">
+    <value>バッチはエラーで停止しました: {0}</value>
+  </data>
+  <data name="LogSelectVideoFolder" xml:space="preserve">
+    <value>ビデオが含まれているフォルダーまたはファイルを選択します。</value>
+  </data>
+  <data name="LogSelectOutputFolder" xml:space="preserve">
+    <value>出力先を選択します。</value>
+  </data>
+  <data name="CloseDuringRenderTitle" xml:space="preserve">
+    <value>一旦停止して終了しますか？</value>
+  </data>
+  <data name="CloseDuringRenderMessage" xml:space="preserve">
+    <value>仕事はまだ続いています。ここで閉じると、現在のジョブがキャンセルされるため、このファイルを再度開始する必要があります。とにかく退場しますか？</value>
+  </data>
+  <data name="CloseDuringRenderStop" xml:space="preserve">
+    <value>レンダリングを停止する</value>
+  </data>
+  <data name="CloseDuringRenderKeep" xml:space="preserve">
+    <value>レンダリングを続ける</value>
+  </data>
+  <data name="LogNoItemsFound" xml:space="preserve">
+    <value>まだ何も見つかりません</value>
+  </data>
+  <data name="LogPreparing" xml:space="preserve">
+    <value>準備中</value>
+  </data>
+  <data name="LogPreparingFrames" xml:space="preserve">
+    <value>フレームの準備</value>
+  </data>
+  <data name="LogSearchingFirstPng" xml:space="preserve">
+    <value>最初のフレームを検索しています</value>
+  </data>
+  <data name="LogWaitingFirstUpscaledFrame" xml:space="preserve">
+    <value>最初の結果フレームを待機しています</value>
+  </data>
+  <data name="LogProbingSource" xml:space="preserve">
+    <value>ソースファイルのプローブ</value>
+  </data>
+  <data name="LogReadingVideoInfo" xml:space="preserve">
+    <value>ビデオ情報の読み取り</value>
+  </data>
+  <data name="LogCheckingCache" xml:space="preserve">
+    <value>ストリーム状態の確認</value>
+  </data>
+  <data name="LogTimestampCacheLoaded" xml:space="preserve">
+    <value>タイムスタンプキャッシュがロードされました</value>
+  </data>
+  <data name="LogTimestampCacheSaved" xml:space="preserve">
+    <value>タイムスタンプキャッシュが保存されました</value>
+  </data>
+  <data name="LogProcessing" xml:space="preserve">
+    <value>処理...</value>
+  </data>
+  <data name="LogStartingItem" xml:space="preserve">
+    <value>{0} を開始します</value>
+  </data>
+  <data name="LogBatchComplete" xml:space="preserve">
+    <value>バッチが完了しました</value>
+  </data>
+  <data name="LogExtractingFrames" xml:space="preserve">
+    <value>詳細を再構築中...</value>
+  </data>
+  <data name="LogUpscalingFrames" xml:space="preserve">
+    <value>テクスチャを強化しています...</value>
+  </data>
+  <data name="LogInvalidVideoInfo" xml:space="preserve">
+    <value>動画情報が読み取れませんでした。</value>
+  </data>
+  <data name="LogEncodeComplete" xml:space="preserve">
+    <value>エンコード完了</value>
+  </data>
+  <data name="LogOutputExists" xml:space="preserve">
+    <value>出力はすでにあるのでスキップします</value>
+  </data>
+  <data name="LogSkippingEncode" xml:space="preserve">
+    <value>エンコードをスキップする</value>
+  </data>
+  <data name="LogItemComplete" xml:space="preserve">
+    <value>アイテムが完成しました</value>
+  </data>
+  <data name="LogFinishedItem" xml:space="preserve">
+    <value>完成した{0}</value>
+  </data>
+  <data name="LogExtractionComplete" xml:space="preserve">
+    <value>抽出が完了しました</value>
+  </data>
+  <data name="LogExtractedFrames" xml:space="preserve">
+    <value>抽出された {0} フレーム</value>
+  </data>
+  <data name="LogUpscaleComplete" xml:space="preserve">
+    <value>高級感が完成</value>
+  </data>
+  <data name="LogUpscaledFrames" xml:space="preserve">
+    <value>アップスケールされた {0} フレーム</value>
+  </data>
+  <data name="LogEncodingVideo" xml:space="preserve">
+    <value>仕上げ中...</value>
+  </data>
+  <data name="LogWroteFile" xml:space="preserve">
+    <value>保存済み {0}</value>
+  </data>
+  <data name="LogItemSummary" xml:space="preserve">
+    <value>アイテム {0}/{1} |経過時間 {2}</value>
+  </data>
+  <data name="LogNoFramesExtracted" xml:space="preserve">
+    <value>フレームは抽出されませんでした。</value>
+  </data>
+</root>

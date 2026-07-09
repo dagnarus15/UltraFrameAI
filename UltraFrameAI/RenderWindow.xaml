@@ -232,6 +232,48 @@
                                             </StackPanel>
                                         </Button.Content>
                                     </Button>
+                                    <Button Command="{Binding SetLanguageCommand}"
+                                            CommandParameter="Japanese"
+                                            Margin="0,2,0,0"
+                                            Click="LanguageChoice_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=Japanese}" Value="True">
+                                                        <Setter Property="Background" Value="#2B4D7A" />
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="pack://application:,,,/images/flag-ja.png" Width="18" Height="12" Margin="0,0,8,0" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.Japanese}" />
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Command="{Binding SetLanguageCommand}"
+                                            CommandParameter="Chinese"
+                                            Margin="0,2,0,0"
+                                            Click="LanguageChoice_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource LanguageMenuButtonStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CurrentLanguage, Converter={StaticResource LanguageEqualsConverter}, ConverterParameter=Chinese}" Value="True">
+                                                        <Setter Property="Background" Value="#2B4D7A" />
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="pack://application:,,,/images/flag-zh.png" Width="18" Height="12" Margin="0,0,8,0" />
+                                                <TextBlock Text="{x:Static local:LanguageDisplayNames.Chinese}" />
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
                                 </StackPanel>
                             </Border>
                         </Popup>
