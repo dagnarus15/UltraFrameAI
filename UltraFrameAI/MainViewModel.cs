@@ -1438,11 +1438,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public System.Windows.Media.Brush CurrentBackgroundPreviewBrush => AppThemeManager.CreatePreviewBrush();
 
-    private Task StartAsync() => StartPipelineAsync(Items.Where(item => !item.IsBusy).ToArray(), LocalizedStrings.LogStartingBatch);
+    private Task StartAsync() => StartPipelineAsync(Items.ToArray(), LocalizedStrings.LogStartingBatch);
 
     private async Task StartSelectedAsync()
     {
-        var selectedItems = Items.Where(item => item.IsChecked && !item.IsBusy).ToArray();
+        var selectedItems = Items.Where(item => item.IsChecked).ToArray();
         if (selectedItems.Length == 0)
         {
             Log(LocalizedStrings.LogNoItemSelected);
@@ -1539,10 +1539,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             _runCts = null;
             _pipeline.SetPaused(false);
             IsRenderPaused = false;
+            ClearRenderSkipSelections(Items);
             IsBusy = false;
             IsRenderMode = false;
             ClearRenderPreviewPaths();
             CurrentRenderItems.Clear();
+            OnPropertyChanged(nameof(RenderSkipAllState));
         }
     }
 
@@ -2117,19 +2119,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         foreach (var item in items)
         {
             ct.ThrowIfCancellationRequested();
-            item.SkipRequested = item.SkipInRender;
+            item.SkipInRender = false;
+            item.SkipRequested = false;
             item.ForceOverwrite = false;
             item.ResumeRequested = false;
             item.ResumeProcessedFrames = 0;
             item.ResumeSourceOutputPath = string.Empty;
             item.IsSkipped = false;
             item.IsInterrupted = false;
-
-            if (item.SkipInRender)
-            {
-                MarkItemSkipped(item);
-                continue;
-            }
 
             var overwriteAllowed = options.Overwrite;
             if (File.Exists(item.OutputPath) && !overwriteAllowed)
@@ -3353,6 +3350,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         foreach (var item in items)
         {
             item.SkipInRender = false;
+            item.SkipRequested = false;
         }
     }
 
