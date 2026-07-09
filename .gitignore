@@ -10,6 +10,7 @@ AGENTS.md
 *.log
 *.cache
 *.tmp
+*.bundle
 *.pdb
 corehost-trace.txt
 x264_1080p/
