@@ -1653,7 +1653,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (File.Exists(inputPath))
             {
-                return new[] { inputPath };
+                return IsLikelyVideoFile(inputPath)
+                    ? new[] { inputPath }
+                    : Array.Empty<string>();
             }
 
             var list = new List<string>();
@@ -1751,6 +1753,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var addedItems = new List<QueueItemViewModel>();
         foreach (var sourceFile in sourceFiles)
         {
+            if (IsImagesMode ? !IsLikelyImageFile(sourceFile) : !IsLikelyVideoFile(sourceFile))
+            {
+                continue;
+            }
+
             if (Items.Any(existing => string.Equals(existing.SourcePath, sourceFile, StringComparison.OrdinalIgnoreCase)))
             {
                 continue;
