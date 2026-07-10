@@ -4,6 +4,26 @@ UltraFrame AI is a Windows desktop app for batch video and image upscaling with 
 
 The app provides a localized GUI for building a render queue from files or folders, switching between video and image workflows, benchmarking the current GPU, choosing practical render settings, resuming interrupted video jobs when possible, and opening result folders after processing.
 
+<p>
+  <a href="https://github.com/dagnarus15/UltraFrameAI/issues/new?template=bug_report.yml">
+    <img src="https://img.shields.io/badge/Report%20a%20bug-Open%20issue-EF4444?style=for-the-badge" alt="Report a bug">
+  </a>
+</p>
+
+## Screenshots
+
+![UltraFrame AI main window](docs/screenshots/main-window.png)
+
+![Rendering window](docs/screenshots/render-window.png)
+
+![Size selector](docs/screenshots/size-selector.png)
+
+### Original vs Result
+
+| Original | Result |
+| --- | --- |
+| ![Original frame](docs/screenshots/comparison-original.png) | ![Upscaled result frame](docs/screenshots/comparison-result.png) |
+
 ## Features
 
 - Batch video queue from individual files or whole folders.

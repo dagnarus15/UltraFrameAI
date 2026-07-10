@@ -2205,8 +2205,7 @@ public static class BenchmarkRunner
 
     private static bool IsVideoFile(string path)
     {
-        var ext = Path.GetExtension(path).ToLowerInvariant();
-        return ext is ".mkv" or ".mp4" or ".mov" or ".m4v" or ".avi" or ".webm" or ".ts" or ".m2ts" or ".flv" or ".wmv";
+        return SupportedMediaExtensions.IsVideoFile(path);
     }
 
     private static string ResolveRepoRoot()

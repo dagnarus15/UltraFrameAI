@@ -5456,78 +5456,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private static bool IsLikelyVideoFile(string filePath)
     {
-        var extension = Path.GetExtension(filePath);
-        if (string.IsNullOrWhiteSpace(extension))
-        {
-            return false;
-        }
-
-        switch (extension.ToLowerInvariant())
-        {
-            case ".mkv":
-            case ".mka":
-            case ".mov":
-            case ".avi":
-            case ".wmv":
-            case ".webm":
-            case ".flv":
-            case ".f4v":
-            case ".m4v":
-            case ".mpg":
-            case ".mpeg":
-            case ".mpe":
-            case ".ts":
-            case ".mts":
-            case ".m2ts":
-            case ".3gp":
-            case ".3g2":
-            case ".vob":
-            case ".ogv":
-            case ".ogm":
-            case ".rm":
-            case ".rmvb":
-            case ".mxf":
-            case ".asf":
-            case ".divx":
-            case ".dv":
-            case ".dvr-ms":
-            case ".wtv":
-            case ".ivf":
-            case ".amv":
-            case ".yuv":
-            case ".h264":
-            case ".h265":
-            case ".hevc":
-            case ".m2v":
-            case ".mpv":
-            case ".vid":
-                return true;
-            default:
-                return false;
-        }
+        return SupportedMediaExtensions.IsVideoFile(filePath);
     }
 
     private static bool IsLikelyImageFile(string filePath)
     {
-        var extension = Path.GetExtension(filePath);
-        if (string.IsNullOrWhiteSpace(extension))
-        {
-            return false;
-        }
-
-        switch (extension.ToLowerInvariant())
-        {
-            case ".png":
-            case ".jpg":
-            case ".jpeg":
-            case ".webp":
-            case ".bmp":
-            case ".tif":
-            case ".tiff":
-                return true;
-            default:
-                return false;
-        }
+        return SupportedMediaExtensions.IsImageFile(filePath);
     }
 
     private static string SanitizePath(string name)
