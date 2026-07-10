@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement or new feature.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: Describe the workflow or pain point.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: Describe the feature you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Are there other ways to solve this?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      placeholder: Add screenshots, examples, or related links if useful.

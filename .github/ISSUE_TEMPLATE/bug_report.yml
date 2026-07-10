@@ -1,0 +1,59 @@
+name: Bug report
+description: Report something that is not working correctly.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve UltraFrame AI.
+        Please do not attach copyrighted videos unless you have permission to share them.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the problem clearly.
+      placeholder: Tell us what went wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps that trigger the problem.
+      placeholder: |
+        1. Open...
+        2. Select...
+        3. Click...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen?
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Add relevant messages, screenshots, or log snippets.
+  - type: input
+    id: version
+    attributes:
+      label: UltraFrame AI version
+      placeholder: "1.0.0"
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 23H2"
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      placeholder: "NVIDIA RTX 3060, AMD Radeon RX 6700 XT, Intel Arc..."
+  - type: input
+    id: ffmpeg
+    attributes:
+      label: FFmpeg source
+      placeholder: "Configured folder, PATH, downloaded by the app..."
