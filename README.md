@@ -1,15 +1,17 @@
 # UltraFrame AI
 
-UltraFrame AI is a Windows desktop app for batch video upscaling with RealESRGAN. It is focused on animated and anime-style video, where RealESRGAN usually works best.
+UltraFrame AI is a Windows desktop app for batch video and image upscaling with RealESRGAN. It is focused on animated and anime-style content, where RealESRGAN usually works best.
 
-The app provides a localized GUI for building a render queue from files or folders, benchmarking the current GPU, choosing practical render settings, resuming interrupted jobs when possible, and opening result folders after processing.
-
-Image rendering is planned for future versions.
+The app provides a localized GUI for building a render queue from files or folders, switching between video and image workflows, benchmarking the current GPU, choosing practical render settings, resuming interrupted video jobs when possible, and opening result folders after processing.
 
 ## Features
 
 - Batch video queue from individual files or whole folders.
+- Batch image queue from individual files or whole folders.
+- Separate Video/Image mode switch with mode-specific settings.
 - RealESRGAN-based upscaling through a native Vulkan pipeline.
+- Image output format selection: PNG or JPG.
+- Image target size selection up to 16K.
 - GPU selection and startup benchmark for recommended settings.
 - Resume/recovery flow for interrupted renders when recovery is possible.
 - Render preview window with original/result comparison.
@@ -19,7 +21,7 @@ Image rendering is planned for future versions.
 
 ## FFmpeg
 
-FFmpeg is required for video scanning, decoding, encoding, benchmarking, and rendering.
+FFmpeg is required for video scanning, decoding, encoding, benchmarking, and rendering. Image rendering uses the RealESRGAN image workflow and does not require FFmpeg.
 
 This repository does not commit FFmpeg binaries. The app treats FFmpeg as an external component:
 

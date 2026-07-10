@@ -22,7 +22,7 @@
     <value>クイックスタート</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>アニメーションやアニメに最適です。画像のレンダリングは将来のバージョンで予定されています。</value>
+    <value>アニメーションやアニメに最適です。</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>ワークスペース</value>
@@ -688,10 +688,10 @@
     <value>コーデック</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>形式</value>
+    <value>サイズ</value>
   </data>
   <data name="Resolution" xml:space="preserve">
-    <value>解決</value>
+    <value>解像度</value>
   </data>
   <data name="CustomTargetValue" xml:space="preserve">
     <value>カスタム値</value>
@@ -737,10 +737,10 @@
 **x265** - 通常、結果ファイルは小さくなりますが、時間がかかります。</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
-    <value>形式</value>
+    <value>サイズ</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>ここでのフォーマットとは結果の解像度を意味します。
+    <value>ここでのサイズとは結果の解像度を意味します。
 
 **720p** - HD になります。
 **1080p** - フル HD になります。
@@ -1056,6 +1056,51 @@
   </data>
   <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
     <value>.</value>
+  </data>
+  <data name="ModeVideo" xml:space="preserve">
+    <value>動画</value>
+  </data>
+  <data name="ModeImages" xml:space="preserve">
+    <value>画像</value>
+  </data>
+  <data name="ImageOutputFormat" xml:space="preserve">
+    <value>形式</value>
+  </data>
+  <data name="ImageOutputFormatHelpTitle" xml:space="preserve">
+    <value>画像形式</value>
+  </data>
+  <data name="ImageOutputFormatHelpBody" xml:space="preserve">
+    <value>レンダリングした画像のファイル形式を選びます。
+
+**PNG** - 劣化のない形式です。最高品質、くっきりした輪郭、透明部分を残したい場合に適しています。
+**JPG** - 圧縮形式です。通常はファイルが小さくなりますが、品質が少し下がることがあります。</value>
+  </data>
+  <data name="ImageRenderProgressTitle" xml:space="preserve">
+    <value>画像をレンダリング中</value>
+  </data>
+  <data name="ImageRenderCurrentFile" xml:space="preserve">
+    <value>現在の画像</value>
+  </data>
+  <data name="ImageRenderStopHint" xml:space="preserve">
+    <value>現在の画像が完了した後にレンダーを停止します。</value>
+  </data>
+  <data name="ImageRenderStopAfterCurrent" xml:space="preserve">
+    <value>レンダーを停止</value>
+  </data>
+  <data name="ImageRenderStopRequested" xml:space="preserve">
+    <value>停止中...</value>
+  </data>
+  <data name="ImageRenderStopRequestedDetail" xml:space="preserve">
+    <value>現在の画像の後に停止します。</value>
+  </data>
+  <data name="ImageRenderPreparing" xml:space="preserve">
+    <value>画像レンダーを準備中...</value>
+  </data>
+  <data name="ImageRenderNoItemsToProcess" xml:space="preserve">
+    <value>レンダーする画像がありません。</value>
+  </data>
+  <data name="ImageRenderProgress" xml:space="preserve">
+    <value>{1} 枚中 {0} 枚の画像を処理しました。</value>
   </data>
   <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
     <value>選択済み GPU</value>

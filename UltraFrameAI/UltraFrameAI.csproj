@@ -15,14 +15,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>UltraFrameAI</AssemblyName>
     <RootNamespace>UltraFrameAI</RootNamespace>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <InformationalVersion>1.1.0</InformationalVersion>
     <AssemblyTitle>UltraFrame AI</AssemblyTitle>
     <Product>UltraFrame AI</Product>
     <Company>OpenAI</Company>
-    <Description>Portable batch video upscaling GUI.</Description>
+    <Description>Portable batch video and image upscaling GUI.</Description>
     <ApplicationIcon>Assets\UltraFrameAI.ico</ApplicationIcon>
     <StartupObject>UltraFrameAI.App</StartupObject>
   </PropertyGroup>

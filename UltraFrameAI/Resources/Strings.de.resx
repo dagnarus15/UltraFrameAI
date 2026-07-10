@@ -22,7 +22,7 @@
     <value>Schnellstart</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>Am besten für Animationen und Anime geeignet. Bild-Rendering ist für zukünftige Versionen geplant.</value>
+    <value>Am besten für Animationen und Anime geeignet.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Arbeitsbereich</value>
@@ -795,7 +795,7 @@ Am besten für maximale Stabilität.</value>
     <value>Codec</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>Format</value>
+    <value>Größe</value>
   </data>
   <data name="Resolution" xml:space="preserve">
     <value>Auflösung</value>
@@ -844,10 +844,10 @@ Neben der Geschwindigkeit beeinflusst das Preset, wie viel Aufwand der Encoder i
 **x265** — erzeugt meist kleinere Ergebnisdateien, braucht aber l?nger.</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
-    <value>Format</value>
+    <value>Größe</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>Format bedeutet hier die Ergebnisauflösung.
+    <value>Größe bedeutet hier die Ergebnisauflösung.
 
 **720p** — macht HD daraus.
 **1080p** — macht Full HD daraus.
@@ -1163,6 +1163,51 @@ Leistung: Encoder-Preset, Thread-Anzahlen und Parameter für die Rendergeschwind
   </data>
   <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
     <value> freuen.</value>
+  </data>
+  <data name="ModeVideo" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="ModeImages" xml:space="preserve">
+    <value>Bilder</value>
+  </data>
+  <data name="ImageOutputFormat" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="ImageOutputFormatHelpTitle" xml:space="preserve">
+    <value>Bildformat</value>
+  </data>
+  <data name="ImageOutputFormatHelpBody" xml:space="preserve">
+    <value>Wählt das Dateiformat für gerenderte Bilder.
+
+**PNG** - verlustfreies Format. Am besten für maximale Qualität, scharfe Kanten oder Transparenz.
+**JPG** - komprimiertes Format. Erstellt meist kleinere Dateien, kann die Qualität aber leicht verringern.</value>
+  </data>
+  <data name="ImageRenderProgressTitle" xml:space="preserve">
+    <value>Bilder werden gerendert</value>
+  </data>
+  <data name="ImageRenderCurrentFile" xml:space="preserve">
+    <value>Aktuelles Bild</value>
+  </data>
+  <data name="ImageRenderStopHint" xml:space="preserve">
+    <value>Das Rendern wird nach dem aktuellen Bild beendet.</value>
+  </data>
+  <data name="ImageRenderStopAfterCurrent" xml:space="preserve">
+    <value>Rendern stoppen</value>
+  </data>
+  <data name="ImageRenderStopRequested" xml:space="preserve">
+    <value>Wird gestoppt...</value>
+  </data>
+  <data name="ImageRenderStopRequestedDetail" xml:space="preserve">
+    <value>Stoppt nach dem aktuellen Bild.</value>
+  </data>
+  <data name="ImageRenderPreparing" xml:space="preserve">
+    <value>Bildrendering wird vorbereitet...</value>
+  </data>
+  <data name="ImageRenderNoItemsToProcess" xml:space="preserve">
+    <value>Keine Bilder zum Rendern.</value>
+  </data>
+  <data name="ImageRenderProgress" xml:space="preserve">
+    <value>{0} von {1} Bildern verarbeitet.</value>
   </data>
   <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
     <value>Ausgewählte GPU</value>

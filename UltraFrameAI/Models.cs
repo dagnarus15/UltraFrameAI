@@ -255,7 +255,8 @@ public sealed record RenderSessionItemResult(
     string Title,
     string ElapsedText,
     string AverageFpsText,
-    string OutputPath);
+    string OutputPath,
+    bool ShowAverageFps = true);
 
 public sealed record RenderSessionResults(
     string TotalElapsedText,
@@ -347,6 +348,12 @@ public enum RenderPreviewKind
 {
     Original,
     Result
+}
+
+public enum RenderContentMode
+{
+    Video,
+    Images
 }
 
 public sealed class PipelineOptions

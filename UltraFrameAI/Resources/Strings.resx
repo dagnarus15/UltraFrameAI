@@ -22,7 +22,7 @@
     <value>Quick start</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>Works best with animation and anime. Image rendering is planned for future versions.</value>
+    <value>Works best with animation and anime.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Workspace</value>
@@ -688,7 +688,7 @@
     <value>Codec</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>Format</value>
+    <value>Size</value>
   </data>
   <data name="Resolution" xml:space="preserve">
     <value>Resolution</value>
@@ -737,10 +737,10 @@ Beyond speed, the preset changes how much effort the encoder spends on compressi
 **x265** - usually makes the result file smaller, but takes longer.</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
-    <value>Format</value>
+    <value>Size</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>Format here means the result resolution.
+    <value>Size here means the result resolution.
 
 **720p** - makes it HD.
 **1080p** - makes it Full HD.
@@ -1056,6 +1056,51 @@ Changes are applied automatically, so there is no separate Save button.</value>
   </data>
   <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
     <value>.</value>
+  </data>
+  <data name="ModeVideo" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="ModeImages" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="ImageOutputFormat" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="ImageOutputFormatHelpTitle" xml:space="preserve">
+    <value>Image format</value>
+  </data>
+  <data name="ImageOutputFormatHelpBody" xml:space="preserve">
+    <value>Chooses the file format for rendered images.
+
+**PNG** - lossless format. Best when you want maximum quality, sharp edges, or transparency.
+**JPG** - compressed format. Usually creates smaller files, but can slightly reduce quality.</value>
+  </data>
+  <data name="ImageRenderProgressTitle" xml:space="preserve">
+    <value>Rendering images</value>
+  </data>
+  <data name="ImageRenderCurrentFile" xml:space="preserve">
+    <value>Current image</value>
+  </data>
+  <data name="ImageRenderStopHint" xml:space="preserve">
+    <value>The render will stop after the current image is finished.</value>
+  </data>
+  <data name="ImageRenderStopAfterCurrent" xml:space="preserve">
+    <value>Stop render</value>
+  </data>
+  <data name="ImageRenderStopRequested" xml:space="preserve">
+    <value>Stopping...</value>
+  </data>
+  <data name="ImageRenderStopRequestedDetail" xml:space="preserve">
+    <value>Stopping after the current image.</value>
+  </data>
+  <data name="ImageRenderPreparing" xml:space="preserve">
+    <value>Preparing image render...</value>
+  </data>
+  <data name="ImageRenderNoItemsToProcess" xml:space="preserve">
+    <value>No images need rendering.</value>
+  </data>
+  <data name="ImageRenderProgress" xml:space="preserve">
+    <value>Processed {0} of {1} images.</value>
   </data>
   <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
     <value>Selected GPU</value>

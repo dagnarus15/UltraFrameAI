@@ -22,7 +22,7 @@
     <value>Быстрый старт</value>
   </data>
   <data name="RealEsrganAnimeHint" xml:space="preserve">
-    <value>Лучше всего подходит для анимации и аниме. Рендер изображений ожидайте в будущих версиях.</value>
+    <value>Лучше всего подходит для анимации и аниме.</value>
   </data>
   <data name="Workspace" xml:space="preserve">
     <value>Рабочая область</value>
@@ -795,7 +795,7 @@
     <value>Кодек</value>
   </data>
   <data name="Target" xml:space="preserve">
-    <value>Формат</value>
+    <value>Размер</value>
   </data>
   <data name="Resolution" xml:space="preserve">
     <value>Разрешение</value>
@@ -844,10 +844,10 @@
 **x265** — обычно делает файл результата меньше, но кодирует дольше.</value>
   </data>
   <data name="FormatHelpTitle" xml:space="preserve">
-    <value>Формат</value>
+    <value>Размер</value>
   </data>
   <data name="FormatHelpBody" xml:space="preserve">
-    <value>Формат здесь означает разрешение результата.
+    <value>Размер здесь означает разрешение результата.
 
 **720p** — делает HD.
 **1080p** — делает Full HD.
@@ -1163,6 +1163,51 @@
   </data>
   <data name="RenderSessionResultsDonateSuffix" xml:space="preserve">
     <value>.</value>
+  </data>
+  <data name="ModeVideo" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="ModeImages" xml:space="preserve">
+    <value>Изображения</value>
+  </data>
+  <data name="ImageOutputFormat" xml:space="preserve">
+    <value>Формат</value>
+  </data>
+  <data name="ImageOutputFormatHelpTitle" xml:space="preserve">
+    <value>Формат изображения</value>
+  </data>
+  <data name="ImageOutputFormatHelpBody" xml:space="preserve">
+    <value>Выбирает формат файла для готовых изображений.
+
+**PNG** - формат без потерь. Лучше подходит для максимального качества, чётких краёв и прозрачности.
+**JPG** - сжатый формат. Обычно делает файлы меньше, но может слегка снижать качество.</value>
+  </data>
+  <data name="ImageRenderProgressTitle" xml:space="preserve">
+    <value>Рендер изображений</value>
+  </data>
+  <data name="ImageRenderCurrentFile" xml:space="preserve">
+    <value>Текущее изображение</value>
+  </data>
+  <data name="ImageRenderStopHint" xml:space="preserve">
+    <value>Рендер остановится после завершения текущего изображения.</value>
+  </data>
+  <data name="ImageRenderStopAfterCurrent" xml:space="preserve">
+    <value>Остановить рендер</value>
+  </data>
+  <data name="ImageRenderStopRequested" xml:space="preserve">
+    <value>Останавливаю...</value>
+  </data>
+  <data name="ImageRenderStopRequestedDetail" xml:space="preserve">
+    <value>Остановлю после текущего изображения.</value>
+  </data>
+  <data name="ImageRenderPreparing" xml:space="preserve">
+    <value>Подготавливаю рендер изображений...</value>
+  </data>
+  <data name="ImageRenderNoItemsToProcess" xml:space="preserve">
+    <value>Нет изображений для рендера.</value>
+  </data>
+  <data name="ImageRenderProgress" xml:space="preserve">
+    <value>Обработано {0} из {1} изображений.</value>
   </data>
   <data name="StartupBenchmarkResultsStrongestGpu" xml:space="preserve">
     <value>Выбранная видеокарта</value>

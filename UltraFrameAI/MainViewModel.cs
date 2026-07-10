@@ -55,8 +55,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string RootFolder,
         string OutputFolder,
         string? FfmpegDirectory,
+        string SelectedRenderMode,
         string SelectedCodec,
         string SelectedTarget,
+        string SelectedImageTarget,
+        string? SelectedImageOutputFormat,
         string SelectedContainer,
         string EncoderPreset,
         string FfmpegThreadsText,
@@ -95,6 +98,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         bool Complete);
 
     private readonly PipelineService _pipeline;
+    private readonly ImageRenderService _imageRenderService;
     private readonly bool _persistUserState;
     private readonly RelayCommand _browseRootFolderCommand;
     private readonly RelayCommand _browseRootFileCommand;
@@ -107,6 +111,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly RelayCommand _skipCurrentCommand;
     private readonly RelayCommand _togglePauseCommand;
     private readonly RelayCommand _finishAfterCurrentCommand;
+    private readonly RelayCommand _setRenderModeCommand;
+    private readonly RelayCommand _stopImageRenderCommand;
     private readonly AsyncRelayCommand _scanCommand;
     private readonly AsyncRelayCommand _startCommand;
     private readonly AsyncRelayCommand _startSelectedCommand;
@@ -124,6 +130,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private const string DefaultTargetValue = "1080p";
     private const string CustomTargetActionValue = "__custom_target__";
     private static readonly string[] SupportedTargetValues = { "720p", DefaultTargetValue, "1440p", "2160p", "4320p" };
+    private static readonly string[] SupportedImageTargetValues = { "720p", DefaultTargetValue, "1440p", "2160p", "4320p", "8640p" };
 
     private CancellationTokenSource? _runCts;
     private CancellationTokenSource? _scanCts;
@@ -131,8 +138,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _isBusy;
     private string _rootFolder = Directory.GetCurrentDirectory();
     private string _outputFolder = string.Empty;
+    private RenderContentMode _selectedRenderMode = RenderContentMode.Video;
     private string _selectedCodec = "x264";
     private string _selectedTarget = DefaultTargetValue;
+    private string _selectedImageTarget = DefaultTargetValue;
+    private string _selectedImageOutputFormat = "png";
     private string _selectedContainer = "mkv";
     private string _encoderPreset = "slower";
     private string _ffmpegThreadsText = "0";
@@ -210,6 +220,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _isRenderMode;
     private bool _isRenderPaused;
     private bool _finishAfterCurrentRequested;
+    private bool _stopImageRenderAfterCurrentRequested;
+    private bool _isImageRenderOverlayVisible;
+    private double _imageRenderProgress;
+    private string _imageRenderStatusText = string.Empty;
+    private string _imageRenderDetailText = string.Empty;
     private bool _closeRenderModeAfterCurrentSkip;
     private bool _keepRenderModeForAutoResume;
     private readonly List<QueueItemViewModel> _pendingAutoResumeItems = new();
@@ -232,12 +247,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _recentRootFoldersPath = Path.Combine(settingsRoot, "recent-root-folders.txt");
         _appSettingsPath = Path.Combine(settingsRoot, "app-settings.json");
         _pipeline = new PipelineService();
+        _imageRenderService = new ImageRenderService();
         Items = new ObservableCollection<QueueItemViewModel>();
         CurrentRenderItems = new ObservableCollection<QueueItemViewModel>();
         CurrentRenderItems.CollectionChanged += CurrentRenderItems_CollectionChanged;
         RecentRootFolders = new ObservableCollection<RecentFolderItem>();
         CodecOptions = new[] { "x264", "x265" };
-        _targetOptions = BuildTargetOptions(_selectedTarget);
+        ImageOutputFormatOptions = new[] { "png", "jpg" };
+        _targetOptions = BuildTargetOptions(_selectedTarget, include16K: false);
         ContainerOptions = new[] { "mkv" };
         EncoderPresetOptions = new[] { "fast", "medium", "slower" };
 
@@ -252,6 +269,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _skipCurrentCommand = new RelayCommand(SkipCurrentItem, () => IsBusy);
         _togglePauseCommand = new RelayCommand(TogglePause, () => CanPauseRender);
         _finishAfterCurrentCommand = new RelayCommand(FinishAfterCurrentItem, () => CanFinishAfterCurrent);
+        _setRenderModeCommand = new RelayCommand(SetRenderMode, _ => !IsBusy);
+        _stopImageRenderCommand = new RelayCommand(StopImageRenderAfterCurrent, () => IsImageRenderOverlayVisible && !_stopImageRenderAfterCurrentRequested);
         _scanCommand = new AsyncRelayCommand(() => ScanAsync(showOverlay: true), () => !IsBusy);
         _startCommand = new AsyncRelayCommand(StartAsync, () => !IsBusy);
         _startSelectedCommand = new AsyncRelayCommand(StartSelectedAsync, () => !IsBusy);
@@ -346,6 +365,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public IEnumerable<string> CodecOptions { get; }
 
+    public IEnumerable<string> ImageOutputFormatOptions { get; }
+
     public IEnumerable<TargetFormatOption> TargetOptions => _targetOptions;
 
     public IEnumerable<string> ContainerOptions { get; }
@@ -373,6 +394,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand TogglePauseCommand => _togglePauseCommand;
 
     public ICommand FinishAfterCurrentCommand => _finishAfterCurrentCommand;
+
+    public ICommand SetRenderModeCommand => _setRenderModeCommand;
+
+    public ICommand StopImageRenderCommand => _stopImageRenderCommand;
 
     public ICommand ScanCommand => _scanCommand;
 
@@ -419,6 +444,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _skipCurrentCommand.RaiseCanExecuteChanged();
                 _togglePauseCommand.RaiseCanExecuteChanged();
                 _finishAfterCurrentCommand.RaiseCanExecuteChanged();
+                _setRenderModeCommand.RaiseCanExecuteChanged();
+                _stopImageRenderCommand.RaiseCanExecuteChanged();
                 _resetRootCommand.RaiseCanExecuteChanged();
                 _removeItemCommand.RaiseCanExecuteChanged();
                 if (!value)
@@ -490,6 +517,34 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public string OutputLocationHintText => LocalizedStrings.OutputLocationHint(ComputedOutputFolderName);
 
+    public RenderContentMode SelectedRenderMode
+    {
+        get => _selectedRenderMode;
+        set
+        {
+            var oldMode = _selectedRenderMode;
+            if (SetField(ref _selectedRenderMode, value))
+            {
+                RefreshTargetOptions();
+                RefreshComputedOutputState();
+                RefreshQueueOutputPaths();
+                OnPropertyChanged(nameof(IsVideoMode));
+                OnPropertyChanged(nameof(IsImagesMode));
+                OnPropertyChanged(nameof(SelectedModeTarget));
+                if (!_suppressAppSettingsPersistence && oldMode != value)
+                {
+                    ClearQueueForRenderModeChange();
+                }
+                UpdateActionStates();
+                PersistAppSettings();
+            }
+        }
+    }
+
+    public bool IsVideoMode => SelectedRenderMode == RenderContentMode.Video;
+
+    public bool IsImagesMode => SelectedRenderMode == RenderContentMode.Images;
+
     public string SelectedCodec
     {
         get => _selectedCodec;
@@ -499,6 +554,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 RefreshComputedOutputState();
                 PersistAppSettings();
+            }
+        }
+    }
+
+    public string SelectedModeTarget
+    {
+        get => IsImagesMode ? SelectedImageTarget : SelectedTarget;
+        set
+        {
+            if (IsImagesMode)
+            {
+                SelectedImageTarget = value;
+            }
+            else
+            {
+                SelectedTarget = value;
             }
         }
     }
@@ -516,6 +587,47 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _selectedTarget, value))
             {
                 RefreshTargetOptions();
+                RefreshComputedOutputState();
+                PersistAppSettings();
+                if (IsVideoMode)
+                {
+                    OnPropertyChanged(nameof(SelectedModeTarget));
+                }
+            }
+        }
+    }
+
+    public string SelectedImageTarget
+    {
+        get => _selectedImageTarget;
+        set
+        {
+            if (string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (SetField(ref _selectedImageTarget, value))
+            {
+                RefreshTargetOptions();
+                RefreshComputedOutputState();
+                PersistAppSettings();
+                if (IsImagesMode)
+                {
+                    OnPropertyChanged(nameof(SelectedModeTarget));
+                }
+            }
+        }
+    }
+
+    public string SelectedImageOutputFormat
+    {
+        get => _selectedImageOutputFormat;
+        set
+        {
+            var normalized = NormalizeImageOutputFormat(value);
+            if (SetField(ref _selectedImageOutputFormat, normalized))
+            {
                 RefreshComputedOutputState();
                 PersistAppSettings();
             }
@@ -1140,6 +1252,40 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetField(ref _overallProgress, value);
     }
 
+    public bool IsImageRenderOverlayVisible
+    {
+        get => _isImageRenderOverlayVisible;
+        private set
+        {
+            if (SetField(ref _isImageRenderOverlayVisible, value))
+            {
+                _stopImageRenderCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public double ImageRenderProgress
+    {
+        get => _imageRenderProgress;
+        private set => SetField(ref _imageRenderProgress, value);
+    }
+
+    public string ImageRenderStatusText
+    {
+        get => _imageRenderStatusText;
+        private set => SetField(ref _imageRenderStatusText, value);
+    }
+
+    public string ImageRenderDetailText
+    {
+        get => _imageRenderDetailText;
+        private set => SetField(ref _imageRenderDetailText, value);
+    }
+
+    public string StopImageRenderText => _stopImageRenderAfterCurrentRequested
+        ? LocalizedStrings.Get("ImageRenderStopRequested")
+        : LocalizedStrings.Get("ImageRenderStopAfterCurrent");
+
     public string CurrentLanguageFlagPath => CurrentLanguage switch
     {
         UiLanguage.Russian => "pack://application:,,,/images/flag-ru.png",
@@ -1217,6 +1363,75 @@ public sealed class MainViewModel : INotifyPropertyChanged
         await ScanAsync(showOverlay: true).ConfigureAwait(true);
     }
 
+    public async Task LoadRootPathsAsync(IEnumerable<string> paths)
+    {
+        var validPaths = paths
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Where(path => File.Exists(path) || Directory.Exists(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (validPaths.Length == 0)
+        {
+            return;
+        }
+
+        if (validPaths.Length == 1)
+        {
+            await LoadRootFolderAsync(validPaths[0]).ConfigureAwait(true);
+            return;
+        }
+
+        _scanCts?.Cancel();
+        _scanCts?.Dispose();
+        _scanCts = new CancellationTokenSource();
+
+        try
+        {
+            IsBusy = true;
+            Log(LocalizedStrings.LogScanningFiles);
+            var allSourceFiles = new List<string>();
+            var totalRoots = validPaths.Length;
+            BeginScanOverlay(Path.GetDirectoryName(validPaths[0]) ?? validPaths[0]);
+
+            for (var i = 0; i < validPaths.Length; i++)
+            {
+                var path = validPaths[i];
+                _scanCts.Token.ThrowIfCancellationRequested();
+                RootFolder = path;
+                RememberRecentFolder(path, persist: true);
+                ReportScanProgress(i, totalRoots, allSourceFiles.Count, Path.GetFileName(path));
+
+                var files = IsImagesMode
+                    ? await FindImageFilesAsync(path, null, _scanCts.Token).ConfigureAwait(true)
+                    : await FindVideoFilesAsync(path, null, _scanCts.Token).ConfigureAwait(true);
+                allSourceFiles.AddRange(files);
+                ReportScanProgress(i + 1, totalRoots, allSourceFiles.Count, Path.GetFileName(path));
+            }
+
+            AddSourceFilesToQueue(
+                allSourceFiles
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray(),
+                GetScanRoot(validPaths[0]));
+        }
+        catch (OperationCanceledException)
+        {
+            Log(LocalizedStrings.LogCancelled);
+        }
+        catch (Exception ex)
+        {
+            Log(LocalizedStrings.LogScanFailed(ex.Message));
+            PostToUi(() => ShowPopupMessage(LocalizedStrings.AppTitle, ex.Message));
+        }
+        finally
+        {
+            EndScanOverlay();
+            IsBusy = false;
+            _scanCts?.Dispose();
+            _scanCts = null;
+        }
+    }
+
     public async Task ResetToLastFolderAsync()
     {
         await LoadRootFolderAsync(LoadPersistedRootFolder(_repoRoot)).ConfigureAwait(true);
@@ -1232,6 +1447,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             CurrentLanguage = parsed;
         }
+    }
+
+    private void SetRenderMode(object? parameter)
+    {
+        if (parameter is RenderContentMode mode)
+        {
+            SelectedRenderMode = mode;
+            return;
+        }
+
+        if (parameter is string text && Enum.TryParse(text, true, out RenderContentMode parsed))
+        {
+            SelectedRenderMode = parsed;
+        }
+    }
+
+    private void StopImageRenderAfterCurrent()
+    {
+        _stopImageRenderAfterCurrentRequested = true;
+        ImageRenderDetailText = LocalizedStrings.Get("ImageRenderStopRequestedDetail");
+        OnPropertyChanged(nameof(StopImageRenderText));
+        _stopImageRenderCommand.RaiseCanExecuteChanged();
     }
 
     private bool CanRemoveItem(object? parameter) => !IsBusy && parameter is QueueItemViewModel item && !item.IsBusy;
@@ -1252,16 +1489,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public void UpdateActionStates()
     {
         var anySelected = Items.Any(item => item.IsChecked);
+        var anySelectedStartable = Items.Any(item => item.IsChecked && IsItemCompatibleWithCurrentMode(item));
         var anyDeletable = Items.Any(item => !item.IsBusy);
+        var anyStartable = Items.Any(item => !item.IsBusy && IsItemCompatibleWithCurrentMode(item));
 
         CanDeleteSelected = anySelected;
         CanDeleteAll = anyDeletable && !IsBusy;
-        CanStartAll = !IsBusy && anyDeletable;
-        CanStartSelected = !IsBusy && anySelected;
+        CanStartAll = !IsBusy && anyStartable;
+        CanStartSelected = !IsBusy && anySelectedStartable;
         OnPropertyChanged(nameof(QueueSelectAllState));
         _startCommand.RaiseCanExecuteChanged();
         _startSelectedCommand.RaiseCanExecuteChanged();
     }
+
+    private bool IsItemCompatibleWithCurrentMode(QueueItemViewModel item)
+        => IsImagesMode ? IsLikelyImageFile(item.SourcePath) : IsLikelyVideoFile(item.SourcePath);
 
     public void ShowDeleteAllConfirmation()
     {
@@ -1312,21 +1554,23 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             await Task.Yield();
-            var videos = await FindVideoFilesAsync(inputPath, showOverlay ? ReportScanProgress : null, _scanCts.Token).ConfigureAwait(true);
+            var sourceFiles = IsImagesMode
+                ? await FindImageFilesAsync(inputPath, showOverlay ? ReportScanProgress : null, _scanCts.Token).ConfigureAwait(true)
+                : await FindVideoFilesAsync(inputPath, showOverlay ? ReportScanProgress : null, _scanCts.Token).ConfigureAwait(true);
 
-            var total = videos.Length;
+            var total = sourceFiles.Length;
             var addedItems = new List<QueueItemViewModel>();
             for (var i = 0; i < total; i++)
             {
-                var video = videos[i];
-                if (Items.Any(existing => string.Equals(existing.SourcePath, video, StringComparison.OrdinalIgnoreCase)))
+                var sourceFile = sourceFiles[i];
+                if (Items.Any(existing => string.Equals(existing.SourcePath, sourceFile, StringComparison.OrdinalIgnoreCase)))
                 {
                     continue;
                 }
 
-                var baseName = Path.GetFileNameWithoutExtension(video);
-                var videoDir = Path.GetDirectoryName(video) ?? scanRoot;
-                var relativeDir = Path.GetRelativePath(scanRoot, videoDir);
+                var baseName = Path.GetFileNameWithoutExtension(sourceFile);
+                var sourceDir = Path.GetDirectoryName(sourceFile) ?? scanRoot;
+                var relativeDir = Path.GetRelativePath(scanRoot, sourceDir);
                 if (relativeDir == ".")
                 {
                     relativeDir = string.Empty;
@@ -1336,15 +1580,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     ? baseName
                     : Path.Combine(relativeDir, baseName);
                 var displayTitle = string.IsNullOrWhiteSpace(relativeDir)
-                    ? Path.GetFileName(video)
-                    : Path.Combine(relativeDir, Path.GetFileName(video));
+                    ? Path.GetFileName(sourceFile)
+                    : Path.Combine(relativeDir, Path.GetFileName(sourceFile));
 
                 var item = new QueueItemViewModel()
                 {
                     Index = Items.Count + 1,
                     Title = displayTitle,
-                    SourcePath = video,
-                    OutputPath = BuildOutputPath(video),
+                    SourcePath = sourceFile,
+                    OutputPath = BuildOutputPath(sourceFile),
                 };
                 addedItems.Add(item);
             }
@@ -1438,20 +1682,218 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return matches.ToArray();
     }
 
+    private async Task<string[]> FindImageFilesAsync(string inputPath, Action<int, int, int, string?>? progress, CancellationToken ct)
+    {
+        var matches = await Task.Run(() =>
+        {
+            if (File.Exists(inputPath))
+            {
+                return IsLikelyImageFile(inputPath)
+                    ? new[] { inputPath }
+                    : Array.Empty<string>();
+            }
+
+            var list = new List<string>();
+            foreach (var path in Directory.EnumerateFiles(inputPath, "*", SearchOption.TopDirectoryOnly))
+            {
+                ct.ThrowIfCancellationRequested();
+                if (ShouldSkipScanCandidate(path, GetOutputFolderName()) || !IsLikelyImageFile(path))
+                {
+                    continue;
+                }
+
+                list.Add(path);
+            }
+
+            return list
+                .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }, ct).ConfigureAwait(false);
+
+        var lastTick = Stopwatch.StartNew();
+        for (var i = 0; i < matches.Length; i++)
+        {
+            ct.ThrowIfCancellationRequested();
+            var checkedCount = i + 1;
+            if (progress is not null && (checkedCount == matches.Length || lastTick.ElapsedMilliseconds >= 250))
+            {
+                progress(checkedCount, matches.Length, checkedCount, Path.GetFileName(matches[i]));
+                lastTick.Restart();
+            }
+        }
+
+        progress?.Invoke(matches.Length, matches.Length, matches.Length, matches.Length > 0 ? Path.GetFileName(matches[^1]) : string.Empty);
+        return matches;
+    }
+
+    private void AddSourceFilesToQueue(IReadOnlyList<string> sourceFiles, string scanRoot)
+    {
+        var addedItems = new List<QueueItemViewModel>();
+        foreach (var sourceFile in sourceFiles)
+        {
+            if (Items.Any(existing => string.Equals(existing.SourcePath, sourceFile, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var sourceDir = Path.GetDirectoryName(sourceFile) ?? scanRoot;
+            var relativeDir = string.Empty;
+            try
+            {
+                relativeDir = Path.GetRelativePath(scanRoot, sourceDir);
+                if (relativeDir == ".")
+                {
+                    relativeDir = string.Empty;
+                }
+            }
+            catch
+            {
+                relativeDir = string.Empty;
+            }
+
+            var displayTitle = string.IsNullOrWhiteSpace(relativeDir)
+                ? Path.GetFileName(sourceFile)
+                : Path.Combine(relativeDir, Path.GetFileName(sourceFile));
+
+            var item = new QueueItemViewModel()
+            {
+                Index = Items.Count + addedItems.Count + 1,
+                Title = displayTitle,
+                SourcePath = sourceFile,
+                OutputPath = BuildOutputPath(sourceFile),
+            };
+            addedItems.Add(item);
+        }
+
+        AppendSortedItems(addedItems);
+        ReindexItems();
+        UpdateQueueSummary();
+        UpdateActionStates();
+        Log(LocalizedStrings.LogFoundVideoFiles(addedItems.Count));
+        if (addedItems.Count > 0)
+        {
+            SelectedItem ??= addedItems[0];
+            UpdateSelectionDetails();
+        }
+
+        OnQueueStateChanged();
+        PersistAppSettings();
+    }
+
     public System.Windows.Media.Brush CurrentBackgroundPreviewBrush => AppThemeManager.CreatePreviewBrush();
 
-    private Task StartAsync() => StartPipelineAsync(Items.ToArray(), LocalizedStrings.LogStartingBatch);
+    private Task StartAsync() => IsImagesMode
+        ? StartImageRenderAsync(Items.Where(item => IsLikelyImageFile(item.SourcePath)).ToArray(), LocalizedStrings.LogStartingBatch)
+        : StartPipelineAsync(Items.Where(item => IsLikelyVideoFile(item.SourcePath)).ToArray(), LocalizedStrings.LogStartingBatch);
 
     private async Task StartSelectedAsync()
     {
-        var selectedItems = Items.Where(item => item.IsChecked).ToArray();
+        var selectedItems = Items
+            .Where(item => item.IsChecked)
+            .Where(item => IsImagesMode ? IsLikelyImageFile(item.SourcePath) : IsLikelyVideoFile(item.SourcePath))
+            .ToArray();
         if (selectedItems.Length == 0)
         {
             Log(LocalizedStrings.LogNoItemSelected);
             return;
         }
 
-        await StartPipelineAsync(selectedItems, LocalizedStrings.LogStartingSelectedBatch).ConfigureAwait(true);
+        if (IsImagesMode)
+        {
+            await StartImageRenderAsync(selectedItems, LocalizedStrings.LogStartingSelectedBatch).ConfigureAwait(true);
+        }
+        else
+        {
+            await StartPipelineAsync(selectedItems, LocalizedStrings.LogStartingSelectedBatch).ConfigureAwait(true);
+        }
+    }
+
+    private async Task StartImageRenderAsync(IReadOnlyList<QueueItemViewModel> runItems, string startMessage)
+    {
+        if (runItems.Count == 0)
+        {
+            Log(LocalizedStrings.LogNoItemsFound);
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            RememberRecentFolder(RootFolder, persist: true);
+            _runCts = new CancellationTokenSource();
+            _stopImageRenderAfterCurrentRequested = false;
+            OnPropertyChanged(nameof(StopImageRenderText));
+            ResetItemUi(runItems);
+            Log(startMessage);
+            _pendingRenderSessionResults = null;
+            var sessionWatch = Stopwatch.StartNew();
+            var sessionItems = new HashSet<QueueItemViewModel>(runItems);
+
+            foreach (var item in runItems)
+            {
+                item.IsBusy = true;
+                item.Progress = 0;
+                item.ProgressText = "0%";
+            }
+
+            CurrentItemTitle = runItems[0].Title;
+            CurrentStage = LocalizedStrings.Get("ImageRenderProgressTitle");
+            ImageRenderProgress = 0;
+            ImageRenderStatusText = LocalizedStrings.Get("ImageRenderPreparing");
+            ImageRenderDetailText = string.Empty;
+            IsImageRenderOverlayVisible = true;
+            await Task.Yield();
+
+            var options = BuildImageOptions();
+            var effectiveItems = runItems
+                .Where(item => Overwrite || !File.Exists(item.OutputPath))
+                .ToArray();
+            if (effectiveItems.Length == 0)
+            {
+                ImageRenderStatusText = LocalizedStrings.Get("ImageRenderNoItemsToProcess");
+                Log(LocalizedStrings.Get("ImageRenderNoItemsToProcess"));
+            }
+            else
+            {
+                await _imageRenderService.RunAsync(
+                    effectiveItems,
+                    options,
+                    HandleImageRenderProgress,
+                    () => _stopImageRenderAfterCurrentRequested,
+                    _runCts.Token).ConfigureAwait(true);
+            }
+
+            sessionWatch.Stop();
+            UpdateLastRunSummary(sessionWatch.Elapsed);
+            _pendingRenderSessionResults = BuildImageRenderSessionResults(sessionItems, sessionWatch.Elapsed);
+            Log(LocalizedStrings.LogBatchFinished);
+        }
+        catch (OperationCanceledException)
+        {
+            Log(LocalizedStrings.LogCancelled);
+            _pendingRenderSessionResults = null;
+        }
+        catch (Exception ex)
+        {
+            Log(LocalizedStrings.LogBatchFailed(ex.Message));
+            PostToUi(() => ShowPopupMessage(LocalizedStrings.AppTitle, LocalizedStrings.LogBatchFailed(ex.Message)));
+            _pendingRenderSessionResults = null;
+        }
+        finally
+        {
+            _runCts?.Dispose();
+            _runCts = null;
+            foreach (var item in runItems)
+            {
+                item.IsBusy = false;
+            }
+
+            _stopImageRenderAfterCurrentRequested = false;
+            OnPropertyChanged(nameof(StopImageRenderText));
+            IsImageRenderOverlayVisible = false;
+            IsBusy = false;
+            OnPropertyChanged(nameof(RenderSkipAllState));
+        }
     }
 
     private async Task StartPipelineAsync(IReadOnlyList<QueueItemViewModel> runItems, string startMessage)
@@ -1616,6 +2058,35 @@ public sealed class MainViewModel : INotifyPropertyChanged
         };
     }
 
+    private PipelineOptions BuildImageOptions()
+    {
+        var options = BuildOptions();
+        return new PipelineOptions
+        {
+            RootFolder = options.RootFolder,
+            OutputFolder = options.OutputFolder,
+            Overwrite = options.Overwrite,
+            UseX265 = options.UseX265,
+            TargetHeight = ParseTargetHeight(SelectedImageTarget),
+            OutputContainer = options.OutputContainer,
+            FfmpegThreads = options.FfmpegThreads,
+            UpscalerThreads = options.UpscalerThreads,
+            TileSize = options.TileSize,
+            GpuId = options.GpuId,
+            FfmpegPath = options.FfmpegPath,
+            FfprobePath = options.FfprobePath,
+            UpscalerBackend = UpscalerBackendKind.RealEsrgan,
+            UpscalerPath = options.UpscalerPath,
+            UpscalerWorkingDirectory = options.UpscalerWorkingDirectory,
+            ModelDir = options.ModelDir,
+            ExternalUpscalerArgumentsTemplate = string.Empty,
+            RefinerBackend = RefinerBackendKind.None,
+            EncoderPreset = options.EncoderPreset,
+            PreserveIncompleteOutput = options.PreserveIncompleteOutput,
+            RepairBrokenTimestamps = options.RepairBrokenTimestamps
+        };
+    }
+
     public void MarkStartupBenchmarkPromptShown()
     {
         if (_startupBenchmarkPromptShown)
@@ -1716,7 +2187,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             height = 120;
         }
 
-        SelectedTarget = $"{height}p";
+        SelectedModeTarget = $"{height}p";
     }
 
     public RenderSessionResults? ConsumePendingRenderSessionResults()
@@ -1779,6 +2250,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
             }
 
             OnQueueStateChanged();
+        });
+    }
+
+    private void HandleImageRenderProgress(ImageRenderProgress progress)
+    {
+        PostToUi(() =>
+        {
+            ImageRenderProgress = progress.Progress;
+            ImageRenderStatusText = LocalizedStrings.ImageRenderProgress(progress.Completed, progress.Total);
+            ImageRenderDetailText = progress.CurrentFile;
+            CurrentItemTitle = progress.CurrentFile;
+            OverallProgress = progress.Progress;
         });
     }
 
@@ -2099,6 +2582,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
                 return new RenderSessionItemResult(item.Title, item.ElapsedText, averageFpsText, item.OutputPath);
             })
+            .ToArray();
+
+        return results.Length == 0
+            ? null
+            : new RenderSessionResults(FormatDuration(totalElapsed), results);
+    }
+
+    private RenderSessionResults? BuildImageRenderSessionResults(IEnumerable<QueueItemViewModel> sessionItems, TimeSpan totalElapsed)
+    {
+        var results = sessionItems
+            .Where(item => File.Exists(item.OutputPath))
+            .OrderBy(item => item.Index)
+            .Select(item => new RenderSessionItemResult(
+                item.Title,
+                string.IsNullOrWhiteSpace(item.ElapsedText) ? FormatDuration(TimeSpan.Zero) : item.ElapsedText,
+                "--",
+                item.OutputPath,
+                ShowAverageFps: false))
             .ToArray();
 
         return results.Length == 0
@@ -3475,7 +3976,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private static IReadOnlyList<TargetFormatOption> BuildTargetOptions(string? selectedTarget)
+    private static IReadOnlyList<TargetFormatOption> BuildTargetOptions(string? selectedTarget, bool include16K)
     {
         var options = new List<TargetFormatOption>
         {
@@ -3485,9 +3986,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             new("2160p", "2160p (4K)"),
             new("4320p", "4320p (8K)")
         };
+        if (include16K)
+        {
+            options.Add(new TargetFormatOption("8640p", "8640p (16K)"));
+        }
 
         if (!string.IsNullOrWhiteSpace(selectedTarget) &&
-            !SupportedTargetValues.Contains(selectedTarget, StringComparer.OrdinalIgnoreCase))
+            !(include16K ? SupportedImageTargetValues : SupportedTargetValues).Contains(selectedTarget, StringComparer.OrdinalIgnoreCase))
         {
             options.Add(new TargetFormatOption(selectedTarget, selectedTarget));
         }
@@ -3639,6 +4144,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void OnQueueStateChanged()
     {
         QueueStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ClearQueueForRenderModeChange()
+    {
+        foreach (var item in Items)
+        {
+            item.PropertyChanged -= QueueItem_PropertyChanged;
+        }
+
+        _attachedQueueItems.Clear();
+        Items.Clear();
+        SelectedItem = null;
+        CurrentFileName = string.Empty;
+        ClearRenderPreviewPaths();
+        UpdateQueueSummary();
+        UpdateSelectionDetails();
+        OnPropertyChanged(nameof(QueueSelectAllState));
+        OnQueueStateChanged();
     }
 
     private void CurrentRenderItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -4219,13 +4742,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 RootFolder = loaded.RootFolder;
             }
 
+            var mode = Enum.TryParse(loaded.SelectedRenderMode, true, out RenderContentMode parsedMode)
+                ? parsedMode
+                : RenderContentMode.Video;
             var target = SupportedTargetValues.Contains(loaded.SelectedTarget, StringComparer.OrdinalIgnoreCase)
                 ? SupportedTargetValues.First(option => string.Equals(option, loaded.SelectedTarget, StringComparison.OrdinalIgnoreCase))
+                : DefaultTargetValue;
+            var imageTarget = SupportedImageTargetValues.Contains(loaded.SelectedImageTarget, StringComparer.OrdinalIgnoreCase)
+                ? SupportedImageTargetValues.First(option => string.Equals(option, loaded.SelectedImageTarget, StringComparison.OrdinalIgnoreCase))
                 : DefaultTargetValue;
             var codec = loaded.SelectedCodec == "x265" ? "x265" : "x264";
             const string container = "mkv";
 
+            SelectedRenderMode = mode;
             SelectedTarget = target;
+            SelectedImageTarget = imageTarget;
+            SelectedImageOutputFormat = NormalizeImageOutputFormat(loaded.SelectedImageOutputFormat);
             SelectedCodec = codec;
             SelectedContainer = container;
             EncoderPreset = NormalizeEncoderPreset(loaded.EncoderPreset);
@@ -4365,6 +4897,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException(LocalizedStrings.LogRootNotFound(filePath), filePath);
+            }
+
+            if (IsImagesMode ? !IsLikelyImageFile(filePath) : !IsLikelyVideoFile(filePath))
+            {
+                Log(LocalizedStrings.LogNoItemsFound);
+                return;
             }
 
             if (Items.Any(existing => string.Equals(existing.SourcePath, filePath, StringComparison.OrdinalIgnoreCase)))
@@ -4554,8 +5092,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 RootFolder,
                 OutputFolder,
                 _configuredFfmpegDirectory,
+                SelectedRenderMode.ToString(),
                 SelectedCodec,
                 SelectedTarget,
+                SelectedImageTarget,
+                SelectedImageOutputFormat,
                 SelectedContainer,
                 EncoderPreset,
                 FfmpegThreadsText,
@@ -4692,12 +5233,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private string GetOutputFolderName()
     {
-        return $"_{SelectedCodec}_{SelectedTarget}_output";
+        return IsImagesMode
+            ? $"_images_{SelectedImageTarget}_{SelectedImageOutputFormat}_output"
+            : $"_{SelectedCodec}_{SelectedTarget}_output";
     }
 
     private void RefreshTargetOptions()
     {
-        _targetOptions = BuildTargetOptions(_selectedTarget);
+        _targetOptions = BuildTargetOptions(IsImagesMode ? _selectedImageTarget : _selectedTarget, include16K: IsImagesMode);
         OnPropertyChanged(nameof(TargetOptions));
     }
 
@@ -4714,9 +5257,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
             : 1080;
     }
 
+    private static string NormalizeImageOutputFormat(string? value)
+    {
+        return string.Equals(value, "jpg", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(value, "jpeg", StringComparison.OrdinalIgnoreCase)
+            ? "jpg"
+            : "png";
+    }
+
     private string GetOutputSuffix()
     {
-        return ".mkv";
+        return IsImagesMode ? $".{SelectedImageOutputFormat}" : ".mkv";
     }
 
     private string GetOutputFolderForSource(string sourcePath)
@@ -4744,6 +5295,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             item.OutputPath = BuildOutputPath(item.SourcePath);
         }
+    }
+
+    private void RefreshQueueOutputPaths()
+    {
+        RefreshComputedOutputState();
     }
 
     private static string GetInputDirectory(string inputPath)
@@ -4901,6 +5457,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
             case ".m2v":
             case ".mpv":
             case ".vid":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool IsLikelyImageFile(string filePath)
+    {
+        var extension = Path.GetExtension(filePath);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return false;
+        }
+
+        switch (extension.ToLowerInvariant())
+        {
+            case ".png":
+            case ".jpg":
+            case ".jpeg":
+            case ".webp":
+            case ".bmp":
+            case ".tif":
+            case ".tiff":
                 return true;
             default:
                 return false;

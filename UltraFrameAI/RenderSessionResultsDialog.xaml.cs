@@ -17,8 +17,9 @@ public partial class RenderSessionResultsDialog : Window
             Items.Add(new RenderSessionResultRow(
                 item.Title,
                 LocalizedStrings.RenderSessionResultsItemComplete(item.ElapsedText),
-                LocalizedStrings.RenderSessionResultsItemFps(item.AverageFpsText),
-                item.OutputPath));
+                item.ShowAverageFps ? LocalizedStrings.RenderSessionResultsItemFps(item.AverageFpsText) : string.Empty,
+                item.OutputPath,
+                item.ShowAverageFps));
         }
 
         DataContext = this;
@@ -67,5 +68,6 @@ public partial class RenderSessionResultsDialog : Window
         string Title,
         string CompletionText,
         string AverageFpsText,
-        string OutputPath);
+        string OutputPath,
+        bool ShowAverageFps);
 }

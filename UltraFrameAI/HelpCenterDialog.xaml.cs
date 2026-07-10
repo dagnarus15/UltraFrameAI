@@ -208,7 +208,6 @@ public partial class HelpCenterDialog : Window, INotifyPropertyChanged
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion4"), LocalizedStrings.Get("HelpFaqAnswer4")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion5"), LocalizedStrings.Get("HelpFaqAnswer5")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion6"), LocalizedStrings.Get("HelpFaqAnswer6")),
-            new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion7"), LocalizedStrings.Get("HelpFaqAnswer7")),
             new HelpFaqEntry(LocalizedStrings.Get("HelpFaqQuestion8"), LocalizedStrings.Get("HelpFaqAnswer8"))
         };
     }

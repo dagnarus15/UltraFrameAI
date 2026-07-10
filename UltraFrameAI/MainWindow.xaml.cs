@@ -234,12 +234,13 @@ public partial class MainWindow : Window
     private async void Window_Drop(object sender, System.Windows.DragEventArgs e)
     {
         _viewModel.SetDropTargetActive(false);
-        if (TryGetDropTarget(e) is not string dropTarget)
+        var dropTargets = TryGetDropTargets(e);
+        if (dropTargets.Length == 0)
         {
             return;
         }
 
-        await _viewModel.LoadRootFolderAsync(dropTarget).ConfigureAwait(true);
+        await _viewModel.LoadRootPathsAsync(dropTargets).ConfigureAwait(true);
     }
 
     private void BrowseInputButton_Click(object sender, RoutedEventArgs e)
@@ -275,6 +276,11 @@ public partial class MainWindow : Window
     private void FormatHelp_Click(object sender, RoutedEventArgs e)
     {
         OpenCodecFormatHelp(sender, LocalizedStrings.Get("FormatHelpTitle"), LocalizedStrings.Get("FormatHelpBody"));
+    }
+
+    private void ImageOutputFormatHelp_Click(object sender, RoutedEventArgs e)
+    {
+        OpenCodecFormatHelp(sender, LocalizedStrings.Get("ImageOutputFormatHelpTitle"), LocalizedStrings.Get("ImageOutputFormatHelpBody"));
     }
 
     private void ContainerHelp_Click(object sender, RoutedEventArgs e)
@@ -367,7 +373,7 @@ public partial class MainWindow : Window
             if (dialog.ShowDialog() == true)
             {
                 _viewModel.ApplyCustomTargetHeight(dialog.SelectedHeight);
-                RestoreTargetComboSelection(_viewModel.SelectedTarget);
+                RestoreTargetComboSelection(_viewModel.SelectedModeTarget);
             }
             else
             {
@@ -608,12 +614,14 @@ public partial class MainWindow : Window
     private async void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (IsWithinButton(e.OriginalSource, CodecHelpButton) ||
+            IsWithinButton(e.OriginalSource, ImageOutputFormatHelpButton) ||
             IsWithinButton(e.OriginalSource, FormatHelpButton) ||
             IsWithinButton(e.OriginalSource, EncoderPresetHelpButton) ||
             IsWithinButton(e.OriginalSource, FfmpegThreadsHelpButton) ||
             IsWithinButton(e.OriginalSource, UpscalerJobsHelpButton) ||
             IsWithinButton(e.OriginalSource, TileSizeHelpButton) ||
             IsWithinButton(e.OriginalSource, SettingsCodecHelpButton) ||
+            IsWithinButton(e.OriginalSource, SettingsImageOutputFormatHelpButton) ||
             IsWithinButton(e.OriginalSource, SettingsFormatHelpButton) ||
             IsWithinButton(e.OriginalSource, SettingsContainerHelpButton) ||
             IsWithinButton(e.OriginalSource, SettingsOverlayHelpButton) ||
@@ -656,38 +664,28 @@ public partial class MainWindow : Window
 
     private void UpdateDropState(System.Windows.DragEventArgs e)
     {
-        var canDrop = TryGetDropTarget(e) is not null;
+        var canDrop = TryGetDropTargets(e).Length > 0;
         _viewModel.SetDropTargetActive(canDrop);
         e.Effects = canDrop ? System.Windows.DragDropEffects.Copy : System.Windows.DragDropEffects.None;
         e.Handled = true;
     }
 
-    private static string? TryGetDropTarget(System.Windows.DragEventArgs e)
+    private static string[] TryGetDropTargets(System.Windows.DragEventArgs e)
     {
         if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
         {
-            return null;
+            return Array.Empty<string>();
         }
 
         if (e.Data.GetData(System.Windows.DataFormats.FileDrop) is not string[] paths || paths.Length == 0)
         {
-            return null;
+            return Array.Empty<string>();
         }
 
-        foreach (var path in paths)
-        {
-            if (File.Exists(path))
-            {
-                return path;
-            }
-
-            if (Directory.Exists(path))
-            {
-                return path;
-            }
-        }
-
-        return null;
+        return paths
+            .Where(path => File.Exists(path) || Directory.Exists(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private static void OpenPopup(
@@ -885,6 +883,18 @@ public partial class MainWindow : Window
                 await CloseScanOverlayAsync().ConfigureAwait(true);
             }
         }
+        else if (e.PropertyName == nameof(MainViewModel.IsImageRenderOverlayVisible))
+        {
+            if (!_viewModel.IsImageRenderOverlayVisible &&
+                _viewModel.ConsumePendingRenderSessionResults() is { } results)
+            {
+                var dialog = new RenderSessionResultsDialog(results)
+                {
+                    Owner = this
+                };
+                dialog.ShowDialog();
+            }
+        }
         else if (e.PropertyName == nameof(MainViewModel.IsBusy))
         {
             UpdateDeleteButtonStates();
@@ -908,9 +918,12 @@ public partial class MainWindow : Window
                 }
             }
         }
-        else if (e.PropertyName == nameof(MainViewModel.SelectedTarget))
+        else if (e.PropertyName == nameof(MainViewModel.SelectedTarget) ||
+                 e.PropertyName == nameof(MainViewModel.SelectedImageTarget) ||
+                 e.PropertyName == nameof(MainViewModel.SelectedRenderMode) ||
+                 e.PropertyName == nameof(MainViewModel.SelectedModeTarget))
         {
-            _lastConfirmedTarget = _viewModel.SelectedTarget;
+            _lastConfirmedTarget = _viewModel.SelectedModeTarget;
         }
     }
 

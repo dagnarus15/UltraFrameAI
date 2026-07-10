@@ -254,6 +254,11 @@ public static class LocalizedStrings
     public static string RenderSessionResultsDonatePrefix => GetText(nameof(RenderSessionResultsDonatePrefix));
     public static string RenderSessionResultsDonateLink => GetText(nameof(RenderSessionResultsDonateLink));
     public static string RenderSessionResultsDonateSuffix => GetText(nameof(RenderSessionResultsDonateSuffix));
+    public static string ModeVideo => GetText(nameof(ModeVideo));
+    public static string ModeImages => GetText(nameof(ModeImages));
+    public static string ImageRenderProgressTitle => GetText(nameof(ImageRenderProgressTitle));
+    public static string ImageRenderCurrentFile => GetText(nameof(ImageRenderCurrentFile));
+    public static string ImageRenderStopHint => GetText(nameof(ImageRenderStopHint));
     public static string HelpFaqQuestion1 => GetText(nameof(HelpFaqQuestion1));
     public static string HelpFaqAnswer1 => GetText(nameof(HelpFaqAnswer1));
     public static string HelpFaqQuestion2 => GetText(nameof(HelpFaqQuestion2));
@@ -451,6 +456,10 @@ public static class LocalizedStrings
     public static string RenderSessionResultsSummary(string elapsed) => Format(nameof(RenderSessionResultsSummary), elapsed);
     public static string RenderSessionResultsItemComplete(string elapsed) => Format(nameof(RenderSessionResultsItemComplete), elapsed);
     public static string RenderSessionResultsItemFps(string fps) => Format(nameof(RenderSessionResultsItemFps), fps);
+    public static string ImageRenderProgress(int completed, int total) => Format(
+        nameof(ImageRenderProgress),
+        completed.ToString(CultureInfo.InvariantCulture),
+        total.ToString(CultureInfo.InvariantCulture));
     public static string LogItemCount(int count)
     {
         return CurrentLanguage switch

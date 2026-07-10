@@ -67,7 +67,8 @@
                                                        Text="{Binding CompletionText}" />
                                             <TextBlock Margin="0,4,0,0"
                                                        Foreground="{StaticResource TextSecondaryBrush}"
-                                                       Text="{Binding AverageFpsText}" />
+                                                       Text="{Binding AverageFpsText}"
+                                                       Visibility="{Binding ShowAverageFps, Converter={StaticResource BoolToVisibility}}" />
                                         </StackPanel>
 
                                         <Button Grid.Column="2"
