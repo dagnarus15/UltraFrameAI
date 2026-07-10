@@ -217,7 +217,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _configuredFfmpegDirectory = string.Empty;
     private QueueItemViewModel? _selectedItem;
     private UiLanguage _currentLanguage;
-    private readonly Dictionary<int, (int current, int total)> _sessionFrameProgress = new();
+    private readonly Dictionary<QueueItemViewModel, (int current, int total)> _sessionFrameProgress = new();
     private OutputConflictDecision? _sessionOutputDecision;
     private bool _isRenderMode;
     private bool _isRenderPaused;
@@ -2243,10 +2243,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         PostToUi(() =>
         {
-            var index = progress.ItemIndex > 0 ? progress.ItemIndex - 1 : -1;
-            if (index >= 0 && index < Items.Count)
+            var item = GetRenderItemForProgress(progress.ItemIndex, progress.ItemTitle);
+            if (item is not null)
             {
-                var item = Items[index];
                 item.Stage = progress.Stage;
                 item.Progress = progress.Progress;
                 item.ProgressText = progress.ProgressText;
@@ -2539,13 +2538,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private QueueItemViewModel? GetCurrentItem()
     {
-        if (_currentItemIndex > 0)
+        var currentRenderItem = GetRenderItemForProgress(_currentItemIndex, CurrentItemTitle);
+        if (currentRenderItem is not null)
         {
-            var byIndex = Items.FirstOrDefault(item => item.Index == _currentItemIndex);
-            if (byIndex is not null)
-            {
-                return byIndex;
-            }
+            return currentRenderItem;
         }
 
         if (string.IsNullOrWhiteSpace(CurrentItemTitle))
@@ -2556,9 +2552,38 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return Items.FirstOrDefault(item => string.Equals(item.Title, CurrentItemTitle, StringComparison.OrdinalIgnoreCase));
     }
 
+    private QueueItemViewModel? GetRenderItemForProgress(int itemIndex, string itemTitle)
+    {
+        if (itemIndex <= 0 || CurrentRenderItems.Count == 0)
+        {
+            return null;
+        }
+
+        var byQueueIndex = CurrentRenderItems.FirstOrDefault(item =>
+            item.Index == itemIndex &&
+            (string.IsNullOrWhiteSpace(itemTitle) || string.Equals(item.Title, itemTitle, StringComparison.OrdinalIgnoreCase)));
+        if (byQueueIndex is not null)
+        {
+            return byQueueIndex;
+        }
+
+        var runIndex = itemIndex - 1;
+        if (runIndex >= 0 && runIndex < CurrentRenderItems.Count)
+        {
+            var byRunIndex = CurrentRenderItems[runIndex];
+            if (string.IsNullOrWhiteSpace(itemTitle) || string.Equals(byRunIndex.Title, itemTitle, StringComparison.OrdinalIgnoreCase))
+            {
+                return byRunIndex;
+            }
+        }
+
+        return null;
+    }
+
     private void TrackFrameProgress(PipelineProgress progress)
     {
-        if (progress.ItemIndex <= 0)
+        var item = GetRenderItemForProgress(progress.ItemIndex, progress.ItemTitle);
+        if (item is null)
         {
             return;
         }
@@ -2568,7 +2593,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
-        _sessionFrameProgress[progress.ItemIndex] = (current, total);
+        _sessionFrameProgress[item] = (current, total);
     }
 
     private static bool TryParseFrameProgress(string text, out int current, out int total)
@@ -2615,7 +2640,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 var averageFpsText = "--";
                 if (TryParseDisplayedDuration(item.ElapsedText, out var itemElapsed)
                     && itemElapsed.TotalSeconds > 0
-                    && _sessionFrameProgress.TryGetValue(item.Index, out var frameProgress)
+                    && _sessionFrameProgress.TryGetValue(item, out var frameProgress)
                     && frameProgress.total > 0)
                 {
                     var fps = frameProgress.total / itemElapsed.TotalSeconds;
