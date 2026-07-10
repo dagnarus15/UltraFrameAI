@@ -1133,13 +1133,41 @@
                                             Click="FormatHelp_Click"
                                             />
                                 </Grid>
-                                <ComboBox x:Name="MainTargetComboBox"
-                                          ItemsSource="{Binding TargetOptions}"
+                                <ComboBox x:Name="MainVideoTargetComboBox"
+                                          ItemsSource="{Binding VideoTargetOptions}"
                                           DisplayMemberPath="Label"
                                           SelectedValuePath="Value"
-                                          SelectedValue="{Binding SelectedModeTarget}"
+                                          SelectedValue="{Binding SelectedTarget}"
                                           SelectionChanged="TargetFormat_SelectionChanged"
-                                          HorizontalAlignment="Stretch" />
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsImagesMode}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.Style>
+                                </ComboBox>
+                                <ComboBox x:Name="MainImageTargetComboBox"
+                                          ItemsSource="{Binding ImageTargetOptions}"
+                                          DisplayMemberPath="Label"
+                                          SelectedValuePath="Value"
+                                          SelectedValue="{Binding SelectedImageTarget}"
+                                          SelectionChanged="TargetFormat_SelectionChanged"
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsImagesMode}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.Style>
+                                </ComboBox>
                             </StackPanel>
                         </Grid>
                         <Grid Margin="0,2,0,6">
@@ -1788,13 +1816,41 @@
                                                 Content="?"
                                                 Click="FormatHelp_Click" />
                                     </Grid>
-                                    <ComboBox x:Name="SettingsTargetComboBox"
-                                              ItemsSource="{Binding TargetOptions}"
+                                    <ComboBox x:Name="SettingsVideoTargetComboBox"
+                                              ItemsSource="{Binding VideoTargetOptions}"
                                               DisplayMemberPath="Label"
                                               SelectedValuePath="Value"
-                                              SelectedValue="{Binding SelectedModeTarget}"
+                                              SelectedValue="{Binding SelectedTarget}"
                                               SelectionChanged="TargetFormat_SelectionChanged"
-                                              HorizontalAlignment="Stretch" />
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBox.Style>
+                                            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsImagesMode}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ComboBox.Style>
+                                    </ComboBox>
+                                    <ComboBox x:Name="SettingsImageTargetComboBox"
+                                              ItemsSource="{Binding ImageTargetOptions}"
+                                              DisplayMemberPath="Label"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding SelectedImageTarget}"
+                                              SelectionChanged="TargetFormat_SelectionChanged"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBox.Style>
+                                            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsImagesMode}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ComboBox.Style>
+                                    </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="4">
                                     <StackPanel.Style>

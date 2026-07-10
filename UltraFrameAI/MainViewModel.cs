@@ -117,7 +117,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AsyncRelayCommand _startCommand;
     private readonly AsyncRelayCommand _startSelectedCommand;
     private readonly ObservableCollection<LogEntryViewModel> _logLines = UiCollections.CreateLogCollection();
-    private IReadOnlyList<TargetFormatOption> _targetOptions = Array.Empty<TargetFormatOption>();
+    private IReadOnlyList<TargetFormatOption> _videoTargetOptions = Array.Empty<TargetFormatOption>();
+    private IReadOnlyList<TargetFormatOption> _imageTargetOptions = Array.Empty<TargetFormatOption>();
     private IReadOnlyList<UpscalerBackendOption> _upscalerBackendOptions = Array.Empty<UpscalerBackendOption>();
     private IReadOnlyList<RefinerBackendOption> _refinerBackendOptions = Array.Empty<RefinerBackendOption>();
     private IReadOnlyList<GpuDeviceOption> _gpuOptions = Array.Empty<GpuDeviceOption>();
@@ -170,6 +171,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _preserveIncompleteOutput;
     private bool _repairBrokenTimestamps = true;
     private bool _suppressAppSettingsPersistence;
+    private bool _allowCustomTargetAssignment;
     private string _statusSummary = string.Empty;
     private string _lastHeartbeat = string.Empty;
     private string _currentStage = string.Empty;
@@ -254,7 +256,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         RecentRootFolders = new ObservableCollection<RecentFolderItem>();
         CodecOptions = new[] { "x264", "x265" };
         ImageOutputFormatOptions = new[] { "png", "jpg" };
-        _targetOptions = BuildTargetOptions(_selectedTarget, include16K: false);
+        _videoTargetOptions = BuildTargetOptions(_selectedTarget, include16K: false);
+        _imageTargetOptions = BuildTargetOptions(_selectedImageTarget, include16K: true);
         ContainerOptions = new[] { "mkv" };
         EncoderPresetOptions = new[] { "fast", "medium", "slower" };
 
@@ -367,7 +370,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public IEnumerable<string> ImageOutputFormatOptions { get; }
 
-    public IEnumerable<TargetFormatOption> TargetOptions => _targetOptions;
+    public IEnumerable<TargetFormatOption> VideoTargetOptions => _videoTargetOptions;
+
+    public IEnumerable<TargetFormatOption> ImageTargetOptions => _imageTargetOptions;
 
     public IEnumerable<string> ContainerOptions { get; }
 
@@ -525,7 +530,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var oldMode = _selectedRenderMode;
             if (SetField(ref _selectedRenderMode, value))
             {
-                RefreshTargetOptions();
                 RefreshComputedOutputState();
                 RefreshQueueOutputPaths();
                 OnPropertyChanged(nameof(IsVideoMode));
@@ -563,6 +567,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => IsImagesMode ? SelectedImageTarget : SelectedTarget;
         set
         {
+            if (string.IsNullOrWhiteSpace(value) ||
+                string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (!_allowCustomTargetAssignment &&
+                !(IsImagesMode ? IsImageTargetOptionAvailable(value) : IsVideoTargetOptionAvailable(value)))
+            {
+                return;
+            }
+
             if (IsImagesMode)
             {
                 SelectedImageTarget = value;
@@ -579,7 +595,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _selectedTarget;
         set
         {
-            if (string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(value) ||
+                string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal) ||
+                (!_allowCustomTargetAssignment && !IsVideoTargetOptionAvailable(value)))
             {
                 return;
             }
@@ -602,7 +620,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _selectedImageTarget;
         set
         {
-            if (string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(value) ||
+                string.Equals(value, CustomTargetActionValue, StringComparison.Ordinal) ||
+                (!_allowCustomTargetAssignment && !IsImageTargetOptionAvailable(value)))
             {
                 return;
             }
@@ -2180,14 +2200,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
         PersistAppSettings();
     }
 
-    public void ApplyCustomTargetHeight(int height)
+    public void ApplyCustomTargetHeight(int height, bool forImages)
     {
         if (height < 120)
         {
             height = 120;
         }
 
-        SelectedModeTarget = $"{height}p";
+        _allowCustomTargetAssignment = true;
+        try
+        {
+            if (forImages)
+            {
+                SelectedImageTarget = $"{height}p";
+            }
+            else
+            {
+                SelectedTarget = $"{height}p";
+            }
+        }
+        finally
+        {
+            _allowCustomTargetAssignment = false;
+        }
     }
 
     public RenderSessionResults? ConsumePendingRenderSessionResults()
@@ -5240,9 +5275,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void RefreshTargetOptions()
     {
-        _targetOptions = BuildTargetOptions(IsImagesMode ? _selectedImageTarget : _selectedTarget, include16K: IsImagesMode);
-        OnPropertyChanged(nameof(TargetOptions));
+        _videoTargetOptions = BuildTargetOptions(_selectedTarget, include16K: false);
+        _imageTargetOptions = BuildTargetOptions(_selectedImageTarget, include16K: true);
+        OnPropertyChanged(nameof(VideoTargetOptions));
+        OnPropertyChanged(nameof(ImageTargetOptions));
+        OnPropertyChanged(nameof(SelectedModeTarget));
     }
+
+    private bool IsVideoTargetOptionAvailable(string value)
+        => _videoTargetOptions.Any(option => !option.IsCustomAction && string.Equals(option.Value, value, StringComparison.Ordinal));
+
+    private bool IsImageTargetOptionAvailable(string value)
+        => _imageTargetOptions.Any(option => !option.IsCustomAction && string.Equals(option.Value, value, StringComparison.Ordinal));
 
     private static int ParseTargetHeight(string? target)
     {

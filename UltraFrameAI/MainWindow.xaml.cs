@@ -358,9 +358,15 @@ public partial class MainWindow : Window
             return;
         }
 
-        var previousTarget = string.IsNullOrWhiteSpace(_lastConfirmedTarget)
-            ? "1080p"
-            : _lastConfirmedTarget;
+        var isImageTarget = ReferenceEquals(comboBox, MainImageTargetComboBox) ||
+                            ReferenceEquals(comboBox, SettingsImageTargetComboBox);
+        var previousTarget = isImageTarget
+            ? _viewModel.SelectedImageTarget
+            : _viewModel.SelectedTarget;
+        if (string.IsNullOrWhiteSpace(previousTarget))
+        {
+            previousTarget = "1080p";
+        }
         var initialHeight = ExtractTargetHeight(previousTarget);
         var dialog = new CustomTargetValueDialog(initialHeight)
         {
@@ -372,12 +378,12 @@ public partial class MainWindow : Window
         {
             if (dialog.ShowDialog() == true)
             {
-                _viewModel.ApplyCustomTargetHeight(dialog.SelectedHeight);
-                RestoreTargetComboSelection(_viewModel.SelectedModeTarget);
+                _viewModel.ApplyCustomTargetHeight(dialog.SelectedHeight, isImageTarget);
+                RestoreTargetComboSelection(comboBox, isImageTarget ? _viewModel.SelectedImageTarget : _viewModel.SelectedTarget);
             }
             else
             {
-                RestoreTargetComboSelection(previousTarget);
+                RestoreTargetComboSelection(comboBox, previousTarget);
             }
         }
         finally
@@ -422,8 +428,10 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(() =>
         {
-            RestoreTargetComboSelection(MainTargetComboBox, targetValue);
-            RestoreTargetComboSelection(SettingsTargetComboBox, targetValue);
+            RestoreTargetComboSelection(MainVideoTargetComboBox, targetValue);
+            RestoreTargetComboSelection(SettingsVideoTargetComboBox, targetValue);
+            RestoreTargetComboSelection(MainImageTargetComboBox, targetValue);
+            RestoreTargetComboSelection(SettingsImageTargetComboBox, targetValue);
         }, DispatcherPriority.Background);
     }
 
